@@ -7,140 +7,243 @@ def calculate_work_factor(dev: Developer) -> float:
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
     return morale_factor * fatigue_factor
 
-def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Task], 
-                   overtime_ids: set[str], resting_ids: set[str]) -> list[str]:
-    """1日のゲーム進行処理を行い、発生した出来事のログ（テキストリスト）を返す"""
-    logs = []
-    
-    # 1. 予算の消費 (開発者の日当支払い。休みでも発生)
-    daily_cost = 0
-    for dev in developers:
-        daily_cost += dev.salary
-    project.budget -= daily_cost
-    logs.append(f"開発者の給与（日当）として計 ¥{daily_cost:,} を支払いました。 (残予算: ¥{project.budget:,})")
+def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_in_week: int):
+    """PLが有効な場合、空いているDEVメンバーに自動でタスクをアサインする"""
+    if not project.pl_active:
+        return
+        
+    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    if not pl:
+        return
 
-    # 2. 各開発者の作業進行
-    for dev in developers:
-        if dev.id in resting_ids:
-            # 休暇中の処理
-            dev.fatigue = max(0.0, dev.fatigue - 30.0)
-            dev.morale += 10.0
-            logs.append(f"💤 {dev.name} は休暇を取りました。疲労が回復し、士気が上がりました。")
-            
-            # アサインされていたタスクは進捗しない
+    # 田中PLの場合、アサインにミスが発生しタイムロスする確率 (各日30%)
+    if pl.id == "pl_tanaka" and random.random() < 0.30:
+        logs.append(f"⚠️ [アサイン遅延] 田中PLの指示がうまく伝わらず、今日の新規タスクの割り当ては見送られました。")
+        return
+
+    # 空いているDEVメンバー（担当中のタスクがないメンバー）の取得
+    free_devs = []
+    for dev in project.assigned_developers:
+        if dev.role != "DEV":
             continue
-        
-        # 作業時間の決定
-        hours = 8.0
-        is_overtime = dev.id in overtime_ids
-        if is_overtime:
-            hours = 12.0
-            logs.append(f"🔥 {dev.name} に残業を指示しました。")
+        is_busy = any(t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS" for t in tasks)
+        if not is_busy:
+            free_devs.append(dev)
             
-        # 担当タスクの取得
-        assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
-        
-        # 進捗計算
-        if assigned_task:
-            factor = calculate_work_factor(dev)
-            effective_hours = hours * dev.work_speed * factor
-            assigned_task.actual_hours += effective_hours
-            
-            progress_increase = (effective_hours / assigned_task.estimated_hours) * 100.0
-            assigned_task.progress = min(100.0, assigned_task.progress + progress_increase)
-            
-            logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業しました。(進捗: +{progress_increase:.1f}% -> {assigned_task.progress:.1f}%)")
-            
-            # タスク完了判定
-            if assigned_task.progress >= 100.0:
-                assigned_task.status = "DONE"
-                assigned_task.assigned_developer_id = None
-                logs.append(f"✅ タスク「{assigned_task.name}」が完了しました！")
-                
-            # バグ発生の判定
-            # 基本バグ率 + 疲労度影響。作業時間（effective_hours）に比例して判定
-            bug_chance = dev.base_bug_rate * (1.0 + dev.fatigue / 100.0) * effective_hours
-            if random.random() < bug_chance:
-                project.bugs_total += 1
-                logs.append(f"⚠️ 「{assigned_task.name}」のコードに潜在的なバグが混入しました。(総バグ数: {project.bugs_total}件)")
-        else:
-            logs.append(f"😴 {dev.name} は担当タスクがないため、社内雑務をしていました。")
+    for dev in free_devs:
+        # BUG_FIRST 方針かつバグが存在する場合、バグ修正タスクをアサイン
+        if project.direction == "BUG_FIRST" and project.bugs_total > 0:
+            bug_task_id = f"BUG_FIX_W{project.week}D{day_in_week}_{dev.id}"
+            if not any(t.id == bug_task_id for t in tasks):
+                from prototype.entities import Task
+                bug_task = Task(bug_task_id, f"[緊急] バグ修正 ({dev.name})", 8.0)
+                bug_task.assigned_developer_id = dev.id
+                bug_task.status = "IN_PROGRESS"
+                tasks.append(bug_task)
+                logs.append(f"📋 {pl.name}: 「開発方針に従い、{dev.name} さんにバグ修正をアサインしました。」")
+                continue
 
-        # 3. 開発者の状態（疲労・士気）更新
-        if is_overtime:
-            dev.fatigue += 20.0
-            if "PRIVATE_FIRST" in dev.personality_tags:
-                dev.morale -= 25.0
-                logs.append(f"😡 {dev.name} は残業させられたことに強い不満を抱いています！(士気大幅低下)")
-            else:
-                dev.morale -= 8.0
-        else:
-            dev.fatigue += 10.0
-            dev.morale -= 2.0
+        # 通常のタスクアサイン
+        todo_tasks = [t for t in tasks if t.status == "TODO"]
+        if todo_tasks:
+            next_task = todo_tasks[0]
+            next_task.assigned_developer_id = dev.id
+            next_task.status = "IN_PROGRESS"
+            logs.append(f"📋 {pl.name}: 「{dev.name} さん、次は『{next_task.name}』をお願いします。」")
+
+
+def run_weekly_sprint(project: Project, tasks: list[Task], 
+                      overtime_ids: set[str], resting_ids: set[str]) -> list[str]:
+    """1週間（5営業日）分の開発シミュレーションを実行する"""
+    logs = []
+    developers = project.assigned_developers
+    pl = next((d for d in developers if d.role == "PL"), None)
+    
+    logs.append(f"\n--- スプリント {project.week} 開発スタート (残り納期: {project.deadline_weeks} 週間) ---")
+
+    # 1. 1週間 (5日間) のシミュレーションループ
+    for day in range(1, 6):
+        logs.append(f"\n[第{project.week}週 / 営業日 {day}日目]")
+        
+        # タスクアサインの実行
+        auto_assign_tasks(project, tasks, logs, day)
+        
+        # メンバーの給料（日当）の消費
+        daily_cost = sum(d.salary for d in developers)
+        project.budget -= daily_cost
+        
+        # 開発者の作業進行
+        for dev in developers:
+            if dev.role == "PL":
+                # PL自身の状態更新
+                if dev.id in resting_ids:
+                    dev.fatigue = max(0.0, dev.fatigue - 20.0)
+                    dev.morale = min(100.0, dev.morale + 10.0)
+                else:
+                    dev.fatigue += 5.0
+                    dev.morale -= 1.0
+                    
+                # PLボイコット判定
+                if dev.morale <= 0.0 and project.pl_active:
+                    project.pl_active = False
+                    logs.append(f"🚨 【PLボイコット】{dev.name} の士気が完全に失われました！「PMが現場に介入しすぎるなら、私はもう管理をやりません」と自律稼働を停止しました。")
+                continue
+
+            # DEVの作業進行
+            if dev.id in resting_ids:
+                dev.fatigue = max(0.0, dev.fatigue - 30.0)
+                dev.morale += 10.0
+                logs.append(f"💤 {dev.name} は休暇を取りました。")
+                continue
+
+            # 作業時間の決定
+            hours = 8.0
+            is_overtime = dev.id in overtime_ids
+            if is_overtime:
+                hours = 12.0
+                
+            assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
             
-        # 1on1の開示残り日数を減少
+            if assigned_task:
+                # 進捗計算
+                factor = calculate_work_factor(dev)
+                effective_hours = hours * dev.work_speed * factor
+                assigned_task.actual_hours += effective_hours
+                
+                progress_increase = (effective_hours / assigned_task.estimated_hours) * 100.0
+                assigned_task.progress = min(100.0, assigned_task.progress + progress_increase)
+                
+                logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%)")
+                
+                # 完了判定
+                if assigned_task.progress >= 100.0:
+                    assigned_task.status = "DONE"
+                    assigned_task.assigned_developer_id = None
+                    logs.append(f"✅ 「{assigned_task.name}」が完了しました！")
+                    
+                    if assigned_task.id.startswith("BUG_FIX_"):
+                        project.bugs_total = max(0, project.bugs_total - 1)
+                        project.reported_bugs = max(0, project.reported_bugs - 1)
+                        logs.append(f"🔧 バグが1件修正されました。(残バグ: {project.bugs_total}件)")
+
+                # バグ発生判定（バグ修正中以外でのみ発生）
+                if not assigned_task.id.startswith("BUG_FIX_"):
+                    # 鈴木PLがアクティブな場合、バグ発生率が 15% 減少するパッシブ効果
+                    bug_multiplier = 0.85 if (pl and pl.id == "pl_suzuki" and project.pl_active) else 1.0
+                    bug_chance = dev.base_bug_rate * (1.0 + dev.fatigue / 100.0) * effective_hours * bug_multiplier
+                    
+                    if random.random() < bug_chance:
+                        project.bugs_total += 1
+                        logs.append(f"⚠️ 「{assigned_task.name}」のコードにバグが混入しました。(総バグ: {project.bugs_total}件)")
+            else:
+                logs.append(f"😴 {dev.name} は待機状態です。")
+
+            # DEVの状態（疲労・士気）更新
+            if is_overtime:
+                dev.fatigue += 20.0
+                if "PRIVATE_FIRST" in dev.personality_tags:
+                    dev.morale -= 25.0
+                else:
+                    dev.morale -= 8.0
+            else:
+                dev.fatigue += 10.0
+                dev.morale -= 2.0
+
+    # 2. 1on1などの効果週数カウントを減少
+    for dev in developers:
         if dev.reveal_duration > 0:
             dev.reveal_duration -= 1
 
-    # 3. 顧客満足度の更新
+    # 3. 顧客満足度の週末更新
     unreported_bugs = project.bugs_total - project.reported_bugs
     
-    # 顧客タイプによる不満度計算
     if project.customer.type == "QUALITY_ORIENTED":
-        # 品質重視: 隠れている（未報告の）バグがあると、顧客は不穏な空気を察知して満足度が下がる
+        # 品質重視: 未報告バグへの強い反発
         if unreported_bugs > 0:
-            satisfaction_drop = unreported_bugs * 1.5
+            satisfaction_drop = unreported_bugs * 5.0  # 週単位なので影響を大きく
             project.customer.satisfaction -= satisfaction_drop
-            # 隠蔽ペナルティとして上司の満足度もこっそり下がる
-            project.manager_satisfaction -= unreported_bugs * 0.5
-            
-        # 報告済みバグに対する不満
-        project.customer.satisfaction -= project.reported_bugs * 0.5
+            project.manager_satisfaction -= unreported_bugs * 2.0
+            logs.append(f"❌ 顧客はバグが隠されているのではないかと不審に思っています。")
+        project.customer.satisfaction -= project.reported_bugs * 1.5
         
     elif project.customer.type == "SPEED_ORIENTED":
-        # スピード重視: 全体タスクの平均進捗率が、残り日数に対して遅れていると満足度低下
+        # スピード重視: スプリント単位での進捗ギャップ
         total_progress = sum(t.progress for t in tasks)
         avg_progress = total_progress / len(tasks)
-        expected_progress = ((20 - project.deadline_days) / 20) * 100.0
         
+        # 現在の週数に基づく想定進捗 (4週間のうちの割合)
+        expected_progress = (project.week / 4.0) * 100.0
         if avg_progress < expected_progress:
             delay_gap = expected_progress - avg_progress
-            project.customer.satisfaction -= delay_gap * 0.2
+            project.customer.satisfaction -= delay_gap * 0.5
+            logs.append(f"❌ 開発スケジュールが想定より遅れています。")
             
-    # 顧客満足度は 0-100 に収める
+    elif project.customer.type == "VAGUE_REQUIREMENTS":
+        # 要件あいまい: あいまい度が高いと、顧客満足度が毎日少しずつ下がる
+        # 週合計で引く
+        satisfaction_drop = project.customer.vague_level * 0.4
+        project.customer.satisfaction -= satisfaction_drop
+        if satisfaction_drop > 0:
+            logs.append(f"❓ 顧客は仕様のすり合わせ不足に強い不安を抱いています。")
+            
     project.customer.satisfaction = max(0.0, min(100.0, project.customer.satisfaction))
 
     # 4. 上級マネージャー満足度の更新
-    # 基本的に顧客満足度に連動するが、離職者や極端な疲労メンバーがいるとマイナス
     base_manager_sat = project.customer.satisfaction
     
     # メンバーの過労によるペナルティ
     for dev in developers:
         if dev.fatigue >= 90:
-            base_manager_sat -= 15.0
-            logs.append(f"🚨 【警告】{dev.name} が過労で限界寸前です！上司が心配しています。")
+            base_manager_sat -= 20.0
+            logs.append(f"🚨 【重大な警告】{dev.name} が過労で倒れかけています！上司から管理責任を問われています。")
             
     project.manager_satisfaction = max(0.0, min(100.0, base_manager_sat))
 
-    # 5. 日付とデッドラインの更新
-    project.day += 1
-    project.deadline_days -= 1
+    # 5. 週数の進捗
+    project.week += 1
+    project.deadline_weeks -= 1
     
     return logs
 
 
-def trigger_event(project: Project, developers: list[Developer], tasks: list[Task]) -> dict:
-    """ランダムイベントを発生させる。発生しない場合は None を返す。"""
-    # 1日の終わりに 30% の確率でイベント発生
-    if random.random() > 0.35:
+def trigger_event(project: Project, tasks: list[Task]) -> dict:
+    """週の終わりにランダムイベントを発生させる"""
+    developers = project.assigned_developers
+    
+    # 要件あいまい顧客の場合、あいまい度（vague_level）に応じて追加要求イベントが確率で発生
+    if project.customer.type == "VAGUE_REQUIREMENTS":
+        rework_chance = (project.customer.vague_level / 100.0) * 0.70 # 週単位なので高確率に
+        if random.random() < rework_chance:
+            target_dev = random.choice([d for d in developers if d.role == "DEV"])
+            return {
+                "id": "rework_request",
+                "title": "顧客からの追加要望（手戻り）",
+                "description": f"顧客の{project.customer.name}から、「出来上がってきたモジュールの仕様について、追加で機能変更してほしい」と要求がありました。追加タスク「画面レイアウトの再調整」(24時間) が発生します。",
+                "choices": [
+                    {
+                        "text": f"要望をそのまま開発者に丸投げする (顧客満足度+15, 担当の {target_dev.name} の士気-30)",
+                        "action": lambda p, d, t: pass_through_rework(p, d, t, target_dev)
+                    },
+                    {
+                        "text": f"防波堤としてPMが間に入り調整して納得させる (調整費用 ¥30,000 消費, 顧客満足度+5, {target_dev.name} の士気-5)",
+                        "action": lambda p, d, t: buffer_rework(p, d, t, target_dev)
+                    },
+                    {
+                        "text": "交渉して追加要望を断る (タスク追加なし, 顧客満足度-25)",
+                        "action": lambda p, d, t: reject_rework(p)
+                    }
+                ]
+            }
+
+    # 1週間の終わりに 50% の確率で通常イベント発生
+    if random.random() > 0.50:
         return None
 
-    # イベントリスト
     events = [
         {
             "id": "spec_change",
             "title": "仕様変更の打診",
-            "description": f"顧客の{project.customer.name}から、「追加機能としてダッシュボードのグラフ化を追加してほしい」と打診がありました。予算は ¥200,000 追加されますが、納期は据え置きです。",
+            "description": f"顧客の{project.customer.name}から、「ダッシュボードのグラフ分析機能を追加してほしい」と打診がありました。予算は ¥200,000 追加されますが、納期は据え置きです。",
             "choices": [
                 {
                     "text": "受け入れる (予算+20万, 追加タスク「グラフ描画機能」登録, 顧客満足度+10)",
@@ -155,7 +258,7 @@ def trigger_event(project: Project, developers: list[Developer], tasks: list[Tas
         {
             "id": "bug_discovery",
             "title": "テスト環境でのバグ発覚",
-            "description": "開発中のシステムに不具合があるのではないかと、顧客側が疑念を持っています。正直にバグ状況を報告しますか？",
+            "description": "開発中のシステムにバグが潜んでいるのではないかと、顧客側が疑念を持っています。正直にバグ状況を報告しますか？",
             "choices": [
                 {
                     "text": f"正直に報告する (報告済バグ数を {project.bugs_total}件 に更新。顧客満足度-10, 上司信頼+5)",
@@ -172,7 +275,7 @@ def trigger_event(project: Project, developers: list[Developer], tasks: list[Tas
     return random.choice(events)
 
 
-# イベント用アクション関数
+# アクション関数
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
     project.budget += 200000
     from prototype.entities import Task
@@ -194,3 +297,24 @@ def report_bugs_honestly(project: Project) -> str:
 
 def hide_bugs(project: Project) -> str:
     return "バグを報告せず、順調であると回答しました。顧客は納得したようですが、バグが残ったままです。"
+
+def pass_through_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
+    from prototype.entities import Task
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    tasks.append(new_task)
+    dev.morale -= 30.0
+    project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
+    return f"顧客の要望をそのまま {dev.name} に丸投げしました。{dev.name} の士気が著しく低下しました。"
+
+def buffer_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
+    from prototype.entities import Task
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    tasks.append(new_task)
+    project.budget -= 30000
+    dev.morale -= 5.0
+    project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
+    return f"PMが調整に入り、納得感を持って {dev.name} に作業を依頼しました。費用 ¥30,000 を消費しましたが、士気の低下を抑えられました。"
+
+def reject_rework(project: Project) -> str:
+    project.customer.satisfaction = max(0.0, project.customer.satisfaction - 25.0)
+    return "顧客の追加要望を断りました。顧客の満足度が大きく低下しました。"
