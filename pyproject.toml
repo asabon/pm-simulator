@@ -1,0 +1,14 @@
+[project]
+name = "pm-simulator"
+version = "0.1.0"
+description = "A simulation game to experience software project management."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+play-sim = "prototype.main:main"
+
+[tool.uv]
+package = true
+
