@@ -107,6 +107,13 @@ def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Ta
             delay_gap = expected_progress - avg_progress
             project.customer.satisfaction -= delay_gap * 0.2
             
+    elif project.customer.type == "VAGUE_REQUIREMENTS":
+        # 要件あいまい: あいまい度（vague_level）に比例して、顧客の不安から満足度が毎日低下する
+        satisfaction_drop = project.customer.vague_level * 0.15
+        project.customer.satisfaction -= satisfaction_drop
+        if satisfaction_drop > 0:
+            logs.append(f"❓ 顧客は仕様のあいまさに不安を感じています。(顧客満足度 -{satisfaction_drop:.1f})")
+            
     # 顧客満足度は 0-100 に収める
     project.customer.satisfaction = max(0.0, min(100.0, project.customer.satisfaction))
 
@@ -131,11 +138,40 @@ def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Ta
 
 def trigger_event(project: Project, developers: list[Developer], tasks: list[Task]) -> dict:
     """ランダムイベントを発生させる。発生しない場合は None を返す。"""
-    # 1日の終わりに 30% の確率でイベント発生
+    # 要件あいまい顧客の場合、あいまい度（vague_level）に応じて追加要求イベントが確率で発生
+    if project.customer.type == "VAGUE_REQUIREMENTS":
+        # あいまい度が高いほど、高確率で追加要求（手戻り）イベントが発生する (最大で毎日 40% の確率)
+        rework_chance = (project.customer.vague_level / 100.0) * 0.45
+        if random.random() < rework_chance:
+            # ランダムに影響を受ける開発者を選定しておく
+            target_dev = random.choice(developers)
+            
+            # 手戻り要求イベントの定義
+            return {
+                "id": "rework_request",
+                "title": "顧客からの追加要望（手戻り）",
+                "description": f"顧客の{project.customer.name}から、「出来上がってきた画面の仕様について、少し追加で修正してほしい」と要求がありました。追加タスク「画面レイアウトの再調整」(24時間) が発生します。",
+                "choices": [
+                    {
+                        "text": f"要望をそのまま開発者に丸投げする (顧客満足度+15, 担当予定の {target_dev.name} の士気-30)",
+                        "action": lambda p, d, t: pass_through_rework(p, d, t, target_dev)
+                    },
+                    {
+                        "text": f"防波堤としてPMが間に入り調整して納得させる (調整費用 ¥30,000 消費, 顧客満足度+5, {target_dev.name} の士気-5)",
+                        "action": lambda p, d, t: buffer_rework(p, d, t, target_dev)
+                    },
+                    {
+                        "text": "交渉して追加要望を断る (タスク追加なし, 顧客満足度-25)",
+                        "action": lambda p, d, t: reject_rework(p)
+                    }
+                ]
+            }
+
+    # 1日の終わりに 35% の確率で通常イベント発生
     if random.random() > 0.35:
         return None
 
-    # イベントリスト
+    # 通常イベントリスト
     events = [
         {
             "id": "spec_change",
@@ -194,3 +230,25 @@ def report_bugs_honestly(project: Project) -> str:
 
 def hide_bugs(project: Project) -> str:
     return "バグを報告せず、順調であると回答しました。顧客は納得したようですが、バグが残ったままです。"
+
+# 追加要求イベント用アクション関数
+def pass_through_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
+    from prototype.entities import Task
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    tasks.append(new_task)
+    dev.morale -= 30.0
+    project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
+    return f"顧客の要望をそのまま {dev.name} に丸投げしました。{dev.name} の士気が著しく低下しました。"
+
+def buffer_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
+    from prototype.entities import Task
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    tasks.append(new_task)
+    project.budget -= 30000
+    dev.morale -= 5.0
+    project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
+    return f"PMが調整に入り、納得感を持って {dev.name} に作業を依頼しました。費用 ¥30,000 を消費しましたが、士気の低下を抑えられました。"
+
+def reject_rework(project: Project) -> str:
+    project.customer.satisfaction = max(0.0, project.customer.satisfaction - 25.0)
+    return "顧客の追加要望を断りました。顧客の満足度が大きく低下しました。"

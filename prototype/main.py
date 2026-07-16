@@ -12,7 +12,10 @@ def show_status(project, developers, tasks):
     print(f"【プロジェクト】: {project.name}")
     print(f"【 残 予 算 】: ¥{project.budget:,}  |  【 納 期 】: あと {project.deadline_days} 日")
     print(f"【総バグ数】: {project.bugs_total} 件 (報告済: {project.reported_bugs} 件)")
-    print(f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type})")
+    
+    # あいまい度情報の追加
+    vague_info = f"  |  【要求あいまい度】: {project.customer.vague_level:.1f}%" if project.customer.type == "VAGUE_REQUIREMENTS" else ""
+    print(f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type}){vague_info}")
     print(f"【上司信頼度】: {project.manager_satisfaction:.1f}%")
     
     print("\n■ 開発者メンバー状態")
@@ -49,8 +52,15 @@ def main():
     print("\n顧客のタイプを選択してください:")
     print("1: 品質重視 (品質に妥協がなく、未報告のバグがあると満足度が激しく低下する)")
     print("2: スピード重視 (とにかく納期優先。進捗が遅れると満足度が徐々に低下する)")
+    print("3: 要件あいまい重視 (追加要求・手戻りが多発。PMの防波堤能力が試される)")
     choice = input("選択 (デフォルト: 1): ")
-    c_type = "SPEED_ORIENTED" if choice == "2" else "QUALITY_ORIENTED"
+    
+    if choice == "2":
+        c_type = "SPEED_ORIENTED"
+    elif choice == "3":
+        c_type = "VAGUE_REQUIREMENTS"
+    else:
+        c_type = "QUALITY_ORIENTED"
     
     project, developers, tasks = get_initial_data(customer_type=c_type)
     
@@ -58,8 +68,10 @@ def main():
     print(f"上級マネージャー:「今回のクライアントである {project.customer.name} さんを紹介するよ。」")
     if c_type == "QUALITY_ORIENTED":
         print("「渡辺部長は非常に品質に厳しい方だ。バグを隠したまま納品しようものなら、私の立場もなくなる。しっかり管理してくれ。」")
-    else:
+    elif c_type == "SPEED_ORIENTED":
         print("「渡辺部長はスピードを最優先される方だ。スケジュール遅延は許されない。とにかく納期を守るように動いてくれ。」")
+    else:
+        print("「渡辺部長はご自身の要求を言語化するのが苦手で、仕様が非常にあいまいだ。こまめにデモを見せて合意を取らないと、後で手戻りが発生するぞ。頑張ってくれ。」")
     print("「君のマネジメント能力に期待しているよ。では、スタートだ！」")
     input("\n[Enterキーを押して開始...]")
 
@@ -106,7 +118,7 @@ def main():
         print("3: 飲み会（懇親会）を開催する (費用: ¥30,000)")
         print("4: 残業指示の切り替え (次の日の進捗が増えるが、疲労増)")
         print("5: 休暇の付与 (次の日の作業から外れるが、疲労回復)")
-        print("6: 顧客へ進捗報告・バグ報告 (期待値調整)")
+        print("6: 顧客へ進捗報告・期待値調整 (デモ) (あいまい度の低下・バグ報告)")
         print("7: 上級マネージャーへ交渉 (予算追加 / 納期延長)")
         print("0: 1日を進める")
         
@@ -232,22 +244,30 @@ def main():
                     print(f"{selected_dev.name} に次の日の有給/休暇を付与しました。")
 
         elif action == "6":
-            print("\n--- 顧客への報告と期待値調整 ---")
+            print("\n--- 顧客への報告と期待値調整 (デモ) ---")
             unreported = project.bugs_total - project.reported_bugs
             print(f"現在、検知されているバグ: {project.bugs_total}件 (うち未報告: {unreported}件)")
-            print("1: 正直にバグを含めて報告する (一時的に満足度低下、ただしサプライズ防止)")
-            print("2: 進捗状況だけを報告し、バグは濁す (満足度維持、ただし隠蔽リスク継続)")
+            if project.customer.type == "VAGUE_REQUIREMENTS":
+                print(f"現在の顧客の要求あいまい度: {project.customer.vague_level:.1f}%")
+            
+            print("1: 正直にバグを含めて報告し、進捗デモを行う (バグをクリアし、あいまい度-20%)")
+            print("2: 進捗状況だけを簡単に報告し、バグは濁す (あいまい度-10%のみ)")
             r_choice = input("選択 (デフォルト: 1): ")
+            
             if r_choice == "2":
                 print("✉️ 顧客へ『進捗は概ね順調です』と定形報告を送りました。")
                 project.customer.satisfaction = min(100.0, project.customer.satisfaction + 2.0)
+                if project.customer.type == "VAGUE_REQUIREMENTS":
+                    project.customer.vague_level = max(0.0, project.customer.vague_level - 10.0)
+                    print("顧客の仕様への理解が少し進みました。")
             else:
                 project.reported_bugs = project.bugs_total
                 project.customer.satisfaction = max(0.0, project.customer.satisfaction - (unreported * 2.0))
-                # 報告の誠実さで上司の信頼が少し上がる
                 project.manager_satisfaction = min(100.0, project.manager_satisfaction + 5.0)
+                if project.customer.type == "VAGUE_REQUIREMENTS":
+                    project.customer.vague_level = max(0.0, project.customer.vague_level - 20.0)
+                    print(f"顧客と仕様について十分な認識合わせを行いました！(あいまい度 -20%)")
                 print("✉️ 顧客へバグ状況も含めて詳細な進捗レポートを報告しました。")
-                print("顧客は不満を示していますが、隠し事はクリアされました。")
             input("[Enterキーで戻る]")
 
         elif action == "7":

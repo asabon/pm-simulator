@@ -61,8 +61,9 @@ class Customer:
     def __init__(self, customer_id: str, name: str, customer_type: str):
         self.id = customer_id
         self.name = name
-        self.type = customer_type  # "SPEED_ORIENTED", "QUALITY_ORIENTED", "CHANGE_PRONE"
+        self.type = customer_type  # "SPEED_ORIENTED", "QUALITY_ORIENTED", "VAGUE_REQUIREMENTS"
         self.satisfaction = 80.0  # 0 - 100
+        self.vague_level = 80.0   # あいまい度 (0 - 100)
 
 
 class Project:
