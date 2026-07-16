@@ -1,44 +1,54 @@
 import sys
-from prototype.data import get_initial_data
-from prototype.engine import next_day_cycle, trigger_event
+from prototype.data import get_pl_candidates, get_dev_candidates, get_initial_project_data
+from prototype.engine import run_weekly_sprint, trigger_event
 
 def print_header(title: str):
     print("\n" + "=" * 60)
     print(f" {title} ".center(60, "="))
     print("=" * 60)
 
+def get_dev_macro_status(dev) -> str:
+    """開発者のマクロな状態（サイン）を返す"""
+    if dev.fatigue >= 80:
+        return "限界寸前 (要休養)"
+    elif dev.fatigue >= 40:
+        return "要注意 (疲労蓄積)"
+    return "良好 (稼働可能)"
+
 def show_status(project, developers, tasks):
-    print_header(f"DAY {project.day} - プロジェクト状況")
+    print_header(f"WEEK {project.week} - スプリント状況")
     print(f"【プロジェクト】: {project.name}")
-    print(f"【 残 予 算 】: ¥{project.budget:,}  |  【 納 期 】: あと {project.deadline_days} 日")
+    print(f"【 残 予 算 】: ¥{project.budget:,}  |  【 納 期 】: あと {project.deadline_weeks} 週間")
     print(f"【総バグ数】: {project.bugs_total} 件 (報告済: {project.reported_bugs} 件)")
     
-    # 顧客・上司情報
+    # 顧客情報
     vague_info = f"  |  【要求あいまい度】: {project.customer.vague_level:.1f}%" if project.customer.type == "VAGUE_REQUIREMENTS" else ""
     print(f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type}){vague_info}")
     print(f"【上司信頼度】: {project.manager_satisfaction:.1f}%")
     
     # PL管理状況
     pl = next((d for d in developers if d.role == "PL"), None)
-    pl_status = "自律稼働中" if project.pl_active else "🚨 ボイコット中 (管理停止)"
-    direction_jp = "進捗優先" if project.direction == "NORMAL" else "バグ修正優先"
-    print(f"【 PL 管理 】: {pl_status} (方針: {direction_jp})")
-    
-    print("\n■ 組織体制とメンバー状態")
-    for dev in developers:
-        # アサインタスクの確認
-        assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
-        task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.1f}%)" if assigned_task else "担当: なし"
+    pl_status = f"自律稼働中 (鈴木PL)" if pl.id == "pl_suzuki" else f"自律稼働中 (田中PL)"
+    if not project.pl_active:
+        pl_status = f"🚨 ボイコット中 ({pl.name})"
         
-        # 隠しパラメータの表示判定
+    direction_jp = "進捗優先" if project.direction == "NORMAL" else "バグ修正優先"
+    print(f"【 PL 管理 】: {pl_status}  |  【開発方針】: {direction_jp}")
+    
+    print("\n■ 開発体制とチームの状態")
+    for dev in developers:
+        assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
+        task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.0f}%)" if assigned_task else "担当: なし"
+        
+        # 隠しパラメータの表示判定 (1on1面談後のみ正確な数値)
         if dev.reveal_duration > 0:
             status_details = f"[疲労: {dev.fatigue:.0f}/100, 士気: {dev.morale:.0f}/100]"
         else:
-            status_details = "[ステータス: 隠蔽中]"
+            status_details = f"[{get_dev_macro_status(dev)}]"
             
         role_label = f"({dev.role})"
         print(f" - {dev.name:<22} {role_label:<6} {status_details:<25} {task_info}")
-        print(f"   サイン: {dev.get_sign()}")
+        print(f"   発言: {dev.get_sign()}")
 
     print("\n■ タスクボード")
     todo_tasks = [t for t in tasks if t.status == "TODO" and not t.id.startswith("BUG_FIX_")]
@@ -51,9 +61,9 @@ def show_status(project, developers, tasks):
     print("=" * 60)
 
 def main():
-    print_header("PM Simulator - CLI Prototype")
+    print_header("PM Simulator - CLI Prototype (Macro PM Version)")
     print("ゲームの目的: プロジェクトを成功させ、上司（上級マネージャー）を満足させること。")
-    print("上司の期待に応えるため、顧客の期待値をコントロールし、チームを崩壊させずに乗り切りましょう。")
+    print("PLを信頼して現場管理を委ねつつ、PMはマクロな方針決定、顧客交渉、リスク対策に専念しましょう。")
     
     # 顧客タイプの選択
     print("\n顧客のタイプを選択してください:")
@@ -69,40 +79,88 @@ def main():
     else:
         c_type = "QUALITY_ORIENTED"
     
-    project, developers, tasks = get_initial_data(customer_type=c_type)
-    pl = next(d for d in developers if d.role == "PL")
+    project, tasks = get_initial_data = get_initial_project_data(customer_type=c_type)
     
+    # --- A. 初期契約交渉フェーズ ---
+    print_header("キックオフ前: 初期契約交渉")
+    print("プロジェクト開始にあたり、顧客と1つだけ交渉を行うことができます。")
+    print("1: 納期延長交渉 (納期を 4週間 ➔ 5週間 に延ばす。ただし顧客の初期満足度が -20% となる)")
+    print("2: 予算追加交渉 (予算を ¥1,000,000 ➔ ¥1,300,000 に増やす。ただし上司の初期信頼度が -20% となる)")
+    print("3: 交渉せず現状維持で開始 (納期4週間、予算100万、初期満足度80%、上司信頼度80%)")
+    neg_choice = input("選択 (デフォルト: 3): ")
+    
+    if neg_choice == "1":
+        project.deadline_weeks = 5
+        project.customer.satisfaction = 60.0
+        print("\n🤝 納期延長を獲得しました！ (納期: 5週間 / 初期顧客満足度: 60%)")
+    elif neg_choice == "2":
+        project.budget = 1300000
+        project.manager_satisfaction = 60.0
+        print("\n🤝 追加予算を獲得しました！ (予算: ¥1,300,000 / 初期上司信頼度: 60%)")
+    else:
+        print("\n🤝 現状維持でプロジェクトをスタートします。")
+        
+    input("[Enterキーで次へ]")
+
+    # --- B. 体制構築（要員アサイン）フェーズ ---
+    print_header("キックオフ前: 体制構築（人材雇用）")
+    print(f"現在の予算: ¥{project.budget:,}")
+    print("プロジェクトを運営するチームメンバーをアサインしてください。")
+    
+    # PLの選択
+    print("\n[STEP 1] PL (プロジェクトリーダー) を1名選択してください (必須):")
+    pl_candidates = get_pl_candidates()
+    for idx, pl_cand in enumerate(pl_candidates):
+        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 管理スキル・信頼性高)")
+    pl_choice = input("選択: ")
+    selected_pl = pl_candidates[1] if pl_choice == "2" else pl_candidates[0]
+    project.assigned_developers.append(selected_pl)
+    print(f"➔ {selected_pl.name} をPLとしてアサインしました。")
+    
+    # DEVの選択
+    print("\n[STEP 2] DEV (開発メンバー) をアサインしてください (1名以上、複数可):")
+    dev_candidates = get_dev_candidates()
+    for dev_cand in dev_candidates:
+        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 特性: {', '.join(dev_cand.personality_tags) if dev_cand.personality_tags else 'なし'})")
+        u_input = input(f"  このメンバーを雇用しますか？ (y/n): ")
+        if u_input.lower() == 'y':
+            project.assigned_developers.append(dev_cand)
+            print(f"  ➔ {dev_cand.name} をアサインしました。")
+            
+    # DEVが誰も選ばれなかった場合の強制アサイン (山田を自動雇用)
+    if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0:
+        print("\n⚠️ 開発メンバーがアサインされていません！山田さんを自動的にアサインしました。")
+        project.assigned_developers.append(dev_candidates[0])
+        
     print("\n--- イントロダクション ---")
-    print(f"上級マネージャー:「今回のクライアントである {project.customer.name} さんを紹介するよ。」")
+    print(f"上級マネージャー:「今回のクライアントである {project.customer.name} さんを紹介したよ。」")
     if c_type == "QUALITY_ORIENTED":
         print("「渡辺部長は非常に品質に厳しい方だ。バグを隠したまま納品しようものなら、私の立場もなくなる。しっかり管理してくれ。」")
     elif c_type == "SPEED_ORIENTED":
         print("「渡辺部長はスピードを最優先される方だ。スケジュール遅延は許されない。とにかく納期を守るように動いてくれ。」")
     else:
-        print("「渡辺部長はご自身の要求を言語化するのが苦手で、仕様が非常にあいまいだ。こまめにデモを見せて合意を取らないと、後で手戻りが発生するぞ。頑張ってくれ。」")
-    print(f"「現場のタスクアサインと進捗管理は、PLの {pl.name} に任せてある。君はマクロな管理に集中してくれ。」")
-    print("「君のマネジメント能力に期待しているよ。では、スタートだ！」")
-    input("\n[Enterキーを押して開始...]")
+        print("「渡辺部長はご自身の要求を言語化するのが苦手で、仕様が非常にあいまいだ。こまめにデモを見せて合意を取らないと、後で手戻りが発生するぞ。計画的に動いてくれ。」")
+    print(f"「現場の管理は PL の {selected_pl.name} に任せてある。君はPMとしての本来の役割（交渉・意思決定）を果たしてくれ。」")
+    input("\n[Enterキーを押して第1週を開始...]")
 
     overtime_ids = set()
     resting_ids = set()
 
-    # メインゲームループ
+    # メイン週次ゲームループ
     while True:
-        show_status(project, developers, tasks)
+        show_status(project, project.assigned_developers, tasks)
         
         # ゲームオーバー判定
         if project.budget <= 0:
             print("\n❌ 【GAME OVER】 予算が底をつきました！プロジェクトは破綻し、会社から解雇されました。")
             break
-        if project.deadline_days < 0:
-            # 納期が過ぎた場合、すべてのタスクが完了しているか確認
+        if project.deadline_weeks < 0:
             incomplete = [t for t in tasks if t.status != "DONE"]
             if incomplete:
-                print("\n❌ 【GAME OVER】 納期遅れが発生しました！タスクが完了せず、顧客から損害賠償を請求されました。")
+                print("\n❌ 【GAME OVER】 納期遅れが発生しました！スプリント期間内にタスクが完了せず、プロジェクトは失敗に終わりました。")
                 break
-        if any(d.fatigue >= 100 for d in developers):
-            collapsed_dev = next(d for d in developers if d.fatigue >= 100)
+        if any(d.fatigue >= 100 for d in project.assigned_developers):
+            collapsed_dev = next(d for d in project.assigned_developers if d.fatigue >= 100)
             print(f"\n❌ 【GAME OVER】 {collapsed_dev.name} が過労により倒れ、退職しました。チームが崩壊しプロジェクトは打ち切られました。")
             break
         if project.manager_satisfaction <= 0:
@@ -110,61 +168,59 @@ def main():
             break
 
         # クリア判定
-        # バグ修正や追加タスクも含めて、すべてのタスクが完了しているか
         if all(t.status == "DONE" for t in tasks):
             print("\n🎉 【PROJECT CLEAR!!!】 すべてのタスクを完了し、プロジェクトを無事納品しました！")
             print(f"最終的な上級マネージャー評価: {project.manager_satisfaction:.1f}%")
             if project.manager_satisfaction >= 80:
                 print("🏆 評価: Sクラス！上司は君のマネジメントを大絶賛しています。昇進間違いなし！")
             elif project.manager_satisfaction >= 50:
-                print("👍 評価: Aクラス。無難にプロジェクトを納めました。信頼を獲得しました。")
+                print("👍 評価: Aクラス。無難にプロジェクトを納めました。")
             else:
-                print("😐 評価: Bクラス。なんとか終わらせましたが、プロセスに多くの課題を残しました。")
+                print("😐 評価: Bクラス。なんとか終わらせましたが、多くの課題を残しました。")
             break
 
-        print(f"行動を選択してください:")
+        print(f"週次アクションを選択してください:")
         
-        # PLの状況に応じたメニュー表示
         if project.pl_active:
-            print("1: タスクの割り当てを変更する [PLが自律管理中のため不要です]")
+            print("1: 【PL自動管理中】 タスク割り当てを変更する (鈴木/田中リーダーに一任されています)")
         else:
-            print("1: 【手動】タスクの割り当てを変更する (PLボイコット中につき強制介入)")
+            print("1: 【手動割り当て】 タスク割り当てを変更する (PLボイコット中につき強制介入が必要)")
             
-        print("2: メンバーと 1on1 (面談) を行う (PLと行うと現場週報開示 / DEVと直接行うと過干渉ペナルティ)")
-        print("3: 飲み会（懇親会）を開催する (費用: ¥30,000)")
-        print("4: 現場への残業指示の切り替え (直接指示するとPL士気-25)")
-        print("5: 現場への休暇付与設定 (直接指示するとPL士気-25)")
-        print("6: 顧客へ進捗報告・期待値調整 (デモ) (あいまい度の低下・バグ報告)")
-        print("7: 上級マネージャーへ交渉 (予算追加 / 納期延長)")
-        print("8: PLへ開発方針を指示する (NORMAL:進捗優先 / BUG_FIRST:バグ修正優先)")
+        print("2: PL・メンバーと面談 (1on1) を行う (PLと行うと現場状況が数値開示されます)")
+        print("3: チーム全体の懇親会（飲み会）を開催する (費用: ¥30,000 / 士気回復)")
+        print("4: 来週の稼働指示 (残業・休暇) を決定する")
+        print("5: 顧客へスプリント報告・デモを行う (あいまい度低下・バグ報告)")
+        print("6: 上級マネージャーへ交渉 (予算追加 / 納期延長)")
+        print("7: PLへ開発方針指示を出す (NORMAL:進捗優先 / BUG_FIRST:バグ修正優先)")
         if not project.pl_active:
-            print("9: PLへ謝罪しケアする (費用: ¥50,000、ボイコット解除)")
+            print("8: PLに謝罪してケアする (費用: ¥50,000 / ボイコット解除)")
             
-        print("0: 1日を進める")
+        print("0: スプリント(1週間)を進める")
         
         action = input("入力: ")
         
         if action == "1":
             if project.pl_active:
-                print("\n❌ 現場のタスク割り当ては鈴木リーダーに一任しています。割り当ての変更は不要です。")
+                pl = next(d for d in project.assigned_developers if d.role == "PL")
+                print(f"\n❌ 現場のタスクアサインは {pl.name} に一任しています。")
                 print("（PLを信頼し、PMの本来の業務である顧客交渉やリスク管理に集中しましょう）")
                 input("[Enterキーで戻る]")
                 continue
             
+            # 手動アサイン (PLボイコット時のみ)
             print("\n--- 【手動】タスク割り当て (PLボイコット中) ---")
             todo_in_progress = [t for t in tasks if t.status != "DONE"]
             for i, t in enumerate(todo_in_progress):
-                assigned_name = next((d.name for d in developers if d.id == t.assigned_developer_id), "未割り当て")
+                assigned_name = next((d.name for d in project.assigned_developers if d.id == t.assigned_developer_id), "未割り当て")
                 print(f"{i+1}: {t.name} (現状: {t.status} / 担当: {assigned_name})")
             
             t_choice = input("割り当てるタスクを選択 (戻るは Enter): ")
             if t_choice.isdigit() and 1 <= int(t_choice) <= len(todo_in_progress):
                 selected_task = todo_in_progress[int(t_choice) - 1]
                 
-                # 開発者選択
                 print("\n担当者を選択してください:")
-                print("0: 割り当て解除 (TODOに戻す)")
-                devs_list = [d for d in developers if d.role == "DEV"]
+                print("0: 割り当て解除")
+                devs_list = [d for d in project.assigned_developers if d.role == "DEV"]
                 for j, dev in enumerate(devs_list):
                     print(f"{j+1}: {dev.name}")
                 d_choice = input("選択: ")
@@ -174,7 +230,6 @@ def main():
                     print(f"「{selected_task.name}」を未割り当てに戻しました。")
                 elif d_choice.isdigit() and 1 <= int(d_choice) <= len(devs_list):
                     selected_dev = devs_list[int(d_choice) - 1]
-                    # 既存のアサイン解除
                     for t in tasks:
                         if t.assigned_developer_id == selected_dev.id and t.status == "IN_PROGRESS":
                             t.assigned_developer_id = None
@@ -184,131 +239,141 @@ def main():
                     print(f"「{selected_task.name}」を {selected_dev.name} に割り当てました。")
                     
         elif action == "2":
-            print("\n--- 1on1 (面談) ---")
-            for i, dev in enumerate(developers):
+            print("\n--- スプリント面談 (1on1) ---")
+            for i, dev in enumerate(project.assigned_developers):
                 role_label = "(PL)" if dev.role == "PL" else "(DEV)"
                 print(f"{i+1}: {dev.name} {role_label}")
-            d_choice = input("面談するメンバーを選択: ")
-            if d_choice.isdigit() and 1 <= int(d_choice) <= len(developers):
-                selected_dev = developers[int(d_choice) - 1]
+            d_choice = input("面談する相手を選択: ")
+            if d_choice.isdigit() and 1 <= int(d_choice) <= len(project.assigned_developers):
+                selected_dev = project.assigned_developers[int(d_choice) - 1]
+                pl = next(d for d in project.assigned_developers if d.role == "PL")
                 
                 if selected_dev.role == "PL":
-                    # PLとの1on1: 鈴木リーダーの士気回復と、現場メンバーのステータス開示
+                    # PLとの1on1: 自律管理を活性化
                     selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 30.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 10.0)
                     
-                    # 現場メンバーのステータスを開示する（週報レポート）
-                    for d in developers:
+                    # 全員のステータスを週報として開示させる
+                    for d in project.assigned_developers:
                         if d.role == "DEV":
                             d.reveal_duration = 3
                             
-                    print(f"💡 PL {selected_dev.name} と面談を行いました。現場の週報レポートを受け取りました。")
-                    print(f"【PL鈴木の管理者プライド】: {selected_dev.morale:.0f}/100")
-                    print("➔ 3日間、現場メンバー（山田・佐藤）の正確な疲労と士気が表示されます。")
+                    print(f"💡 PL {selected_dev.name} と面談しました。週報として現場メンバーの稼働状況が開示されました。")
+                    print(f"【PLの信頼度】: {selected_dev.morale:.0f}/100")
+                    print("➔ 3スプリントの間、現場メンバーの正確な『疲労・士気』が確認できます。")
                 else:
-                    # DEVとの直接1on1: 過干渉によるPLの士気低下
+                    # DEVと直接面談: PMの過干渉になりPLの士気が下がる
                     selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 15.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 5.0)
                     
-                    # PLのプライド低下
+                    # PLのプライドが傷つく
                     pl.morale -= 10.0
-                    print(f"💡 {selected_dev.name} と直接面談を行いました。")
-                    print(f"⚠️ 【過干渉】鈴木PLから「現場に直接口を出しすぎではないですか？私への相談を通してください」と難色を示されました。")
-                    print(f"(鈴木PLの士気 -10 -> 現在: {pl.morale:.0f}/100)")
+                    print(f"💡 DEV {selected_dev.name} と直接面談を行いました。")
+                    print(f"⚠️ 【過干渉警告】PL {pl.name} から「直接メンバーと面談をされるのは、私の管理能力を疑われているようで心外です」と難色を示されました。")
+                    print(f"({pl.name} の士気 -10 -> 現在: {pl.morale:.0f}/100)")
                 input("[Enterキーで戻る]")
 
         elif action == "3":
-            print("\n--- 飲み会（懇親会）開催 ---")
+            print("\n--- 懇親会（飲み会）開催 ---")
             if project.budget < 30000:
                 print("予算が足りません！ (開催費用: ¥30,000)")
                 continue
             
             project.budget -= 30000
-            print("🍻 飲み会を開催しました！ (費用 ¥30,000 消費)")
+            print("🍻 懇親会を開催しました！ (費用 ¥30,000 消費)")
             
-            # 飲み会嫌い（Sato）の強制参加処理
-            sato = next((d for d in developers if "PRIVATE_FIRST" in d.personality_tags), None)
+            sato = next((d for d in project.assigned_developers if "PRIVATE_FIRST" in d.personality_tags), None)
             force_join = False
             if sato:
                 print(f"プライベート重視の {sato.name} を強制参加させますか？")
-                print("1: 強制参加させる (やる気が激減しストレス増加)")
+                print("1: 強制参加させる (やる気が下がりストレス増加)")
                 print("2: 自由参加にする (本人は不参加、やる気変化なし)")
                 join_choice = input("選択 (デフォルト: 2): ")
                 if join_choice == "1":
                     force_join = True
             
-            for dev in developers:
+            for dev in project.assigned_developers:
                 if "DRINK_LOVER" in dev.personality_tags:
                     dev.morale += 30.0
-                    print(f"😊 {dev.name} (飲み会好き): 「最高ですね！モチベーション上がりました！」 (士気大幅UP)")
+                    print(f"😊 {dev.name} (飲み会好き): やる気が大幅にアップしました！ (士気大幅UP)")
                 elif "PRIVATE_FIRST" in dev.personality_tags:
                     if force_join:
                         dev.morale -= 20.0
                         dev.fatigue += 10.0
-                        print(f"😡 {dev.name} (プライベート重視/強制参加): 「正直、業務外で拘束されるのは苦痛です……」 (士気低下/疲労増)")
+                        print(f"😡 {dev.name} (強制参加): 不満を感じ、疲労が溜まりました。 (士気低下/疲労増)")
                     else:
-                        print(f"🏠 {dev.name} (プライベート重視/自由参加): 定時に帰宅し、家でゆっくり過ごしたようです。")
+                        print(f"🏠 {dev.name} (自由参加): 定時で帰宅し、プライベートを満喫しました。")
                 else:
                     dev.morale += 10.0
-                    print(f"🙂 {dev.name}: 「楽しかったです。」")
+                    print(f"🙂 {dev.name}: チームの親睦が深まりました。")
             input("[Enterキーで戻る]")
 
         elif action == "4":
-            print("\n--- 残業指示設定 ---")
-            devs_list = [d for d in developers if d.role == "DEV"]
+            print("\n--- 来週の稼働指示設定 (PL経由) ---")
+            devs_list = [d for d in project.assigned_developers if d.role == "DEV"]
+            pl = next(d for d in project.assigned_developers if d.role == "PL")
+            
+            print("指示するメンバーを選択してください:")
             for i, dev in enumerate(devs_list):
-                status = "残業中" if dev.id in overtime_ids else "定時退社"
+                status = "残業予定" if dev.id in overtime_ids else ("休暇予定" if dev.id in resting_ids else "通常稼働")
                 print(f"{i+1}: {dev.name} [現在: {status}]")
-            d_choice = input("残業指示を出すメンバーの番号を入力 (完了は Enter): ")
+            d_choice = input("メンバーの番号を入力 (戻るは Enter): ")
+            
             if d_choice.isdigit() and 1 <= int(d_choice) <= len(devs_list):
                 selected_dev = devs_list[int(d_choice) - 1]
                 
-                # PLがアクティブな場合、直接の指示は過干渉ペナルティ
-                if project.pl_active:
-                    pl.morale -= 25.0
-                    print(f"⚠️ 【過干渉】PLを通さずに {selected_dev.name} へ直接残業指示を出したため、鈴木PLのプライドが傷つきました。")
-                    print(f"(鈴木PLの士気 -25 -> 現在: {pl.morale:.0f}/100)")
+                print(f"\n{selected_dev.name} への来週の稼働指示を選択してください:")
+                print("1: 残業を指示する (進捗が伸びるが疲労蓄積)")
+                print("2: 有給（休暇）を付与する (作業から外れるが疲労回復)")
+                print("3: 通常稼働に戻す")
+                i_choice = input("指示: ")
                 
-                if selected_dev.id in overtime_ids:
-                    overtime_ids.remove(selected_dev.id)
-                    print(f"{selected_dev.name} を定時退社に戻しました。")
-                else:
+                # PLの進言と過干渉判定
+                warning_triggered = False
+                if i_choice == "1":
+                    # 疲労がすでに要注意以上の場合、PLから進言が入る
+                    if selected_dev.fatigue >= 40.0 and project.pl_active:
+                        print(f"\n⚠️ 【PLの進言】")
+                        print(f"  {pl.name}: 「PM、{selected_dev.name} さんはかなり疲労が溜まっています。来週の残業は避けるべきです！」")
+                        confirm = input("  PLの進言を無視して強行しますか？ (y/n): ")
+                        if confirm.lower() != 'y':
+                            print("残業指示をキャンセルしました。")
+                            input("[Enterキーで戻る]")
+                            continue
+                        else:
+                            warning_triggered = True
+                    
+                    # 休暇と競合クリア
                     if selected_dev.id in resting_ids:
                         resting_ids.remove(selected_dev.id)
                     overtime_ids.add(selected_dev.id)
-                    print(f"{selected_dev.name} に残業を指示しました。")
-                input("[Enterキーで戻る]")
-
-        elif action == "5":
-            print("\n--- 休暇付与設定 ---")
-            devs_list = [d for d in developers if d.role == "DEV"]
-            for i, dev in enumerate(devs_list):
-                status = "休暇予定" if dev.id in resting_ids else "出勤予定"
-                print(f"{i+1}: {dev.name} [現在: {status}]")
-            d_choice = input("休暇を付与するメンバーの番号を入力 (完了は Enter): ")
-            if d_choice.isdigit() and 1 <= int(d_choice) <= len(devs_list):
-                selected_dev = devs_list[int(d_choice) - 1]
-                
-                # PLがアクティブな場合、直接の指示は過干渉ペナルティ
-                if project.pl_active:
-                    pl.morale -= 25.0
-                    print(f"⚠️ 【過干渉】PLを通さずに {selected_dev.name} へ直接休暇を付与したため、鈴木PLのプライドが傷つきました。")
-                    print(f"(鈴木PLの士気 -25 -> 現在: {pl.morale:.0f}/100)")
-                
-                if selected_dev.id in resting_ids:
-                    resting_ids.remove(selected_dev.id)
-                    print(f"{selected_dev.name} を出勤予定に戻しました。")
-                else:
+                    print(f"➔ {selected_dev.name} に来週の残業を指示しました。")
+                    
+                elif i_choice == "2":
                     if selected_dev.id in overtime_ids:
                         overtime_ids.remove(selected_dev.id)
                     resting_ids.add(selected_dev.id)
-                    print(f"{selected_dev.name} に休暇を付与しました。")
+                    print(f"➔ {selected_dev.name} に来週の有給/休暇を付与しました。")
+                    
+                elif i_choice == "3":
+                    if selected_dev.id in overtime_ids:
+                        overtime_ids.remove(selected_dev.id)
+                    if selected_dev.id in resting_ids:
+                        resting_ids.remove(selected_dev.id)
+                    print(f"➔ {selected_dev.name} を通常稼働に戻しました。")
+                
+                # 進言を無視して指示を強行した場合、PLのプライドが傷つく
+                if warning_triggered:
+                    pl.morale -= 25.0
+                    print(f"\n🚨 【過干渉ペナルティ】PLの進言を無視して指示を強行したため、{pl.name} の管理者プライドが傷つきました。")
+                    print(f"({pl.name} の管理士気 -25 -> 現在: {pl.morale:.0f}/100)")
+                
                 input("[Enterキーで戻る]")
 
-        elif action == "6":
-            print("\n--- 顧客への報告と期待値調整 (デモ) ---")
+        elif action == "5":
+            print("\n--- 顧客への定例報告と進捗デモ ---")
             unreported = project.bugs_total - project.reported_bugs
             print(f"現在、検知されているバグ: {project.bugs_total}件 (うち未報告: {unreported}件)")
             if project.customer.type == "VAGUE_REQUIREMENTS":
@@ -326,7 +391,7 @@ def main():
                     print("顧客の仕様への理解が少し進みました。")
             else:
                 project.reported_bugs = project.bugs_total
-                project.customer.satisfaction = max(0.0, project.customer.satisfaction - (unreported * 2.0))
+                project.customer.satisfaction = max(0.0, project.customer.satisfaction - (unreported * 5.0)) # 週単位なので影響大
                 project.manager_satisfaction = min(100.0, project.manager_satisfaction + 5.0)
                 if project.customer.type == "VAGUE_REQUIREMENTS":
                     project.customer.vague_level = max(0.0, project.customer.vague_level - 20.0)
@@ -334,7 +399,7 @@ def main():
                 print("✉️ 顧客へバグ状況も含めて詳細な進捗レポートを報告しました。")
             input("[Enterキーで戻る]")
 
-        elif action == "7":
+        elif action == "6":
             print("\n--- 上級マネージャーへのエスカレーション交渉 ---")
             if project.manager_satisfaction < 50:
                 print("❌ 上司からの信頼が低すぎるため、交渉を聞き入れてもらえません！ (必要信頼度: 50%以上)")
@@ -343,7 +408,7 @@ def main():
             
             print(f"現在の上司信頼度: {project.manager_satisfaction:.1f}%")
             print("1: 予算の追加を要請する (上司信頼度-20%, 予算+¥300,000)")
-            print("2: 納期延長の根回しを依頼する (上司信頼度-20%, 納期+3日)")
+            print("2: 納期延長の根回しを依頼する (上司信頼度-20%, 納期+1週間)")
             n_choice = input("選択 (戻るは Enter): ")
             if n_choice == "1":
                 project.manager_satisfaction -= 20.0
@@ -351,25 +416,27 @@ def main():
                 print("🤝 上司へ粘り強く交渉し、追加予算 ¥300,000 を獲得しました！ (信頼度が下がりました)")
             elif n_choice == "2":
                 project.manager_satisfaction -= 20.0
-                project.deadline_days += 3
-                print("🤝 上司が顧客へ根回しを行ってくれ、納期が 3 日間延長されました！ (信頼度が下がりました)")
+                project.deadline_weeks += 1
+                print("🤝 上司が顧客へ根回しを行ってくれ、納期が 1 週間延長されました！ (信頼度が下がりました)")
             input("[Enterキーで戻る]")
 
-        elif action == "8":
+        elif action == "7":
             print("\n--- PLへ開発方針を指示する ---")
             print(f"現在の開発方針: {project.direction}")
             print("1: 進捗優先方針 (NORMAL - 進捗の早いタスク順に割り振る)")
             print("2: バグ修正優先方針 (BUG_FIRST - 発生しているバグの修正を最優先にする)")
             d_choice = input("方針を選択: ")
+            pl = next(d for d in project.assigned_developers if d.role == "PL")
             if d_choice == "2":
                 project.direction = "BUG_FIRST"
-                print("📋 鈴木PLに『バグの修正を最優先にしてほしい』と指示しました。")
+                print(f"📋 {pl.name} に『バグの修正を最優先にしてほしい』と指示しました。")
             else:
                 project.direction = "NORMAL"
-                print("📋 鈴木PLに『基本機能の開発（進捗優先）を進めてほしい』と指示しました。")
+                print(f"📋 {pl.name} に『基本機能の開発（進捗優先）を進めてほしい』と指示しました。")
             input("[Enterキーで戻る]")
 
-        elif action == "9" and not project.pl_active:
+        elif action == "8" and not project.pl_active:
+            pl = next(d for d in project.assigned_developers if d.role == "PL")
             print("\n--- PLへ謝罪しケアを行う ---")
             if project.budget < 50000:
                 print("予算が足りません！ (謝罪・再教育費用: ¥50,000)")
@@ -378,23 +445,23 @@ def main():
             project.budget -= 50000
             project.pl_active = True
             pl.morale = 50.0
-            print("🤝 鈴木リーダーに自身の介入を謝罪し、改めて現場管理を委ねることで合意しました。(費用 ¥50,000 消費)")
-            print("➔ 鈴木PLが業務に復帰し、自動タスク割り当てが再開されます。(PL士気: 50/100)")
+            print(f"🤝 {pl.name} に自身の介入を謝罪し、改めて現場管理を委ねることで合意しました。(費用 ¥50,000 消費)")
+            print(f"➔ {pl.name} が業務に復帰し、自動タスク割り当てが再開されます。(PL士気: 50/100)")
             input("[Enterキーで戻る]")
 
         elif action == "0":
-            # 1日を進める処理の実行
-            print_header("1日の進行中...")
-            logs = next_day_cycle(project, developers, tasks, overtime_ids, resting_ids)
+            # 1週間（スプリント）を進める
+            print_header("1週間のスプリント開発を実行中...")
+            logs = run_weekly_sprint(project, tasks, overtime_ids, resting_ids)
             for log in logs:
                 print(log)
             
-            # 翌日のために残業・休暇予定をリセット
+            # 翌週のために残業・休暇予定をリセット
             overtime_ids.clear()
             resting_ids.clear()
             
-            # ランダムイベントのトリガー
-            event = trigger_event(project, developers, tasks)
+            # 週の終わりのランダムイベント
+            event = trigger_event(project, tasks)
             if event:
                 print("\n" + "!" * 20 + " トラブル発生 " + "!" * 20)
                 print(f"【{event['title']}】")
@@ -408,11 +475,11 @@ def main():
                     selected_idx = int(ev_choice) - 1
                 
                 # アクションの実行
-                event_log = event['choices'][selected_idx]['action'](project, developers, tasks)
+                event_log = event['choices'][selected_idx]['action'](project, project.assigned_developers, tasks)
                 print(f"\n➔ {event_log}")
                 print("!" * 53)
             
-            input("\n[Enterキーで次の日へ...]")
+            input("\n[Enterキーで次のスプリントへ...]")
 
 if __name__ == "__main__":
     main()
