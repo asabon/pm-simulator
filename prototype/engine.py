@@ -7,10 +7,55 @@ def calculate_work_factor(dev: Developer) -> float:
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
     return morale_factor * fatigue_factor
 
+def auto_assign_tasks(project: Project, developers: list[Developer], tasks: list[Task], logs: list[str]):
+    """PLが有効な場合、空いているDEVメンバーに自動でタスクをアサインする"""
+    if not project.pl_active:
+        return
+        
+    pl = next((d for d in developers if d.role == "PL"), None)
+    if not pl:
+        return
+
+    # 空いているDEVメンバー（担当中のタスクがないメンバー）の取得
+    free_devs = []
+    for dev in developers:
+        if dev.role != "DEV":
+            continue
+        # 現在アサインされていて進行中のタスクがあるか確認
+        is_busy = any(t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS" for t in tasks)
+        if not is_busy:
+            free_devs.append(dev)
+            
+    for dev in free_devs:
+        # BUG_FIRST 方針で、かつ未修正バグ（総バグ数 - 報告済バグ、あるいは総バグ数そのもの）がある場合
+        # 今回は「総バグ数」がある場合にバグ修正をアサインする
+        if project.direction == "BUG_FIRST" and project.bugs_total > 0:
+            bug_task_id = f"BUG_FIX_{project.day}_{dev.id}"
+            if not any(t.id == bug_task_id for t in tasks):
+                from prototype.entities import Task
+                bug_task = Task(bug_task_id, f"[緊急] バグの修正 ({dev.name})", 8.0)
+                bug_task.assigned_developer_id = dev.id
+                bug_task.status = "IN_PROGRESS"
+                tasks.append(bug_task)
+                logs.append(f"📋 {pl.name}: 「方針に従い、{dev.name} さんにバグ修正タスクをアサインしました。」")
+                continue
+
+        # 通常のタスクアサイン
+        todo_tasks = [t for t in tasks if t.status == "TODO"]
+        if todo_tasks:
+            next_task = todo_tasks[0]
+            next_task.assigned_developer_id = dev.id
+            next_task.status = "IN_PROGRESS"
+            logs.append(f"📋 {pl.name}: 「{dev.name} さん、次は『{next_task.name}』をお願いします。」")
+
+
 def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Task], 
                    overtime_ids: set[str], resting_ids: set[str]) -> list[str]:
     """1日のゲーム進行処理を行い、発生した出来事のログ（テキストリスト）を返す"""
     logs = []
+    
+    # PLによる自律的なタスク割り当ての実行
+    auto_assign_tasks(project, developers, tasks, logs)
     
     # 1. 予算の消費 (開発者の日当支払い。休みでも発生)
     daily_cost = 0
@@ -21,13 +66,28 @@ def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Ta
 
     # 2. 各開発者の作業進行
     for dev in developers:
+        # PLは直接タスクの作業を行わない（管理に専念）
+        if dev.role == "PL":
+            if dev.id in resting_ids:
+                dev.fatigue = max(0.0, dev.fatigue - 20.0)
+                dev.morale = min(100.0, dev.morale + 10.0)
+                logs.append(f"💤 PL {dev.name} は休暇を取りました。")
+            else:
+                dev.fatigue += 5.0
+                dev.morale -= 1.0
+                logs.append(f"📊 PL {dev.name} は進捗管理とチームマネジメントを行っています。")
+            
+            # ボイコット判定
+            if dev.morale <= 0.0 and project.pl_active:
+                project.pl_active = False
+                logs.append(f"🚨 【PLボイコット】{dev.name} の士気（プライド）が完全に失われました！「PMが直接指示するなら、私の管理は不要ですね」と自律管理を放棄しました。")
+            continue
+
         if dev.id in resting_ids:
             # 休暇中の処理
             dev.fatigue = max(0.0, dev.fatigue - 30.0)
             dev.morale += 10.0
             logs.append(f"💤 {dev.name} は休暇を取りました。疲労が回復し、士気が上がりました。")
-            
-            # アサインされていたタスクは進捗しない
             continue
         
         # 作業時間の決定
@@ -35,7 +95,7 @@ def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Ta
         is_overtime = dev.id in overtime_ids
         if is_overtime:
             hours = 12.0
-            logs.append(f"🔥 {dev.name} に残業を指示しました。")
+            logs.append(f"🔥 {dev.name} に残業指示が出ています。")
             
         # 担当タスクの取得
         assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
@@ -57,14 +117,20 @@ def next_day_cycle(project: Project, developers: list[Developer], tasks: list[Ta
                 assigned_task.assigned_developer_id = None
                 logs.append(f"✅ タスク「{assigned_task.name}」が完了しました！")
                 
-            # バグ発生の判定
-            # 基本バグ率 + 疲労度影響。作業時間（effective_hours）に比例して判定
-            bug_chance = dev.base_bug_rate * (1.0 + dev.fatigue / 100.0) * effective_hours
-            if random.random() < bug_chance:
-                project.bugs_total += 1
-                logs.append(f"⚠️ 「{assigned_task.name}」のコードに潜在的なバグが混入しました。(総バグ数: {project.bugs_total}件)")
+                # バグ修正タスク完了時のバグ減少処理
+                if assigned_task.id.startswith("BUG_FIX_"):
+                    project.bugs_total = max(0, project.bugs_total - 1)
+                    project.reported_bugs = max(0, project.reported_bugs - 1)
+                    logs.append(f"🔧 バグが1件修正されました。(残バグ数: {project.bugs_total}件)")
+                
+            # バグ発生の判定（バグ修正タスク中以外でのみ発生）
+            if not assigned_task.id.startswith("BUG_FIX_"):
+                bug_chance = dev.base_bug_rate * (1.0 + dev.fatigue / 100.0) * effective_hours
+                if random.random() < bug_chance:
+                    project.bugs_total += 1
+                    logs.append(f"⚠️ 「{assigned_task.name}」のコードに潜在的なバグが混入しました。(総バグ数: {project.bugs_total}件)")
         else:
-            logs.append(f"😴 {dev.name} は担当タスクがないため、社内雑務をしていました。")
+            logs.append(f"😴 {dev.name} は担当タスクがないため、待機していました。")
 
         # 3. 開発者の状態（疲労・士気）更新
         if is_overtime:
@@ -144,7 +210,7 @@ def trigger_event(project: Project, developers: list[Developer], tasks: list[Tas
         rework_chance = (project.customer.vague_level / 100.0) * 0.45
         if random.random() < rework_chance:
             # ランダムに影響を受ける開発者を選定しておく
-            target_dev = random.choice(developers)
+            target_dev = random.choice([d for d in developers if d.role == "DEV"])
             
             # 手戻り要求イベントの定義
             return {

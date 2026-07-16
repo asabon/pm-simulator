@@ -5,35 +5,41 @@ def get_initial_data(customer_type="QUALITY_ORIENTED"):
     developers = [
         Developer(
             dev_id="dev_yamada",
-            name="山田 (中堅エンジニア)",
+            name="山田 (DEV / 中堅)",
             work_speed=1.2,
             base_bug_rate=0.02,
             salary=15000,
-            personality_tags=["DRINK_LOVER"]  # 飲み会でモラールが上がりやすい
+            personality_tags=["DRINK_LOVER"],
+            role="DEV"
         ),
         Developer(
             dev_id="dev_sato",
-            name="佐藤 (若手エンジニア)",
+            name="佐藤 (DEV / 若手)",
             work_speed=0.8,
             base_bug_rate=0.01,
             salary=12000,
-            personality_tags=["PRIVATE_FIRST"]  # 残業・飲み会強制が嫌い、休みを好む
+            personality_tags=["PRIVATE_FIRST"],
+            role="DEV"
         ),
         Developer(
             dev_id="dev_suzuki",
-            name="鈴木 (ベテランエンジニア)",
+            name="鈴木 (PL / ベテラン)",
             work_speed=1.0,
             base_bug_rate=0.04,
             salary=18000,
-            personality_tags=["TECH_GEEK"]  # 新しい技術や負債解消を好む
+            personality_tags=["TECH_GEEK"],
+            role="PL"
         )
     ]
+    
+    # PLの初期士気（プライド）を高めに設定
+    developers[2].morale = 100.0
 
     # 顧客の定義
     customer = Customer(
         customer_id="cust_watanabe",
         name="渡辺部長 (A社)",
-        customer_type=customer_type  # SPEED_ORIENTED / QUALITY_ORIENTED
+        customer_type=customer_type  # SPEED_ORIENTED / QUALITY_ORIENTED / VAGUE_REQUIREMENTS
     )
 
     # プロジェクトの定義（20日間、予算100万）
@@ -55,7 +61,7 @@ def get_initial_data(customer_type="QUALITY_ORIENTED"):
         Task("T07", "管理画面ダッシュボード構築", 24.0),
         Task("T08", "単体テストコード作成", 20.0),
         Task("T09", "統合シナリオテスト実施", 32.0),
-        Task("T10: [NEW]", "本番サーバーへのデプロイ", 16.0)
+        Task("T10", "本番サーバーへのデプロイ", 16.0)
     ]
 
     return project, developers, tasks
