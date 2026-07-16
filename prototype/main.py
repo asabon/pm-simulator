@@ -1,6 +1,6 @@
 import sys
-from data import get_initial_data
-from engine import next_day_cycle, trigger_event
+from prototype.data import get_initial_data
+from prototype.engine import next_day_cycle, trigger_event
 
 def print_header(title: str):
     print("\n" + "=" * 60)

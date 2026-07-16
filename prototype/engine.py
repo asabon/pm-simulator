@@ -1,5 +1,5 @@
 import random
-from entities import Project, Developer, Task, Customer
+from prototype.entities import Project, Developer, Task, Customer
 
 def calculate_work_factor(dev: Developer) -> float:
     """士気と疲労による作業効率補正を計算する"""
@@ -175,7 +175,7 @@ def trigger_event(project: Project, developers: list[Developer], tasks: list[Tas
 # イベント用アクション関数
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
     project.budget += 200000
-    from entities import Task
+    from prototype.entities import Task
     new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0)
     tasks.append(new_task)
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)

@@ -1,4 +1,4 @@
-from entities import Developer, Task, Customer, Project
+from prototype.entities import Developer, Task, Customer, Project
 
 def get_initial_data(customer_type="QUALITY_ORIENTED"):
     # 開発者の定義
