@@ -7,6 +7,90 @@ def calculate_work_factor(dev: Developer) -> float:
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
     return morale_factor * fatigue_factor
 
+def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
+    """PLによるスケジュール妥当性見積もりレポートを生成する"""
+    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    devs = [d for d in project.assigned_developers if d.role == "DEV"]
+    
+    if not pl or not devs:
+        return "⚠️ PLまたは開発メンバーがアサインされていません。"
+        
+    project.has_evidence = True # レポートを確認したためエビデンスを保持
+    
+    # 未完了のタスク
+    incomplete_tasks = [t for t in tasks if t.status != "DONE"]
+    total_task_hours = sum(t.estimated_hours for t in incomplete_tasks)
+    
+    # 納期（日）と総稼働可能時間（通常稼働）
+    deadline_days = project.deadline_weeks * 5
+    available_hours_per_dev = deadline_days * 8.0
+    total_available_hours = available_hours_per_dev * len(devs)
+    
+    # BE/FEタスクの集計
+    be_task_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
+    fe_task_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "FE")
+    
+    # BE/FE人員の有無
+    has_be_dev = any(d.specialty == "BE" for d in devs)
+    has_fe_dev = any(d.specialty == "FE" for d in devs)
+    
+    if pl.id == "pl_suzuki":
+        # 鈴木PL: スキルミスマッチ効率を考慮した正確なシミュレーション
+        estimated_actual_needed = 0.0
+        for t in incomplete_tasks:
+            if t.skill_type == "BE":
+                if has_be_dev:
+                    estimated_actual_needed += t.estimated_hours / 1.5
+                else:
+                    estimated_actual_needed += t.estimated_hours / 0.5
+            else: # FE
+                if has_fe_dev:
+                    estimated_actual_needed += t.estimated_hours / 1.2
+                else:
+                    estimated_actual_needed += t.estimated_hours / 0.6
+                    
+        gap = total_available_hours - estimated_actual_needed
+        
+        report = f"📋 【鈴木PLの見積もり監査レポート】\n"
+        report += f"  ■ 分析内容:\n"
+        report += f"    - 未完了タスク総見積もり: {total_task_hours:.1f} 人時 (BE: {be_task_hours:.1f}h / FE: {fe_task_hours:.1f}h)\n"
+        report += f"    - スキル特性（ミスマッチ）を加味した実質必要開発時間: 約 {estimated_actual_needed:.1f} 時間\n"
+        report += f"    - 納期までのチーム総稼働時間 (定時): {total_available_hours:.1f} 時間 (残り {project.deadline_weeks} 週間 / 開発者 {len(devs)} 名)\n"
+        report += f"  ■ 妥当性判定:\n"
+        
+        if gap < -10.0:
+            report += f"    🚨 深刻なスケジュール不足です！ 実質必要時間に対して、約 {-gap:.1f} 時間分 不足しています。\n"
+            report += f"    （原因: メンバーの専門性とタスクのギャップ、あるいは納期設計の甘さがあります。納期延長か追加人員の交渉を強く進言します。）"
+        elif gap < 15.0:
+            report += f"    ⚠️ ギリギリ収まる見込みですが、バグ対応や仕様変更のバッファがありません。(余裕: {gap:.1f} 時間)\n"
+            report += f"    （通常通り進める場合、バグが1件でも発生すると遅延します。開発方針をバグ優先にするか、何らかの対策費を確保しておくと安全です。）"
+        else:
+            report += f"    ✅ 納期内に十分に完了可能なスケジュールです。 (余裕: {gap:.1f} 時間)"
+            
+        return report
+        
+    else:
+        # 田中PL: 精度がブレる見積もり
+        raw_gap = total_available_hours - total_task_hours
+        random_error = random.randint(-30, 30)
+        estimated_gap = raw_gap + random_error
+        
+        report = f"📋 【田中PLの状況報告レポート (※見積もり精度: 粗め)】\n"
+        report += f"  ■ 分析内容:\n"
+        report += f"    - 残りタスクの合計時間: {total_task_hours:.1f} 時間\n"
+        report += f"    - 納期までの総稼働時間: {total_available_hours:.1f} 時間\n"
+        report += f"  ■ 妥当性判定:\n"
+        
+        if estimated_gap < 0:
+            report += f"    🚨 えーっと、たぶん納期に間に合いそうにありません。だいたい {-estimated_gap:.1f} 時間くらい足りない気がします……たぶん。\n"
+            report += f"    （BEとFEの役割分担がうまく噛み合っていないような気もしますが、よく分かりません。納期を少し延ばしてもらったほうが無難かもしれません。）"
+        else:
+            report += f"    ❓ なんとかギリギリいけるんじゃないでしょうか？ (予測バッファ: {estimated_gap:.1f} 時間)\n"
+            report += f"    （ただ、バグが出たら遅れるかもしれませんし、私の勘なのであまり自信はありません……）"
+            
+        return report
+
+
 def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_in_week: int):
     """PLが有効な場合、空いているDEVメンバーに自動でタスクをアサインする"""
     if not project.pl_active:
@@ -105,15 +189,31 @@ def run_weekly_sprint(project: Project, tasks: list[Task],
             assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
             
             if assigned_task:
+                # 専門性とタスクスキルのミスマッチ判定
+                is_mismatch = False
+                if dev.specialty == "BE" and assigned_task.skill_type == "FE":
+                    is_mismatch = True
+                    speed_mult = 0.6
+                elif dev.specialty == "FE" and assigned_task.skill_type == "BE":
+                    is_mismatch = True
+                    speed_mult = 0.5
+                elif dev.specialty == "BE" and assigned_task.skill_type == "BE":
+                    speed_mult = 1.5
+                elif dev.specialty == "FE" and assigned_task.skill_type == "FE":
+                    speed_mult = 1.2
+                else:
+                    speed_mult = dev.work_speed
+                
                 # 進捗計算
                 factor = calculate_work_factor(dev)
-                effective_hours = hours * dev.work_speed * factor
+                effective_hours = hours * speed_mult * factor
                 assigned_task.actual_hours += effective_hours
                 
                 progress_increase = (effective_hours / assigned_task.estimated_hours) * 100.0
                 assigned_task.progress = min(100.0, assigned_task.progress + progress_increase)
                 
-                logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%)")
+                mismatch_sign = " (※スキルミスマッチ中)" if is_mismatch else ""
+                logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%){mismatch_sign}")
                 
                 # 完了判定
                 if assigned_task.progress >= 100.0:
@@ -130,6 +230,10 @@ def run_weekly_sprint(project: Project, tasks: list[Task],
                 if not assigned_task.id.startswith("BUG_FIX_"):
                     # 鈴木PLがアクティブな場合、バグ発生率が 15% 減少するパッシブ効果
                     bug_multiplier = 0.85 if (pl and pl.id == "pl_suzuki" and project.pl_active) else 1.0
+                    # スキルミスマッチの場合、バグ発生率が 3 倍
+                    if is_mismatch:
+                        bug_multiplier *= 3.0
+                        
                     bug_chance = dev.base_bug_rate * (1.0 + dev.fatigue / 100.0) * effective_hours * bug_multiplier
                     
                     if random.random() < bug_chance:
@@ -158,20 +262,17 @@ def run_weekly_sprint(project: Project, tasks: list[Task],
     unreported_bugs = project.bugs_total - project.reported_bugs
     
     if project.customer.type == "QUALITY_ORIENTED":
-        # 品質重視: 未報告バグへの強い反発
         if unreported_bugs > 0:
-            satisfaction_drop = unreported_bugs * 5.0  # 週単位なので影響を大きく
+            satisfaction_drop = unreported_bugs * 5.0
             project.customer.satisfaction -= satisfaction_drop
             project.manager_satisfaction -= unreported_bugs * 2.0
             logs.append(f"❌ 顧客はバグが隠されているのではないかと不審に思っています。")
         project.customer.satisfaction -= project.reported_bugs * 1.5
         
     elif project.customer.type == "SPEED_ORIENTED":
-        # スピード重視: スプリント単位での進捗ギャップ
         total_progress = sum(t.progress for t in tasks)
         avg_progress = total_progress / len(tasks)
         
-        # 現在の週数に基づく想定進捗 (4週間のうちの割合)
         expected_progress = (project.week / 4.0) * 100.0
         if avg_progress < expected_progress:
             delay_gap = expected_progress - avg_progress
@@ -179,8 +280,6 @@ def run_weekly_sprint(project: Project, tasks: list[Task],
             logs.append(f"❌ 開発スケジュールが想定より遅れています。")
             
     elif project.customer.type == "VAGUE_REQUIREMENTS":
-        # 要件あいまい: あいまい度が高いと、顧客満足度が毎日少しずつ下がる
-        # 週合計で引く
         satisfaction_drop = project.customer.vague_level * 0.4
         project.customer.satisfaction -= satisfaction_drop
         if satisfaction_drop > 0:
@@ -210,9 +309,8 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
     """週の終わりにランダムイベントを発生させる"""
     developers = project.assigned_developers
     
-    # 要件あいまい顧客の場合、あいまい度（vague_level）に応じて追加要求イベントが確率で発生
     if project.customer.type == "VAGUE_REQUIREMENTS":
-        rework_chance = (project.customer.vague_level / 100.0) * 0.70 # 週単位なので高確率に
+        rework_chance = (project.customer.vague_level / 100.0) * 0.70
         if random.random() < rework_chance:
             target_dev = random.choice([d for d in developers if d.role == "DEV"])
             return {
@@ -235,7 +333,6 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
                 ]
             }
 
-    # 1週間の終わりに 50% の確率で通常イベント発生
     if random.random() > 0.50:
         return None
 
@@ -279,7 +376,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
     project.budget += 200000
     from prototype.entities import Task
-    new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0)
+    new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0, "FE") # グラフ描画はFEタスク
     tasks.append(new_task)
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
     return "仕様変更を受け入れました。新たなタスクが追加され、予算が ¥200,000 増加しました。"
@@ -300,7 +397,7 @@ def hide_bugs(project: Project) -> str:
 
 def pass_through_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
     from prototype.entities import Task
-    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE") # 画面レイアウトはFE
     tasks.append(new_task)
     dev.morale -= 30.0
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
@@ -308,7 +405,7 @@ def pass_through_rework(project: Project, developers: list[Developer], tasks: li
 
 def buffer_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
     from prototype.entities import Task
-    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0)
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE")
     tasks.append(new_task)
     project.budget -= 30000
     dev.morale -= 5.0

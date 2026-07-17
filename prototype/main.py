@@ -1,6 +1,6 @@
 import sys
 from prototype.data import get_pl_candidates, get_dev_candidates, get_initial_project_data
-from prototype.engine import run_weekly_sprint, trigger_event
+from prototype.engine import run_weekly_sprint, trigger_event, generate_pl_estimation_report
 
 def print_header(title: str):
     print("\n" + "=" * 60)
@@ -28,8 +28,8 @@ def show_status(project, developers, tasks):
     
     # PL管理状況
     pl = next((d for d in developers if d.role == "PL"), None)
-    pl_status = f"自律稼働中 (鈴木PL)" if pl.id == "pl_suzuki" else f"自律稼働中 (田中PL)"
-    if not project.pl_active:
+    pl_status = f"自律稼働中 ({pl.name})" if pl else "アサインなし"
+    if pl and not project.pl_active:
         pl_status = f"🚨 ボイコット中 ({pl.name})"
         
     direction_jp = "進捗優先" if project.direction == "NORMAL" else "バグ修正優先"
@@ -46,8 +46,8 @@ def show_status(project, developers, tasks):
         else:
             status_details = f"[{get_dev_macro_status(dev)}]"
             
-        role_label = f"({dev.role})"
-        print(f" - {dev.name:<22} {role_label:<6} {status_details:<25} {task_info}")
+        role_label = f"({dev.role} / {dev.specialty}専門)"
+        print(f" - {dev.name:<22} {role_label:<14} {status_details:<25} {task_info}")
         print(f"   発言: {dev.get_sign()}")
 
     print("\n■ タスクボード")
@@ -55,13 +55,13 @@ def show_status(project, developers, tasks):
     in_progress_tasks = [t for t in tasks if t.status == "IN_PROGRESS"]
     done_tasks = [t for t in tasks if t.status == "DONE" and not t.id.startswith("BUG_FIX_")]
     
-    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h)" for t in todo_tasks]))
-    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%)" for t in in_progress_tasks]))
-    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([t.name for t in done_tasks]))
+    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h/{t.skill_type})" for t in todo_tasks]))
+    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%/{t.skill_type})" for t in in_progress_tasks]))
+    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}({t.skill_type})" for t in done_tasks]))
     print("=" * 60)
 
 def main():
-    print_header("PM Simulator - CLI Prototype (Macro PM Version)")
+    print_header("PM Simulator - CLI Prototype (Requirements & Skillset Version)")
     print("ゲームの目的: プロジェクトを成功させ、上司（上級マネージャー）を満足させること。")
     print("PLを信頼して現場管理を委ねつつ、PMはマクロな方針決定、顧客交渉、リスク対策に専念しましょう。")
     
@@ -79,49 +79,67 @@ def main():
     else:
         c_type = "QUALITY_ORIENTED"
     
-    project, tasks = get_initial_data = get_initial_project_data(customer_type=c_type)
+    project, tasks = get_initial_project_data(customer_type=c_type)
     
-    # --- A. 初期契約交渉フェーズ ---
-    print_header("キックオフ前: 初期契約交渉")
-    print("プロジェクト開始にあたり、顧客と1つだけ交渉を行うことができます。")
-    print("1: 納期延長交渉 (納期を 4週間 ➔ 5週間 に延ばす。ただし顧客の初期満足度が -20% となる)")
-    print("2: 予算追加交渉 (予算を ¥1,000,000 ➔ ¥1,300,000 に増やす。ただし上司の初期信頼度が -20% となる)")
-    print("3: 交渉せず現状維持で開始 (納期4週間、予算100万、初期満足度80%、上司信頼度80%)")
-    neg_choice = input("選択 (デフォルト: 3): ")
+    # --- STEP 1: 顧客ヒアリング (要求の明確化) ---
+    print_header("キックオフ STEP 1: 顧客ヒアリング（要求の明確化）")
+    print("プロジェクトを開始する前に、顧客（渡辺部長）にヒアリングを行います。")
+    print("1: 丁寧なヒアリングを行う (要件を徹底的にクリアにする。納期を1週間消費する)")
+    print("2: 簡易ヒアリングで済ませる (即日キックオフ。納期・満足度への初期影響なし)")
+    print("3: ヒアリングを省いて即開始 (即日キックオフ。納期バッファを +1週間 獲得する)")
+    hear_choice = input("選択 (デフォルト: 2): ")
     
-    if neg_choice == "1":
-        project.deadline_weeks = 5
-        project.customer.satisfaction = 60.0
-        print("\n🤝 納期延長を獲得しました！ (納期: 5週間 / 初期顧客満足度: 60%)")
-    elif neg_choice == "2":
-        project.budget = 1300000
-        project.manager_satisfaction = 60.0
-        print("\n🤝 追加予算を獲得しました！ (予算: ¥1,300,000 / 初期上司信頼度: 60%)")
+    if hear_choice == "1":
+        project.hearing_type = "DEEP"
+        project.deadline_weeks -= 1  # 納期を1週消費
+        if c_type == "VAGUE_REQUIREMENTS":
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 10.0)
+            print("\n🚨 【要求定義の罠】")
+            print("  渡辺部長と何度も打ち合わせを重ねましたが、部長自身が要求を明確に言語化できません。")
+            print("  時間だけが過ぎて納期が1週間減り、仕様のあいまさはほとんど解消されませんでした！")
+            print("  (納期: -1週間 / 要求あいまい度: 80% ➔ 70% に微減)")
+        else:
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 40.0)
+            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
+            print("\n🤝 非常に効果的なヒアリングができました！顧客の要求が整理されました。")
+            print("  (納期: -1週間 / 初期顧客満足度 +10 / 要求あいまい度大幅低下)")
+            
+    elif hear_choice == "3":
+        project.hearing_type = "NONE"
+        project.deadline_weeks += 1  # 納期+1週間
+        project.customer.satisfaction = max(0.0, project.customer.satisfaction - 15.0)
+        project.customer.vague_level = min(100.0, project.customer.vague_level + 30.0)
+        print("\n⚠️ ヒアリングを省き、即日開発に踏み切りました。")
+        print("  納期に1週間の余裕ができましたが、顧客は軽視されたと不満を抱いています。")
+        print("  また、仕様の確認不足から、開発時の初期バグ混入率が上がります。")
+        print("  (納期: +1週間 / 初期顧客満足度 -15 / バグ混入率 1.5倍)")
     else:
-        print("\n🤝 現状維持でプロジェクトをスタートします。")
+        project.hearing_type = "LIGHT"
+        print("\n🤝 簡易的なヒアリングを終え、予定通りスタートします。")
         
-    input("[Enterキーで次へ]")
+    input("[Enterキーで体制構築へ]")
 
-    # --- B. 体制構築（要員アサイン）フェーズ ---
-    print_header("キックオフ前: 体制構築（人材雇用）")
-    print(f"現在の予算: ¥{project.budget:,}")
-    print("プロジェクトを運営するチームメンバーをアサインしてください。")
+    # --- STEP 2: 体制構築（要員雇用）とPL見積もり（妥当性監査） ---
+    print_header("キックオフ STEP 2: 体制構築（人材雇用）")
+    print(f"現在の予算: ¥{project.budget:,}  |  現在の納期: {project.deadline_weeks} 週間")
+    print("アサインするメンバーを選択してください。今回のタスクは FE(UI系) と BE(ロジック系) に分かれています。")
+    print("  ※ 山田DEVはBEスペシャリスト(FEが非常に苦手)、佐藤DEVはFEスペシャリスト(BEが非常に苦手)です。")
     
     # PLの選択
-    print("\n[STEP 1] PL (プロジェクトリーダー) を1名選択してください (必須):")
+    print("\n[PLを選択してください (必須・1名)]:")
     pl_candidates = get_pl_candidates()
     for idx, pl_cand in enumerate(pl_candidates):
-        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 管理スキル・信頼性高)")
+        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,})")
     pl_choice = input("選択: ")
     selected_pl = pl_candidates[1] if pl_choice == "2" else pl_candidates[0]
     project.assigned_developers.append(selected_pl)
     print(f"➔ {selected_pl.name} をPLとしてアサインしました。")
     
     # DEVの選択
-    print("\n[STEP 2] DEV (開発メンバー) をアサインしてください (1名以上、複数可):")
+    print("\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
     dev_candidates = get_dev_candidates()
     for dev_cand in dev_candidates:
-        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 特性: {', '.join(dev_cand.personality_tags) if dev_cand.personality_tags else 'なし'})")
+        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 専門: {dev_cand.specialty})")
         u_input = input(f"  このメンバーを雇用しますか？ (y/n): ")
         if u_input.lower() == 'y':
             project.assigned_developers.append(dev_cand)
@@ -129,19 +147,48 @@ def main():
             
     # DEVが誰も選ばれなかった場合の強制アサイン (山田を自動雇用)
     if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0:
-        print("\n⚠️ 開発メンバーがアサインされていません！山田さんを自動的にアサインしました。")
+        print("\n⚠️ 開発メンバーが選択されていないため、山田DEVを自動雇用しました。")
         project.assigned_developers.append(dev_candidates[0])
         
-    print("\n--- イントロダクション ---")
-    print(f"上級マネージャー:「今回のクライアントである {project.customer.name} さんを紹介したよ。」")
-    if c_type == "QUALITY_ORIENTED":
-        print("「渡辺部長は非常に品質に厳しい方だ。バグを隠したまま納品しようものなら、私の立場もなくなる。しっかり管理してくれ。」")
-    elif c_type == "SPEED_ORIENTED":
-        print("「渡辺部長はスピードを最優先される方だ。スケジュール遅延は許されない。とにかく納期を守るように動いてくれ。」")
+    # ヒアリングなし（NONE）の場合はバグ率1.5倍ペナルティ適用
+    if project.hearing_type == "NONE":
+        for dev in project.assigned_developers:
+            if dev.role == "DEV":
+                dev.base_bug_rate *= 1.5
+
+    # PLによる見積もり妥当性確認
+    print("\n" + "-" * 40)
+    print("📋 体制構築が完了したため、PLに見積もりと妥当性の確認を依頼します...")
+    report = generate_pl_estimation_report(project, tasks)
+    print(report)
+    print("-" * 40)
+    input("[Enterキーで事前交渉へ]")
+
+    # --- STEP 3: 初期交渉（エビデンスベース） ---
+    print_header("キックオフ STEP 3: 初期契約交渉")
+    print(f"現在の予算: ¥{project.budget:,}  |  納期: {project.deadline_weeks} 週間")
+    print("PLから提出された妥当性レポート(エビデンス)を元に、顧客・上司と初期交渉を行いますか？")
+    print("1: 納期延長交渉を申し入れる (納期 +1週間)")
+    print("2: 予算追加交渉を申し入れる (予算 +¥300,000)")
+    print("3: 現状維持のままプロジェクトを開始する")
+    neg_choice = input("選択 (デフォルト: 3): ")
+    
+    # 交渉処理
+    # project.has_evidence が True であるため、ペナルティが最小限に抑えられる
+    if neg_choice == "1":
+        project.deadline_weeks += 1
+        project.customer.satisfaction = max(0.0, project.customer.satisfaction - 5.0) # エビデンス提示により-5%のみ
+        print(f"\n🤝 PLの見積もり書(エビデンス)を提示し、納期延長を顧客に納得させました！")
+        print(f"  (納期: {project.deadline_weeks} 週間 / 顧客満足度へのペナルティを最小限に抑えました: -5%)")
+    elif neg_choice == "2":
+        project.budget += 300000
+        project.manager_satisfaction = max(0.0, project.manager_satisfaction - 5.0) # 上司信頼度低下も-5%のみ
+        print(f"\n🤝 PLの見積もりを上司に報告し、スキルミスマッチ等のリスク回避に必要な追加予算 ¥300,000 を獲得しました！")
+        print(f"  (予算: ¥{project.budget:,} / 上司評価への影響を最小限に抑えました: -5%)")
     else:
-        print("「渡辺部長はご自身の要求を言語化するのが苦手で、仕様が非常にあいまいだ。こまめにデモを見せて合意を取らないと、後で手戻りが発生するぞ。計画的に動いてくれ。」")
-    print(f"「現場の管理は PL の {selected_pl.name} に任せてある。君はPMとしての本来の役割（交渉・意思決定）を果たしてくれ。」")
-    input("\n[Enterキーを押して第1週を開始...]")
+        print("\n🤝 現状維持でプロジェクトをスタートします。")
+        
+    input("\n[キックオフ完了。Enterキーを押して開発第1スプリントを開始...]")
 
     overtime_ids = set()
     resting_ids = set()
@@ -249,12 +296,10 @@ def main():
                 pl = next(d for d in project.assigned_developers if d.role == "PL")
                 
                 if selected_dev.role == "PL":
-                    # PLとの1on1: 自律管理を活性化
                     selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 30.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 10.0)
                     
-                    # 全員のステータスを週報として開示させる
                     for d in project.assigned_developers:
                         if d.role == "DEV":
                             d.reveal_duration = 3
@@ -263,12 +308,10 @@ def main():
                     print(f"【PLの信頼度】: {selected_dev.morale:.0f}/100")
                     print("➔ 3スプリントの間、現場メンバーの正確な『疲労・士気』が確認できます。")
                 else:
-                    # DEVと直接面談: PMの過干渉になりPLの士気が下がる
                     selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 15.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 5.0)
                     
-                    # PLのプライドが傷つく
                     pl.morale -= 10.0
                     print(f"💡 DEV {selected_dev.name} と直接面談を行いました。")
                     print(f"⚠️ 【過干渉警告】PL {pl.name} から「直接メンバーと面談をされるのは、私の管理能力を疑われているようで心外です」と難色を示されました。")
@@ -330,10 +373,8 @@ def main():
                 print("3: 通常稼働に戻す")
                 i_choice = input("指示: ")
                 
-                # PLの進言と過干渉判定
                 warning_triggered = False
                 if i_choice == "1":
-                    # 疲労がすでに要注意以上の場合、PLから進言が入る
                     if selected_dev.fatigue >= 40.0 and project.pl_active:
                         print(f"\n⚠️ 【PLの進言】")
                         print(f"  {pl.name}: 「PM、{selected_dev.name} さんはかなり疲労が溜まっています。来週の残業は避けるべきです！」")
@@ -345,7 +386,6 @@ def main():
                         else:
                             warning_triggered = True
                     
-                    # 休暇と競合クリア
                     if selected_dev.id in resting_ids:
                         resting_ids.remove(selected_dev.id)
                     overtime_ids.add(selected_dev.id)
@@ -364,7 +404,6 @@ def main():
                         resting_ids.remove(selected_dev.id)
                     print(f"➔ {selected_dev.name} を通常稼働に戻しました。")
                 
-                # 進言を無視して指示を強行した場合、PLのプライドが傷つく
                 if warning_triggered:
                     pl.morale -= 25.0
                     print(f"\n🚨 【過干渉ペナルティ】PLの進言を無視して指示を強行したため、{pl.name} の管理者プライドが傷つきました。")
@@ -391,7 +430,7 @@ def main():
                     print("顧客の仕様への理解が少し進みました。")
             else:
                 project.reported_bugs = project.bugs_total
-                project.customer.satisfaction = max(0.0, project.customer.satisfaction - (unreported * 5.0)) # 週単位なので影響大
+                project.customer.satisfaction = max(0.0, project.customer.satisfaction - (unreported * 5.0))
                 project.manager_satisfaction = min(100.0, project.manager_satisfaction + 5.0)
                 if project.customer.type == "VAGUE_REQUIREMENTS":
                     project.customer.vague_level = max(0.0, project.customer.vague_level - 20.0)
@@ -413,11 +452,11 @@ def main():
             if n_choice == "1":
                 project.manager_satisfaction -= 20.0
                 project.budget += 300000
-                print("🤝 上司へ粘り強く交渉し、追加予算 ¥300,000 を獲得しました！ (信頼度が下がりました)")
+                print("🤝 上司へ粘り強く交渉し、追加予算 ¥300,000 を獲得しました！")
             elif n_choice == "2":
                 project.manager_satisfaction -= 20.0
                 project.deadline_weeks += 1
-                print("🤝 上司が顧客へ根回しを行ってくれ、納期が 1 週間延長されました！ (信頼度が下がりました)")
+                print("🤝 上司が顧客へ根回しを行ってくれ、納期が 1 週間延長されました！")
             input("[Enterキーで戻る]")
 
         elif action == "7":
@@ -456,7 +495,6 @@ def main():
             for log in logs:
                 print(log)
             
-            # 翌週のために残業・休暇予定をリセット
             overtime_ids.clear()
             resting_ids.clear()
             
