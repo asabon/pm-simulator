@@ -34,8 +34,8 @@ def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     has_be_dev = any(d.specialty == "BE" for d in devs)
     has_fe_dev = any(d.specialty == "FE" for d in devs)
     
-    if pl.id == "pl_suzuki":
-        # 鈴木PL: スキルミスマッチ効率を考慮した正確なシミュレーション
+    if pl.id == "pl_ken":
+        # ケンPL: スキルミスマッチ効率を考慮した正確なシミュレーション
         estimated_actual_needed = 0.0
         for t in incomplete_tasks:
             if t.skill_type == "BE":
@@ -51,7 +51,7 @@ def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
                     
         gap = total_available_hours - estimated_actual_needed
         
-        report = f"📋 【鈴木PLの見積もり監査レポート】\n"
+        report = f"📋 【ケンPLの見積もり監査レポート】\n"
         report += f"  ■ 分析内容:\n"
         report += f"    - 未完了タスク総見積もり: {total_task_hours:.1f} 人時 (BE: {be_task_hours:.1f}h / FE: {fe_task_hours:.1f}h)\n"
         report += f"    - スキル特性（ミスマッチ）を加味した実質必要開発時間: 約 {estimated_actual_needed:.1f} 時間\n"
@@ -70,12 +70,12 @@ def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
         return report
         
     else:
-        # 田中PL: 精度がブレる見積もり
+        # レンPL: 精度がブレる見積もり
         raw_gap = total_available_hours - total_task_hours
         random_error = random.randint(-30, 30)
         estimated_gap = raw_gap + random_error
         
-        report = f"📋 【田中PLの状況報告レポート (※見積もり精度: 粗め)】\n"
+        report = f"📋 【レンPLの状況報告レポート (※見積もり精度: 粗め)】\n"
         report += f"  ■ 分析内容:\n"
         report += f"    - 残りタスクの合計時間: {total_task_hours:.1f} 時間\n"
         report += f"    - 納期までの総稼働時間: {total_available_hours:.1f} 時間\n"
@@ -100,9 +100,9 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
     if not pl:
         return
 
-    # 田中PLの場合、アサインにミスが発生しタイムロスする確率 (各日30%)
-    if pl.id == "pl_tanaka" and random.random() < 0.30:
-        logs.append(f"⚠️ [アサイン遅延] 田中PLの指示がうまく伝わらず、今日の新規タスクの割り当ては見送られました。")
+    # レンPLの場合、アサインにミスが発生しタイムロスする確率 (各日30%)
+    if pl.id == "pl_ren" and random.random() < 0.30:
+        logs.append(f"⚠️ [アサイン遅延] {pl.name}の指示がうまく伝わらず、今日の新規タスクの割り当ては見送られました。")
         return
 
     # 空いているDEVメンバー（担当中のタスクがないメンバー）の取得
@@ -228,8 +228,8 @@ def run_weekly_sprint(project: Project, tasks: list[Task],
 
                 # バグ発生判定（バグ修正中以外でのみ発生）
                 if not assigned_task.id.startswith("BUG_FIX_"):
-                    # 鈴木PLがアクティブな場合、バグ発生率が 15% 減少するパッシブ効果
-                    bug_multiplier = 0.85 if (pl and pl.id == "pl_suzuki" and project.pl_active) else 1.0
+                    # ケンPLがアクティブな場合、バグ発生率が 15% 減少するパッシブ効果
+                    bug_multiplier = 0.85 if (pl and pl.id == "pl_ken" and project.pl_active) else 1.0
                     # スキルミスマッチの場合、バグ発生率が 3 倍
                     if is_mismatch:
                         bug_multiplier *= 3.0
@@ -376,7 +376,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
     project.budget += 200000
     from prototype.entities import Task
-    new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0, "FE") # グラフ描画はFEタスク
+    new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0, "FE")
     tasks.append(new_task)
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
     return "仕様変更を受け入れました。新たなタスクが追加され、予算が ¥200,000 増加しました。"
@@ -397,7 +397,7 @@ def hide_bugs(project: Project) -> str:
 
 def pass_through_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
     from prototype.entities import Task
-    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE") # 画面レイアウトはFE
+    new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE")
     tasks.append(new_task)
     dev.morale -= 30.0
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)

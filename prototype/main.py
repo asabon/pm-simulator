@@ -123,7 +123,7 @@ def main():
     print_header("キックオフ STEP 2: 体制構築（人材雇用）")
     print(f"現在の予算: ¥{project.budget:,}  |  現在の納期: {project.deadline_weeks} 週間")
     print("アサインするメンバーを選択してください。今回のタスクは FE(UI系) と BE(ロジック系) に分かれています。")
-    print("  ※ 山田DEVはBEスペシャリスト(FEが非常に苦手)、佐藤DEVはFEスペシャリスト(BEが非常に苦手)です。")
+    print("  ※ タクDEVはBEスペシャリスト(FEが非常に苦手)、ユイDEVはFEスペシャリスト(BEが非常に苦手)です。")
     
     # PLの選択
     print("\n[PLを選択してください (必須・1名)]:")
@@ -145,9 +145,9 @@ def main():
             project.assigned_developers.append(dev_cand)
             print(f"  ➔ {dev_cand.name} をアサインしました。")
             
-    # DEVが誰も選ばれなかった場合の強制アサイン (山田を自動雇用)
+    # DEVが誰も選ばれなかった場合の強制アサイン (タクを自動雇用)
     if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0:
-        print("\n⚠️ 開発メンバーが選択されていないため、山田DEVを自動雇用しました。")
+        print(f"\n⚠️ 開発メンバーが選択されていないため、タクDEVを自動雇用しました。")
         project.assigned_developers.append(dev_candidates[0])
         
     # ヒアリングなし（NONE）の場合はバグ率1.5倍ペナルティ適用
@@ -174,15 +174,14 @@ def main():
     neg_choice = input("選択 (デフォルト: 3): ")
     
     # 交渉処理
-    # project.has_evidence が True であるため、ペナルティが最小限に抑えられる
     if neg_choice == "1":
         project.deadline_weeks += 1
-        project.customer.satisfaction = max(0.0, project.customer.satisfaction - 5.0) # エビデンス提示により-5%のみ
+        project.customer.satisfaction = max(0.0, project.customer.satisfaction - 5.0)
         print(f"\n🤝 PLの見積もり書(エビデンス)を提示し、納期延長を顧客に納得させました！")
         print(f"  (納期: {project.deadline_weeks} 週間 / 顧客満足度へのペナルティを最小限に抑えました: -5%)")
     elif neg_choice == "2":
         project.budget += 300000
-        project.manager_satisfaction = max(0.0, project.manager_satisfaction - 5.0) # 上司信頼度低下も-5%のみ
+        project.manager_satisfaction = max(0.0, project.manager_satisfaction - 5.0)
         print(f"\n🤝 PLの見積もりを上司に報告し、スキルミスマッチ等のリスク回避に必要な追加予算 ¥300,000 を獲得しました！")
         print(f"  (予算: ¥{project.budget:,} / 上司評価への影響を最小限に抑えました: -5%)")
     else:
@@ -229,7 +228,7 @@ def main():
         print(f"週次アクションを選択してください:")
         
         if project.pl_active:
-            print("1: 【PL自動管理中】 タスク割り当てを変更する (鈴木/田中リーダーに一任されています)")
+            print("1: 【PL自動管理中】 タスク割り当てを変更する (リーダーに一任されています)")
         else:
             print("1: 【手動割り当て】 タスク割り当てを変更する (PLボイコット中につき強制介入が必要)")
             
@@ -423,7 +422,7 @@ def main():
             r_choice = input("選択 (デフォルト: 1): ")
             
             if r_choice == "2":
-                print("✉️ 顧客へ『進捗は概ね順調です』と定形報告を送りました。")
+                print("✉️ 顧客へ『進捗は概ね順順調です』と定形報告を送りました。")
                 project.customer.satisfaction = min(100.0, project.customer.satisfaction + 2.0)
                 if project.customer.type == "VAGUE_REQUIREMENTS":
                     project.customer.vague_level = max(0.0, project.customer.vague_level - 10.0)
