@@ -1,5 +1,5 @@
 class Developer:
-    def __init__(self, dev_id: str, name: str, work_speed: float, base_bug_rate: float, salary: int, personality_tags: list, role: str = "DEV"):
+    def __init__(self, dev_id: str, name: str, work_speed: float, base_bug_rate: float, salary: int, personality_tags: list, role: str = "DEV", specialty: str = "BE"):
         self.id = dev_id
         self.name = name
         self.work_speed = work_speed
@@ -7,6 +7,7 @@ class Developer:
         self.salary = salary  # 日当 (1日のコスト)
         self.personality_tags = personality_tags
         self.role = role  # "PL" / "DEV"
+        self.specialty = specialty  # "FE" / "BE" / "MANAGEMENT"
         
         # 隠しパラメータ
         self._morale = 80.0  # 士気 (0-100)
@@ -55,7 +56,7 @@ class Developer:
 
 
 class Task:
-    def __init__(self, task_id: str, name: str, estimated_hours: float):
+    def __init__(self, task_id: str, name: str, estimated_hours: float, skill_type: str = "BE"):
         self.id = task_id
         self.name = name
         self.estimated_hours = estimated_hours
@@ -63,6 +64,7 @@ class Task:
         self.progress = 0.0  # 0.0 - 100.0
         self.assigned_developer_id = None
         self.status = "TODO"  # "TODO", "IN_PROGRESS", "DONE"
+        self.skill_type = skill_type  # "FE" / "BE"
 
 
 class Customer:
@@ -96,3 +98,7 @@ class Project:
         
         # 雇用中のメンバーリスト (ゲーム中の体制)
         self.assigned_developers = []  # List of Developer
+
+        # キックオフ状態管理用
+        self.hearing_type = None    # ヒアリングのタイプ ("DEEP" / "LIGHT" / "NONE")
+        self.has_evidence = False   # エビデンス（見積もりレポート確認済）の有無
