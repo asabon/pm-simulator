@@ -15,15 +15,17 @@ def get_dev_macro_status(dev) -> str:
         return "要注意 (疲労蓄積)"
     return "良好 (稼働可能)"
 
+SKILL_LABEL = {"BE": "サーバー側", "FE": "画面側"}
+
 def show_status(project, developers, tasks):
     print_header(f"WEEK {project.week} - スプリント状況")
     print(f"【プロジェクト】: {project.name}")
     print(f"【 残 予 算 】: ¥{project.budget:,}  |  【 納 期 】: あと {project.deadline_weeks} 週間")
+    print(f"【要求具体度】: {'🌟' * project.clarity_level:<5} | 【予算妥当性】: {'🌟' * project.budget_level:<5} | 【納期妥当性】: {'🌟' * project.schedule_level:<5}")
     print(f"【総バグ数】: {project.bugs_total} 件 (報告済: {project.reported_bugs} 件)")
     
     # 顧客情報
-    vague_info = f"  |  【要求あいまい度】: {project.customer.vague_level:.1f}%" if project.customer.type == "VAGUE_REQUIREMENTS" else ""
-    print(f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type}){vague_info}")
+    print(f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type})")
     print(f"【上司信頼度】: {project.manager_satisfaction:.1f}%")
     
     # PL管理状況
@@ -40,24 +42,19 @@ def show_status(project, developers, tasks):
         assigned_task = next((t for t in tasks if t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS"), None)
         task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.0f}%)" if assigned_task else "担当: なし"
         
-        # 隠しパラメータの表示判定
-        if dev.reveal_duration > 0:
-            status_details = f"[疲労: {dev.fatigue:.0f}/100, 士気: {dev.morale:.0f}/100]"
-        else:
-            status_details = f"[{get_dev_macro_status(dev)}]"
-            
-        role_label = f"({dev.role} / {dev.specialty}専門)"
-        print(f" - {dev.name:<22} {role_label:<14} {status_details:<25} {task_info}")
-        print(f"   発言: {dev.speak()}")
+        # 疲労などの詳細数値・マクロステータス表示を【完全に非表示】にし、発言（speak）のみにする
+        role_label = f"({dev.role} / {SKILL_LABEL.get(dev.specialty, dev.specialty)}専門)"
+        print(f" - {dev.name:<22} {role_label:<14} {task_info}")
+        print(f"   発言: {dev.speak(assigned_task)}")
 
     print("\n■ タスクボード")
     todo_tasks = [t for t in tasks if t.status == "TODO" and not t.id.startswith("BUG_FIX_")]
     in_progress_tasks = [t for t in tasks if t.status == "IN_PROGRESS"]
     done_tasks = [t for t in tasks if t.status == "DONE" and not t.id.startswith("BUG_FIX_")]
     
-    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h/{t.skill_type})" for t in todo_tasks]))
-    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%/{t.skill_type})" for t in in_progress_tasks]))
-    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}({t.skill_type})" for t in done_tasks]))
+    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in todo_tasks]))
+    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in in_progress_tasks]))
+    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}({SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in done_tasks]))
     print("=" * 60)
 
 def main():
@@ -69,7 +66,7 @@ def main():
     print("\n顧客のタイプを選択してください:")
     print("1: 品質重視 (品質に妥協がなく、未報告のバグがあると満足度が激しく低下する)")
     print("2: スピード重視 (とにかく納期優先。進捗が遅れると満足度が徐々に低下する)")
-    print("3: 要件あいまい重視 (追加要求・手戻りが多発。PMの防波堤能力が試される)")
+    print("3: 要件あいまい (仕様が未確定で追加要求・手戻りが多発。PMの防波堤能力が試される)")
     choice = input("選択 (デフォルト: 1): ")
     
     if choice == "2":
@@ -84,37 +81,44 @@ def main():
     # --- STEP 1: 初期引き合い（粗い要求の開示） ---
     print_header("キックオフ STEP 1: 初期引き合いの確認")
     print(f"顧客の {project.customer.name} から、プロジェクトの相談（引き合い）が届きました。")
-    print("大まかなタスク構成比率は以下の通りです:")
-    be_tasks = [t for t in tasks if t.skill_type == "BE"]
-    fe_tasks = [t for t in tasks if t.skill_type == "FE"]
-    be_pct = (len(be_tasks) / len(tasks)) * 100
-    fe_pct = (len(fe_tasks) / len(tasks)) * 100
-    print(f"  - バックエンド(BE)関連タスク: {len(be_tasks)}件 ({be_pct:.0f}%) ➔ 主にDB・認証・API連携など")
-    print(f"  - フロントエンド(FE)関連タスク: {len(fe_tasks)}件 ({fe_pct:.0f}%) ➔ 主に管理画面・UI構築など")
-    print("\nPMのアクション: この要求特性に合致する専門知識（BE寄りか、FE寄りか）を持ったPLをアサインする必要があります。")
+    print("\n現在のプロジェクトの前提レベル感:")
+    print(f"  - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5) ➔ 開発時の手戻り（追加要望）の発生しやすさ")
+    print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5) ➔ 予算額: ¥{project.budget:,}")
+    print(f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期期間: {project.deadline_weeks} 週間")
+    
+    print("\nPMのアクション: プロジェクトの初期条件を分析し、最適なメンバー構成を検討してください。")
     input("[Enterキーで体制構築へ]")
 
     # --- STEP 2: 体制構築（要員雇用） ---
     print_header("キックオフ STEP 2: 体制構築（人材雇用）")
     print(f"初期予算: ¥{project.budget:,}  |  初期納期: {project.deadline_weeks} 週間")
+    print(f"要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
     print("プロジェクトを運営するチームメンバーをアサインしてください。")
     
+    # 主要スキルの判定（システム内部計算用）
+    be_tasks = [t for t in tasks if t.skill_type == "BE"]
+    fe_tasks = [t for t in tasks if t.skill_type == "FE"]
+    main_skill_type = "BE" if len(be_tasks) >= len(fe_tasks) else "FE"
+    
     # PLの選択
-    print("\n[PLを選択してください (必須・1名)]:")
+    print(f"\n[PLを選択してください (必須・1名)]:")
+    print("※今回の案件に対する各PLの適合（知識）レベルが提示されます。")
     pl_candidates = get_pl_candidates()
     for idx, pl_cand in enumerate(pl_candidates):
-        spec_desc = "BE(バックエンド)知識豊富" if pl_cand.specialty == "BE" else "FE(フロントエンド)知識豊富"
-        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 得意領域: {spec_desc})")
+        knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if pl_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"
+        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 今回の要件への知識レベル: {knowledge_stars})")
     pl_choice = input("選択: ")
     selected_pl = pl_candidates[1] if pl_choice == "2" else pl_candidates[0]
     project.assigned_developers.append(selected_pl)
     print(f"➔ {selected_pl.name} をPLとしてアサインしました。")
     
     # DEVの選択
-    print("\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
+    print(f"\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
+    print("※今回の案件に対する各開発者の適合（知識）レベルが提示されます。")
     dev_candidates = get_dev_candidates()
     for dev_cand in dev_candidates:
-        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 専門: {dev_cand.specialty}開発)")
+        knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if dev_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"
+        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 今回の要件への知識レベル: {knowledge_stars})")
         u_input = input(f"  このメンバーを雇用しますか？ (y/n): ")
         if u_input.lower() == 'y':
             project.assigned_developers.append(dev_cand)
@@ -130,9 +134,9 @@ def main():
     # --- STEP 3: 詳細ヒアリング（PL同行要件定義） ---
     print_header("キックオフ STEP 3: 詳細ヒアリング（PL同行要件定義）")
     print(f"アサインした {selected_pl.name} を同行させて、顧客との詳細ヒアリングに臨みますか？")
-    print("1: 丁寧なヒアリングを行う (アサインしたPLを同行させる。納期を1週間消費。PLの知識と要件が合致すれば効果最大化)")
-    print("2: 簡易ヒアリングで済ませる (PMが一人で行う。即日キックオフ、納期・満足度への影響なし)")
-    print("3: ヒアリングを省いて即開始 (即日キックオフ。納期バッファを +1週間 獲得する)")
+    print("1: 丁寧なヒアリングを行う (アサインしたPLを同行させる。要求具体度星+2〜3、納期消費により納期妥当性星-1)")
+    print("2: 簡易ヒアリングで済ませる (PMが一人で行う。即日キックオフ、星変動なし)")
+    print("3: ヒアリングを省いて即開始 (即日キックオフ。納期バッファ+1週間獲得し、納期妥当性星+1。ただし顧客満足度-15、具体度星-1、初期バグ率上昇)")
     hear_choice = input("選択 (デフォルト: 2): ")
     
     if hear_choice == "1":
@@ -143,12 +147,19 @@ def main():
     elif hear_choice == "3":
         project.hearing_type = "NONE"
         project.deadline_weeks += 1  # 納期+1週間
+        old_schedule = project.schedule_level
+        project.schedule_level = min(5, project.schedule_level + 1)
+        
+        old_clarity = project.clarity_level
+        project.clarity_level = max(1, project.clarity_level - 1)
+        
         project.customer.satisfaction = max(0.0, project.customer.satisfaction - 15.0)
-        project.customer.vague_level = min(100.0, project.customer.vague_level + 30.0)
         print("\n⚠️ ヒアリングを省き、即日開発に踏み切りました。")
         print("  納期に1週間の余裕ができましたが、顧客は軽視されたと不満を抱いています。")
         print("  また、仕様の確認不足から、開発時の初期バグ混入率が上がります。")
-        print("  (納期: +1週間 / 初期顧客満足度 -15 / バグ混入率 1.5倍)")
+        print(f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (-1)")
+        print(f"  - 納期妥当性: {'🌟' * old_schedule} ➔ {'🌟' * project.schedule_level} (+1 / 納期+1週間)")
+        print("  - 初期顧客満足度 -15 / バグ混入率 1.5倍")
         
         # ヒアリングなし（NONE）の場合はバグ率1.5倍ペナルティ適用
         for dev in project.assigned_developers:
@@ -156,8 +167,7 @@ def main():
                 dev.base_bug_rate *= 1.5
     else:
         project.hearing_type = "LIGHT"
-        project.customer.vague_level = max(0.0, project.customer.vague_level - 5.0)
-        print("\n🤝 PM一人による簡易ヒアリングを終え、予定通りスタートします。 (要求あいまい度 -5%)")
+        print("\n🤝 PM一人による簡易ヒアリングを終え、予定通りスタートします。 (星変動なし)")
         
     # PLによる妥当性確認（見積もり監査レポートの表示）
     print("\n" + "-" * 40)
@@ -170,23 +180,65 @@ def main():
     # --- STEP 4: 初期交渉（エビデンスベース） ---
     print_header("キックオフ STEP 4: 初期契約交渉")
     print(f"現在の予算: ¥{project.budget:,}  |  納期: {project.deadline_weeks} 週間")
-    print(f"{selected_pl.name} から提出された見積もりレポート(エビデンス)を元に、初期の納期・予算交渉を行いますか？")
-    print("1: 納期延長交渉を申し入れる (納期 +1週間)")
-    print("2: 予算追加交渉を申し入れる (予算 +¥300,000)")
-    print("3: 交渉せず、現状維持のままプロジェクトを開始する")
-    neg_choice = input("選択 (デフォルト: 3): ")
+    print(f"現在のレベル: 要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
+    print(f"{selected_pl.name} から提出された見積もりレポート(エビデンス)を元に、初期の納期・予算・スコープ交渉を行いますか？")
+    print("1: 納期延長交渉を申し入れる (納期 +1週間 / 納期妥当性星+1)")
+    print("2: 予算追加交渉を申し入れる (予算 +¥300,000 / 予算妥当性星+1)")
+    print("3: スコープ削減（機能を削る）交渉をする (予算妥当性星+1、納期妥当性星+1。ただし顧客初期満足度-15)")
+    print("4: 交渉せず、現状維持のままプロジェクトを開始する")
+    neg_choice = input("選択 (デフォルト: 4): ")
     
-    # 交渉処理 (has_evidence は True なのでペナルティ最小)
     if neg_choice == "1":
         project.deadline_weeks += 1
-        project.customer.satisfaction = max(0.0, project.customer.satisfaction - 5.0)
-        print(f"\n🤝 PLの見積もりレポート(エビデンス)を提示し、納期延長を顧客に納得させました！")
-        print(f"  (納期: {project.deadline_weeks} 週間 / 顧客満足度へのペナルティを最小限に抑えました: -5%)")
+        old_schedule = project.schedule_level
+        project.schedule_level = min(5, project.schedule_level + 1)
+        
+        # エビデンス提示効果
+        sat_penalty = 5.0 if project.has_evidence else 25.0
+        project.customer.satisfaction = max(0.0, project.customer.satisfaction - sat_penalty)
+        print(f"\n🤝 納期延長交渉を行いました！")
+        print(f"  - 納期妥当性: {'🌟' * old_schedule} ➔ {'🌟' * project.schedule_level} (+1 / 納期: {project.deadline_weeks} 週間)")
+        print(f"  - 顧客満足度への影響: -{sat_penalty:.1f}%")
+        
     elif neg_choice == "2":
         project.budget += 300000
-        project.manager_satisfaction = max(0.0, project.manager_satisfaction - 5.0)
-        print(f"\n🤝 PLの見積もりを上司に報告し、スキルミスマッチ等のリスク回避に必要な追加予算 ¥300,000 を獲得しました！")
-        print(f"  (予算: ¥{project.budget:,} / 上司評価への影響を最小限に抑えました: -5%)")
+        old_budget_level = project.budget_level
+        project.budget_level = min(5, project.budget_level + 1)
+        
+        # エビデンス提示効果
+        mgr_penalty = 5.0 if project.has_evidence else 25.0
+        project.manager_satisfaction = max(0.0, project.manager_satisfaction - mgr_penalty)
+        print(f"\n🤝 予算追加交渉を行いました！")
+        print(f"  - 予算妥当性: {'🌟' * old_budget_level} ➔ {'🌟' * project.budget_level} (+1 / 予算: ¥{project.budget:,})")
+        print(f"  - 上司信頼度への影響: -{mgr_penalty:.1f}%")
+        
+    elif neg_choice == "3":
+        # スコープ削減
+        old_schedule = project.schedule_level
+        old_budget_level = project.budget_level
+        project.schedule_level = min(5, project.schedule_level + 1)
+        project.budget_level = min(5, project.budget_level + 1)
+        
+        # 機能を削るため、見積もりレポートの有無に関わらず顧客初期満足度が低下する
+        sat_penalty = 15.0 if project.has_evidence else 35.0
+        project.customer.satisfaction = max(0.0, project.customer.satisfaction - sat_penalty)
+        
+        # 実際にタスク量を減らすため、TODOタスクの最後から2個を削除（スコープ削減の再現）
+        removed_tasks = []
+        todo_tasks = [t for t in tasks if t.status == "TODO"]
+        if len(todo_tasks) >= 2:
+            removed_tasks.append(todo_tasks[-1])
+            removed_tasks.append(todo_tasks[-2])
+            tasks.remove(todo_tasks[-1])
+            tasks.remove(todo_tasks[-2])
+        
+        print(f"\n🤝 スコープ削減（開発機能の削減）交渉を行いました！")
+        print(f"  開発機能の一部を諦めることで、スケジュールと予算に余裕を作りました。")
+        print(f"  - 納期妥当性: {'🌟' * old_schedule} ➔ {'🌟' * project.schedule_level} (+1)")
+        print(f"  - 予算妥当性: {'🌟' * old_budget_level} ➔ {'🌟' * project.budget_level} (+1)")
+        print(f"  - 削減されたタスク: " + ", ".join([t.name for t in removed_tasks]))
+        print(f"  - 顧客満足度への影響: -{sat_penalty:.1f}% (機能削減への不満)")
+        
     else:
         print("\n🤝 現状維持でプロジェクトをスタートします。")
         
@@ -298,26 +350,25 @@ def main():
                 pl = next(d for d in project.assigned_developers if d.role == "PL")
                 
                 if selected_dev.role == "PL":
-                    selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 30.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 10.0)
                     
+                    print(f"💡 PL {selected_dev.name} と面談しました。")
+                    print("\n📋 【PLによるメンバー状況報告】")
                     for d in project.assigned_developers:
                         if d.role == "DEV":
-                            d.reveal_duration = 3
-                            
-                    print(f"💡 PL {selected_dev.name} と面談しました。週報として現場メンバーの稼働状況が開示されました。")
-                    print(f"【PLの信頼度】: {selected_dev.morale:.0f}/100")
-                    print("➔ 3スプリントの間、現場メンバーの正確な『疲労・士気』が確認できます。")
+                            fatigue_desc = "ピンピンしています" if d.fatigue < 40 else ("かなり疲労が溜まっているようです" if d.fatigue < 80 else "過労寸前で倒れかけています！休ませてください")
+                            print(f" - {d.name}: {fatigue_desc}")
+                    print(f"【PLの信頼】: {selected_dev.name} はあなたとの面談でモチベーションを取り戻したようです。")
                 else:
-                    selected_dev.reveal_duration = 3
                     selected_dev.morale = min(100.0, selected_dev.morale + 15.0)
                     selected_dev.fatigue = max(0.0, selected_dev.fatigue - 5.0)
                     
                     pl.morale -= 10.0
                     print(f"💡 DEV {selected_dev.name} と直接面談を行いました。")
-                    print(f"⚠️ 【過干渉警告】PL {pl.name} から「直接メンバーと面談をされるのは、私の管理能力を疑われているようで心外です」と難色を示されました。")
-                    print(f"({pl.name} の士気 -10 -> 現在: {pl.morale:.0f}/100)")
+                    fatigue_desc = "最近は順調に仕事ができていて楽しいです！" if selected_dev.fatigue < 40 else ("少し疲れが溜まっています。残業は控えめにしてもらえると助かります" if selected_dev.fatigue < 80 else "もう限界です……体調が崩れる前に有給をください。倒れてしまいます")
+                    print(f"   {selected_dev.name}の本音: 「{fatigue_desc}」")
+                    print(f"⚠️ 【過干渉警告】PL {pl.name} から「直接メンバーと面談をされるのは、私の管理能力を疑われているようで心外です」と難色を示されました。 (PLの士気が低下しました)")
                 input("[Enterキーで戻る]")
 
         elif action == "3":

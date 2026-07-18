@@ -18,127 +18,74 @@ def run_detailed_hearing(project: Project, tasks: list[Task]) -> str:
     incomplete_tasks = [t for t in tasks if t.status != "DONE"]
     be_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
     fe_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "FE")
-    
-    # BEが50%以上なら BE中心のプロジェクト、それ以外は FE中心
     project_domain = "BE" if be_hours >= fe_hours else "FE"
     
-    # 納期を1週消費
+    # 納期を1週消費 (納期妥当性の星が1ダウン)
     project.deadline_weeks -= 1
+    old_schedule_level = project.schedule_level
+    project.schedule_level = max(1, project.schedule_level - 1)
     project.hearing_type = "DEEP"
     
-    # 要件あいまい顧客（渡辺部長）の場合
-    if project.customer.type == "VAGUE_REQUIREMENTS":
-        # PLの専門性とプロジェクトドメインの一致チェック
-        if pl.specialty == project_domain:
-            # 一致している場合、有能なPLが要件をクリアにする
-            project.customer.vague_level = max(0.0, project.customer.vague_level - 45.0)
-            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
-            return (f"🤝 【ヒアリング成功】\n"
-                    f"  {pl.name}が専門知識({pl.specialty})を活かして渡辺部長のあいまいな要望を的確に言語化しました！\n"
-                    f"  (納期: -1週間 / 初期顧客満足度 +15 / 要求あいまい度: -45% ➔ 現在: {project.customer.vague_level:.1f}%)")
-        else:
-            # ミスマッチの場合、時間だけ浪費（要件定義の罠）
-            project.customer.vague_level = max(0.0, project.customer.vague_level - 15.0)
-            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
-            domain_jp = "バックエンド" if project_domain == "BE" else "フロントエンド"
-            pl_spec_jp = "バックエンド" if pl.specialty == "BE" else "フロントエンド"
-            return (f"🚨 【ヒアリングミスマッチ（要件定義の罠）】\n"
-                    f"  今回は{domain_jp}中心の要件に対し、{pl.name}の専門知識({pl_spec_jp})が合致しませんでした。\n"
-                    f"  技術的な議論が噛み合わず、時間（1週間）を浪費した割には要件があまり明確になりませんでした。\n"
-                    f"  (納期: -1週間 / 初期顧客満足度 +5 / 要求あいまい度: -15% ➔ 現在: {project.customer.vague_level:.1f}%)")
+    old_clarity = project.clarity_level
+    
+    if pl.specialty == project_domain:
+        # 一致している場合、有能なPLが要件をクリアにする (要求具体度の星+3)
+        project.clarity_level = min(5, project.clarity_level + 3)
+        project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
+        return (f"🤝 【ヒアリング成功】\n"
+                f"  {pl.name}が専門知識({pl.specialty})を活かして顧客の要望を的確に言語化・整理しました！\n"
+                f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+3)\n"
+                f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
+                f"  - 初期顧客満足度 +15")
     else:
-        # 通常の顧客（品質・スピード重視）は、PLが同行すれば基本クリア
-        if pl.specialty == project_domain:
-            project.customer.vague_level = max(0.0, project.customer.vague_level - 50.0)
-            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
-            return f"🤝 {pl.name}の専門的リードにより、顧客の要求仕様が完璧にクリアになりました！ (初期顧客満足度 +15 / 要求あいまい度大幅低下)"
-        else:
-            project.customer.vague_level = max(0.0, project.customer.vague_level - 25.0)
-            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
-            return f"🤝 専門分野に少しズレがありましたが、{pl.name}のサポートにより要求仕様が整理されました。 (初期顧客満足度 +10 / 要求あいまい度低下)"
+        # ミスマッチの場合、時間だけ浪費（要件定義の罠 / 要求具体度の星+1）
+        project.clarity_level = min(5, project.clarity_level + 1)
+        project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
+        domain_jp = "バックエンド" if project_domain == "BE" else "フロントエンド"
+        pl_spec_jp = "バックエンド" if pl.specialty == "BE" else "フロントエンド"
+        return (f"🚨 【ヒアリングミスマッチ（要件定義の罠）】\n"
+                f"  今回は{domain_jp}中心の要件に対し、{pl.name}の専門知識({pl_spec_jp})が合致しませんでした。\n"
+                f"  技術的な議論が噛み合わず、時間（1週間）を浪費した割には要件があまり明確になりませんでした。\n"
+                f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+1)\n"
+                f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
+                f"  - 初期顧客満足度 +5")
 
 
 def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     """PLによるスケジュール妥当性見積もりレポートを生成する"""
     pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
-    devs = [d for d in project.assigned_developers if d.role == "DEV"]
-    
-    if not pl or not devs:
-        return "⚠️ PLまたは開発メンバーがアサインされていません。"
+    if not pl:
+        return "⚠️ PLがアサインされていません。"
         
     project.has_evidence = True # レポートを確認したためエビデンスを保持
     
-    # 未完了のタスク
-    incomplete_tasks = [t for t in tasks if t.status != "DONE"]
-    total_task_hours = sum(t.estimated_hours for t in incomplete_tasks)
-    
-    # 納期（日）と総稼働可能時間（通常稼働）
-    deadline_days = project.deadline_weeks * 5
-    available_hours_per_dev = deadline_days * 8.0
-    total_available_hours = available_hours_per_dev * len(devs)
-    
-    # BE/FEタスクの集計
-    be_task_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
-    fe_task_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "FE")
-    
-    # BE/FE人員の有無
-    has_be_dev = any(d.specialty == "BE" for d in devs)
-    has_fe_dev = any(d.specialty == "FE" for d in devs)
-    
     if pl.id == "pl_ken":
-        # ケンPL: スキルミスマッチ効率を考慮した正確なシミュレーション
-        estimated_actual_needed = 0.0
-        for t in incomplete_tasks:
-            if t.skill_type == "BE":
-                if has_be_dev:
-                    estimated_actual_needed += t.estimated_hours / 1.5
-                else:
-                    estimated_actual_needed += t.estimated_hours / 0.5
-            else: # FE
-                if has_fe_dev:
-                    estimated_actual_needed += t.estimated_hours / 1.2
-                else:
-                    estimated_actual_needed += t.estimated_hours / 0.6
-                    
-        gap = total_available_hours - estimated_actual_needed
-        
         report = f"📋 【ケンPLの見積もり監査レポート】\n"
         report += f"  ■ 分析内容:\n"
-        report += f"    - 未完了タスク総見積もり: {total_task_hours:.1f} 人時 (BE: {be_task_hours:.1f}h / FE: {fe_task_hours:.1f}h)\n"
-        report += f"    - スキル特性（ミスマッチ）を加味した実質必要開発時間: 約 {estimated_actual_needed:.1f} 時間\n"
-        report += f"    - 納期までのチーム総稼働時間 (定時): {total_available_hours:.1f} 時間 (残り {project.deadline_weeks} 週間 / 開発者 {len(devs)} 名)\n"
+        report += f"    - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5)\n"
+        report += f"    - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5)\n"
+        report += f"    - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5)\n"
         report += f"  ■ 妥当性判定:\n"
         
-        if gap < -10.0:
-            report += f"    🚨 深刻なスケジュール不足です！ 実質必要時間に対して、約 {-gap:.1f} 時間分 不足しています。\n"
-            report += f"    （原因: メンバーの専門性とタスクのギャップ、あるいは納期設計の甘さがあります。納期延長か追加人員の交渉を強く進言します。）"
-        elif gap < 15.0:
-            report += f"    ⚠️ ギリギリ収まる見込みですが、バグ対応や仕様変更のバッファがありません。(余裕: {gap:.1f} 時間)\n"
-            report += f"    （通常通り進める場合、バグが1件でも発生すると遅延します。開発方針をバグ優先にするか、何らかの対策費を確保しておくと安全です。）"
+        if project.schedule_level <= 1:
+            report += f"    🚨 深刻なスケジュール不足です！納期妥当性が極めて低く、このまま開始するとデスマーチになります。\n"
+            report += f"    （対策案: 初期交渉で納期延長を申し入れ、納期妥当性を引き上げることを強く進言します。）"
+        elif project.schedule_level == 2:
+            report += f"    ⚠️ ギリギリ完了可能ですが、仕様変更やバグ対応のバッファがありません。\n"
+            report += f"    （対策案: スコープ削減交渉で作業量を減らすか、開発方針をバグ優先にすることをお勧めします。）"
         else:
-            report += f"    ✅ 納期内に十分に完了可能なスケジュールです。 (余裕: {gap:.1f} 時間)"
-            
+            report += f"    ✅ 納期内に十分に完了可能なスケジュール設計です。"
         return report
-        
     else:
-        # レンPL: 精度がブレる見積もり
-        raw_gap = total_available_hours - total_task_hours
-        random_error = random.randint(-30, 30)
-        estimated_gap = raw_gap + random_error
-        
         report = f"📋 【レンPLの状況報告レポート (※見積もり精度: 粗め)】\n"
-        report += f"  ■ 分析内容:\n"
-        report += f"    - 残りタスクの合計時間: {total_task_hours:.1f} 時間\n"
-        report += f"    - 納期までの総稼働時間: {total_available_hours:.1f} 時間\n"
         report += f"  ■ 妥当性判定:\n"
         
-        if estimated_gap < 0:
-            report += f"    🚨 えーっと、たぶん納期に間に合いそうにありません。だいたい {-estimated_gap:.1f} 時間くらい足りない気がします……たぶん。\n"
-            report += f"    （BEとFEの役割分担がうまく噛み合っていないような気もしますが、よく分かりません。納期を少し延ばしてもらったほうが無難かもしれません。）"
+        if project.schedule_level <= 2:
+            report += f"    🚨 えーっと、たぶん納期に間に合いそうにありません。スケジュールがかなり厳しい気がします……たぶん。\n"
+            report += f"    （対策案: 納期を少し延ばしてもらったほうが無難かもしれません。）"
         else:
-            report += f"    ❓ なんとかギリギリいけるんじゃないでしょうか？ (予測バッファ: {estimated_gap:.1f} 時間)\n"
-            report += f"    （ただ、バグが出たら遅れるかもしれませんし、私の勘なのであまり自信はありません……）"
-            
+            report += f"    ❓ なんとかギリギリいけるんじゃないでしょうか？\n"
+            report += f"    （バグが出たら遅れるかもしれませんし、私の勘なのであまり自信はありません……）"
         return report
 
 
@@ -360,29 +307,32 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
     """週の終わりにランダムイベントを発生させる"""
     developers = project.assigned_developers
     
-    if project.customer.type == "VAGUE_REQUIREMENTS":
-        rework_chance = (project.customer.vague_level / 100.0) * 0.70
-        if random.random() < rework_chance:
-            target_dev = random.choice([d for d in developers if d.role == "DEV"])
-            return {
-                "id": "rework_request",
-                "title": "顧客からの追加要望（手戻り）",
-                "description": f"顧客の{project.customer.name}から、「出来上がってきたモジュールの仕様について、追加で機能変更してほしい」と要求がありました。追加タスク「画面レイアウトの再調整」(24時間) が発生します。",
-                "choices": [
-                    {
-                        "text": f"要望をそのまま開発者に丸投げする (顧客満足度+15, 担当の {target_dev.name} の士気-30)",
-                        "action": lambda p, d, t: pass_through_rework(p, d, t, target_dev)
-                    },
-                    {
-                        "text": f"防波堤としてPMが間に入り調整して納得させる (調整費用 ¥30,000 消費, 顧客満足度+5, {target_dev.name} の士気-5)",
-                        "action": lambda p, d, t: buffer_rework(p, d, t, target_dev)
-                    },
-                    {
-                        "text": "交渉して追加要望を断る (タスク追加なし, 顧客満足度-25)",
-                        "action": lambda p, d, t: reject_rework(p)
-                    }
-                ]
-            }
+    # 要求具体度（clarity_level）に基づいた仕様変更（手戻り）の発生判定
+    # レベル1 ➔ 80%, レベル2 ➔ 50%, レベル3 ➔ 30%, レベル4 ➔ 15%, レベル5 ➔ 5%
+    rework_chances = {1: 0.80, 2: 0.50, 3: 0.30, 4: 0.15, 5: 0.05}
+    chance = rework_chances.get(project.clarity_level, 0.30)
+    
+    if random.random() < chance:
+        target_dev = random.choice([d for d in developers if d.role == "DEV"])
+        return {
+            "id": "rework_request",
+            "title": "顧客からの追加要望（手戻り）",
+            "description": f"顧客の{project.customer.name}から、「出来上がってきたモジュールの仕様について、追加で機能変更してほしい」と要求がありました。追加タスク「画面レイアウトの再調整」(24時間) が発生します。",
+            "choices": [
+                {
+                    "text": f"要望をそのまま開発者に丸投げする (顧客満足度+15, 担当の {target_dev.name} の士気-30)",
+                    "action": lambda p, d, t: pass_through_rework(p, d, t, target_dev)
+                },
+                {
+                    "text": f"防波堤としてPMが間に入り調整して納得させる (調整費用 ¥30,000 消費, 顧客満足度+5, {target_dev.name} の士気-5)",
+                    "action": lambda p, d, t: buffer_rework(p, d, t, target_dev)
+                },
+                {
+                    "text": "交渉して追加要望を断る (タスク追加なし, 顧客満足度-25)",
+                    "action": lambda p, d, t: reject_rework(p)
+                }
+            ]
+        }
 
     if random.random() > 0.50:
         return None
