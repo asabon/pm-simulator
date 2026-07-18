@@ -4,7 +4,7 @@ class Person:
         self.name = name
         self.role = role  # "PL" / "DEV" / "CUSTOMER" / "BOSS" など
 
-    def speak(self) -> str:
+    def speak(self, current_task=None) -> str:
         """キャラクターの発言を取得する（子クラスでオーバーライド）"""
         return ""
 
@@ -41,11 +41,11 @@ class Developer(Person):
     def fatigue(self, value):
         self._fatigue = max(0.0, min(100.0, value))
 
-    def speak(self) -> str:
+    def speak(self, current_task=None) -> str:
         """開発者の状態に応じた『ひと言サイン』を出力する"""
-        return self.get_sign()
+        return self.get_sign(current_task)
 
-    def get_sign(self) -> str:
+    def get_sign(self, current_task=None) -> str:
         """開発者の状態に応じた『ひと言サイン』を出力する"""
         if self.role == "PL":
             if self.fatigue >= 80 or self.morale <= 20:
@@ -55,14 +55,24 @@ class Developer(Person):
             
             # PLの専門性に応じたメッセージ
             if self.specialty == "BE":
-                return "「バックエンドの設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
+                return "「バックエンド of 設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
             elif self.specialty == "FE":
                 return "「UIや画面周りの設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
             return "「進捗管理は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
 
+        # DEVの場合
+        # 1. 限界状態
         if self.fatigue >= 80 or self.morale <= 20:
             return "「……うう、頭が痛いです。体調が優れないので作業が遅れるかもしれません……」"
-        elif self.fatigue >= 50 or self.morale <= 50:
+            
+        # 2. ミスマッチ状態（現在作業中のタスクがある場合）
+        if current_task and current_task.skill_type != self.specialty:
+            if self.fatigue >= 50 or self.morale <= 50:
+                return "「苦手な分野のタスクで、しかも疲れが溜まっていて全然頭が回りません……」"
+            return "「この領域はあまり得意じゃないんですよね……時間がかかるかもしれません」"
+            
+        # 3. 疲労蓄積（要注意）
+        if self.fatigue >= 50 or self.morale <= 50:
             return "「最近ちょっと寝不足ですね……。仕様がコロコロ変わると辛いです」"
         
         # 通常・良好な時
@@ -93,18 +103,24 @@ class Customer(Person):
         self.satisfaction = 80.0  # 0 - 100
         self.vague_level = 80.0   # あいまい度 (0 - 100)
 
-    def speak(self) -> str:
+    def speak(self, current_task=None) -> str:
         return f"「私は{self.name}です。タイプは{self.type}です。」"
 
 
 class Project:
-    def __init__(self, name: str, budget: int, deadline_weeks: int, customer: Customer):
+    def __init__(self, name: str, budget: int, deadline_weeks: int, customer: Customer, clarity_level: int = 3, budget_level: int = 3, schedule_level: int = 3):
         self.name = name
         self.budget = budget
         self.deadline_weeks = deadline_weeks
+        self.customer = customer
+        
+        # 3つのレベル感パラメータ (1〜5)
+        self.clarity_level = clarity_level
+        self.budget_level = budget_level
+        self.schedule_level = schedule_level
+        
         self.bugs_total = 0
         self.reported_bugs = 0  # 顧客・上司に報告済みのバグ数
-        self.customer = customer
         
         self.manager_satisfaction = 80.0  # 上級マネージャー満足度 (0 - 100)
         self.week = 1

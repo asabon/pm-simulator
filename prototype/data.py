@@ -51,19 +51,46 @@ def get_dev_candidates() -> list[Developer]:
     ]
 
 def get_initial_project_data(customer_type="QUALITY_ORIENTED"):
-    # 顧客の定義
+    # 顧客の定義と星パラメータの初期化
+    if customer_type == "SPEED_ORIENTED":
+        c_name = "スピード重視顧客 (B社)"
+        clarity_level = 4
+        budget_level = 3
+        schedule_level = 1  # 納期妥当性が非常に厳しい (弾丸スケジュール)
+    elif customer_type == "VAGUE_REQUIREMENTS":
+        c_name = "渡辺部長 (A社)"
+        clarity_level = 1  # 要求具体度が非常に曖昧
+        budget_level = 3
+        schedule_level = 3
+    else:  # QUALITY_ORIENTED
+        c_name = "品質重視顧客 (C社)"
+        clarity_level = 3
+        budget_level = 2  # 予算がカツカツ
+        schedule_level = 3
+
     customer = Customer(
         customer_id="cust_watanabe",
-        name="渡辺部長 (A社)",
-        customer_type=customer_type  # SPEED_ORIENTED / QUALITY_ORIENTED / VAGUE_REQUIREMENTS
+        name=c_name,
+        customer_type=customer_type
     )
 
-    # プロジェクトの定義（納期4週間、予算100万）
+    # 予算妥当性星レベルマッピング: 1=60万, 2=80万, 3=100万, 4=120万, 5=150万
+    budget_map = {1: 600000, 2: 800000, 3: 1000000, 4: 1200000, 5: 1500000}
+    init_budget = budget_map.get(budget_level, 1000000)
+
+    # 納期妥当性星レベルマッピング: 1=2週間, 2=3週間, 3=4週間, 4=5週間, 5=6週間
+    schedule_map = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+    init_deadline = schedule_map.get(schedule_level, 4)
+
+    # プロジェクトの定義
     project = Project(
         name="新システム構築プロジェクト",
-        budget=1000000,
-        deadline_weeks=4,
-        customer=customer
+        budget=init_budget,
+        deadline_weeks=init_deadline,
+        customer=customer,
+        clarity_level=clarity_level,
+        budget_level=budget_level,
+        schedule_level=schedule_level
     )
 
     # タスク一覧の定義 (FE / BE の割り振り)
