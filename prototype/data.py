@@ -5,7 +5,7 @@ def get_pl_candidates() -> list[Developer]:
     return [
         Developer(
             dev_id="pl_ken",
-            name="ケン (ケンPL / BE知識豊富)",
+            name="ケン (ケンPL / サーバー側知識豊富)",
             work_speed=1.0,
             base_bug_rate=0.02,
             salary=18000,
@@ -15,7 +15,7 @@ def get_pl_candidates() -> list[Developer]:
         ),
         Developer(
             dev_id="pl_ren",
-            name="レン (レンPL / FE知識豊富)",
+            name="レン (レンPL / 画面側知識豊富)",
             work_speed=0.7,
             base_bug_rate=0.05,
             salary=10000,
@@ -30,7 +30,7 @@ def get_dev_candidates() -> list[Developer]:
     return [
         Developer(
             dev_id="dev_taku",
-            name="タク (タクDEV / BE特化)",
+            name="タク (タクDEV / サーバー側特化)",
             work_speed=1.0,
             base_bug_rate=0.02,
             salary=15000,
@@ -40,7 +40,7 @@ def get_dev_candidates() -> list[Developer]:
         ),
         Developer(
             dev_id="dev_yui",
-            name="ユイ (ユイDEV / FE特化)",
+            name="ユイ (ユイDEV / 画面側特化)",
             work_speed=1.0,
             base_bug_rate=0.01,
             salary=12000,

@@ -15,6 +15,8 @@ def get_dev_macro_status(dev) -> str:
         return "要注意 (疲労蓄積)"
     return "良好 (稼働可能)"
 
+SKILL_LABEL = {"BE": "サーバー側", "FE": "画面側"}
+
 def show_status(project, developers, tasks):
     print_header(f"WEEK {project.week} - スプリント状況")
     print(f"【プロジェクト】: {project.name}")
@@ -41,7 +43,7 @@ def show_status(project, developers, tasks):
         task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.0f}%)" if assigned_task else "担当: なし"
         
         # 疲労などの詳細数値・マクロステータス表示を【完全に非表示】にし、発言（speak）のみにする
-        role_label = f"({dev.role} / {dev.specialty}専門)"
+        role_label = f"({dev.role} / {SKILL_LABEL.get(dev.specialty, dev.specialty)}専門)"
         print(f" - {dev.name:<22} {role_label:<14} {task_info}")
         print(f"   発言: {dev.speak(assigned_task)}")
 
@@ -50,9 +52,9 @@ def show_status(project, developers, tasks):
     in_progress_tasks = [t for t in tasks if t.status == "IN_PROGRESS"]
     done_tasks = [t for t in tasks if t.status == "DONE" and not t.id.startswith("BUG_FIX_")]
     
-    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h/{t.skill_type})" for t in todo_tasks]))
-    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%/{t.skill_type})" for t in in_progress_tasks]))
-    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}({t.skill_type})" for t in done_tasks]))
+    print(f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in todo_tasks]))
+    print(f" [IN PROGRESS] ({len(in_progress_tasks)}件): " + ", ".join([f"{t.name}({t.progress:.0f}%/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in in_progress_tasks]))
+    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}({SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in done_tasks]))
     print("=" * 60)
 
 def main():
@@ -77,7 +79,6 @@ def main():
     project, tasks = get_initial_project_data(customer_type=c_type)
     
     # --- STEP 1: 初期引き合い（粗い要求の開示） ---
-    # --- STEP 1: 初期引き合い（粗い要求の開示） ---
     print_header("キックオフ STEP 1: 初期引き合いの確認")
     print(f"顧客の {project.customer.name} から、プロジェクトの相談（引き合い）が届きました。")
     print("\n現在のプロジェクトの前提レベル感:")
@@ -85,10 +86,10 @@ def main():
     print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5) ➔ 予算額: ¥{project.budget:,}")
     print(f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期期間: {project.deadline_weeks} 週間")
     
-    print("\nPMのアクション: この要求特性に合致する専門知識（BE寄りか、FE寄りか）を持ったPLをアサインする必要があります。")
+    print("\nPMのアクション: この要求特性に合致する専門知識（サーバー側寄りか、画面側寄りか）を持ったPLをアサインする必要があります。")
     input("[Enterキーで体制構築へ]")
 
-    # --- STEP 2: 体制構築（要員雇用） ---
+    # --- STEP 2: 体制構築（要員雇用）） ---
     print_header("キックオフ STEP 2: 体制構築（人材雇用）")
     print(f"初期予算: ¥{project.budget:,}  |  初期納期: {project.deadline_weeks} 週間")
     print(f"要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
@@ -98,7 +99,7 @@ def main():
     print("\n[PLを選択してください (必須・1名)]:")
     pl_candidates = get_pl_candidates()
     for idx, pl_cand in enumerate(pl_candidates):
-        spec_desc = "BE(バックエンド)知識豊富" if pl_cand.specialty == "BE" else "FE(フロントエンド)知識豊富"
+        spec_desc = "サーバー側(ロジック)の知識豊富" if pl_cand.specialty == "BE" else "画面側(UI)の知識豊富"
         print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 得意領域: {spec_desc})")
     pl_choice = input("選択: ")
     selected_pl = pl_candidates[1] if pl_choice == "2" else pl_candidates[0]
@@ -109,7 +110,7 @@ def main():
     print("\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
     dev_candidates = get_dev_candidates()
     for dev_cand in dev_candidates:
-        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 専門: {dev_cand.specialty}開発)")
+        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 専門: {SKILL_LABEL.get(dev_cand.specialty, dev_cand.specialty)}開発)")
         u_input = input(f"  このメンバーを雇用しますか？ (y/n): ")
         if u_input.lower() == 'y':
             project.assigned_developers.append(dev_cand)
