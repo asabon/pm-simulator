@@ -48,7 +48,7 @@ def show_status(project, developers, tasks):
             
         role_label = f"({dev.role} / {dev.specialty}専門)"
         print(f" - {dev.name:<22} {role_label:<14} {status_details:<25} {task_info}")
-        print(f"   発言: {dev.get_sign()}")
+        print(f"   発言: {dev.speak()}")
 
     print("\n■ タスクボード")
     todo_tasks = [t for t in tasks if t.status == "TODO" and not t.id.startswith("BUG_FIX_")]

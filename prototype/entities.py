@@ -1,12 +1,21 @@
-class Developer:
-    def __init__(self, dev_id: str, name: str, work_speed: float, base_bug_rate: float, salary: int, personality_tags: list, role: str = "DEV", specialty: str = "BE"):
-        self.id = dev_id
+class Person:
+    def __init__(self, person_id: str, name: str, role: str):
+        self.id = person_id
         self.name = name
+        self.role = role  # "PL" / "DEV" / "CUSTOMER" / "BOSS" など
+
+    def speak(self) -> str:
+        """キャラクターの発言を取得する（子クラスでオーバーライド）"""
+        return ""
+
+
+class Developer(Person):
+    def __init__(self, dev_id: str, name: str, work_speed: float, base_bug_rate: float, salary: int, personality_tags: list, role: str = "DEV", specialty: str = "BE"):
+        super().__init__(dev_id, name, role)
         self.work_speed = work_speed
         self.base_bug_rate = base_bug_rate
         self.salary = salary  # 日当 (1日のコスト)
         self.personality_tags = personality_tags
-        self.role = role  # "PL" / "DEV"
         self.specialty = specialty  # "FE" / "BE"
         
         # 隠しパラメータ
@@ -31,6 +40,10 @@ class Developer:
     @fatigue.setter
     def fatigue(self, value):
         self._fatigue = max(0.0, min(100.0, value))
+
+    def speak(self) -> str:
+        """開発者の状態に応じた『ひと言サイン』を出力する"""
+        return self.get_sign()
 
     def get_sign(self) -> str:
         """開発者の状態に応じた『ひと言サイン』を出力する"""
@@ -73,13 +86,15 @@ class Task:
         self.skill_type = skill_type  # "FE" / "BE"
 
 
-class Customer:
+class Customer(Person):
     def __init__(self, customer_id: str, name: str, customer_type: str):
-        self.id = customer_id
-        self.name = name
+        super().__init__(customer_id, name, "CUSTOMER")
         self.type = customer_type  # "SPEED_ORIENTED", "QUALITY_ORIENTED", "VAGUE_REQUIREMENTS"
         self.satisfaction = 80.0  # 0 - 100
         self.vague_level = 80.0   # あいまい度 (0 - 100)
+
+    def speak(self) -> str:
+        return f"「私は{self.name}です。タイプは{self.type}です。」"
 
 
 class Project:
