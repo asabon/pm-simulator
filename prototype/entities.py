@@ -136,6 +136,6 @@ class Project:
         # 雇用中のメンバーリスト (ゲーム中の体制)
         self.assigned_developers = []  # List of Developer
 
-        # キックオフ状態管理用
+        # プロジェクト立ち上げ・事前準備状態管理用
         self.hearing_type = None    # ヒアリングのタイプ ("DEEP" / "LIGHT" / "NONE")
         self.has_evidence = False   # エビデンス（見積もりレポート確認済）の有無
