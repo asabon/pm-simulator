@@ -86,16 +86,7 @@ def main():
     print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5) ➔ 予算額: ¥{project.budget:,}")
     print(f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期期間: {project.deadline_weeks} 週間")
     
-    # 要求比率の計算と開示
-    be_tasks = [t for t in tasks if t.skill_type == "BE"]
-    fe_tasks = [t for t in tasks if t.skill_type == "FE"]
-    be_pct = (len(be_tasks) / len(tasks)) * 100
-    fe_pct = (len(fe_tasks) / len(tasks)) * 100
-    print("\n今回のプロジェクトの主たる要求分野:")
-    print(f"  - 『データ・処理』要件: {len(be_tasks)}件 ({be_pct:.0f}%) ➔ データベース構築、API連携、計算ロジックなど")
-    print(f"  - 『画面・UI』要件    : {len(fe_tasks)}件 ({fe_pct:.0f}%) ➔ 管理画面、グラフ描画、操作画面など")
-    
-    print("\nPMのアクション: 要求比率の高い分野（『データ・処理』または『画面・UI』）に対して「知識レベル」が高いPLをアサインする必要があります。")
+    print("\nPMのアクション: プロジェクトの初期条件を分析し、最適なメンバー構成を検討してください。")
     input("[Enterキーで体制構築へ]")
 
     # --- STEP 2: 体制構築（要員雇用） ---
@@ -104,13 +95,14 @@ def main():
     print(f"要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
     print("プロジェクトを運営するチームメンバーをアサインしてください。")
     
-    # 主要スキルの判定（どちらのタスクの方が多いか）
+    # 主要スキルの判定（システム内部計算用）
+    be_tasks = [t for t in tasks if t.skill_type == "BE"]
+    fe_tasks = [t for t in tasks if t.skill_type == "FE"]
     main_skill_type = "BE" if len(be_tasks) >= len(fe_tasks) else "FE"
-    main_skill_jp = "データ・処理" if main_skill_type == "BE" else "画面・UI"
     
     # PLの選択
     print(f"\n[PLを選択してください (必須・1名)]:")
-    print(f"※今回のメイン要求分野『{main_skill_jp}』に対する知識レベルが提示されます。")
+    print("※今回の案件に対する各PLの適合（知識）レベルが提示されます。")
     pl_candidates = get_pl_candidates()
     for idx, pl_cand in enumerate(pl_candidates):
         knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if pl_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"
@@ -122,7 +114,7 @@ def main():
     
     # DEVの選択
     print(f"\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
-    print(f"※今回のメイン要求分野『{main_skill_jp}』に対する知識レベルが提示されます。")
+    print("※今回の案件に対する各開発者の適合（知識）レベルが提示されます。")
     dev_candidates = get_dev_candidates()
     for dev_cand in dev_candidates:
         knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if dev_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"

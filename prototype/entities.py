@@ -53,11 +53,11 @@ class Developer(Person):
             elif self.fatigue >= 50 or self.morale <= 50:
                 return "「PM、現場に直接口を出しすぎではないですか？私への相談を通してください。」"
             
-            # PLの専門性に応じたメッセージ
-            if self.specialty == "BE":
-                return "「サーバー側(ロジック)の設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
+            # PLの専門性（相性）に応じたメッセージ
+            if self.specialty == "BE":  # システム内部でのマッチング
+                return "「今回のプロジェクト要件は私の得意ドメインなので、設計は任せてください。PMは交渉に専念を。」"
             elif self.specialty == "FE":
-                return "「画面側(UI)の設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
+                return "「今回のシステム要件は以前にも同様の経験があります。現場管理は私に任せてください。」"
             return "「進捗管理は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
 
         # DEVの場合
@@ -68,18 +68,18 @@ class Developer(Person):
         # 2. ミスマッチ状態（現在作業中のタスクがある場合）
         if current_task and current_task.skill_type != self.specialty:
             if self.fatigue >= 50 or self.morale <= 50:
-                return "「苦手な分野のタスクで、しかも疲れが溜まっていて全然頭が回りません……」"
-            return "「この領域はあまり得意じゃないんですよね……時間がかかるかもしれません」"
+                return "「経験の薄い分野のタスクで、しかも疲れが溜まっていて全然頭が回りません……」"
+            return "「今回の案件の要件はあまり経験がない分野なんですよね……少し手探りです」"
             
         # 3. 疲労蓄積（要注意）
         if self.fatigue >= 50 or self.morale <= 50:
-            return "「最近ちょっと寝不足ですね……。仕様がコロコロ変わると辛いです」"
+            return "「最近ちょっと寝不足ですね……。仕様がコロコロ変わると心身ともにキツいです」"
         
         # 通常・良好な時
         if "DRINK_LOVER" in self.personality_tags and self.morale >= 85:
             return "担当タスクを笑顔でこなしています。「今度みんなで飲みに行きませんか？」"
         if "TECH_GEEK" in self.personality_tags and self.morale >= 85:
-            return "黙々と作業しています。「新しいフレームワークを試したら、品質が上がりました！」"
+            return "黙々と作業しています。「新しい設計フレームを導入したら、品質が上がりました！」"
         
         return "「今週も順調です！タスクを進めていきます」"
 
