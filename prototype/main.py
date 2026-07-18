@@ -58,6 +58,10 @@ def show_status(project, developers, tasks):
     print("=" * 60)
 
 def main():
+    # Windows環境等でのUnicode出力エラー（絵文字等）対策
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
     print_header("PM Simulator - CLI Prototype (Requirements & Skillset Version)")
     print("ゲームの目的: プロジェクトを成功させ、上司（上級マネージャー）を満足させること。")
     print("PLを信頼して現場管理を委ねつつ、PMはマクロな方針決定、顧客交渉、リスク対策に専念しましょう。")
@@ -79,7 +83,7 @@ def main():
     project, tasks = get_initial_project_data(customer_type=c_type)
     
     # --- STEP 1: 初期引き合い（粗い要求の開示） ---
-    print_header("キックオフ STEP 1: 初期引き合いの確認")
+    print_header("立ち上げ準備 STEP 1: 初期引き合いの確認")
     print(f"顧客の {project.customer.name} から、プロジェクトの相談（引き合い）が届きました。")
     print("\n現在のプロジェクトの前提レベル感:")
     print(f"  - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5) ➔ 開発時の手戻り（追加要望）の発生しやすさ")
@@ -90,7 +94,7 @@ def main():
     input("[Enterキーで体制構築へ]")
 
     # --- STEP 2: 体制構築（要員雇用） ---
-    print_header("キックオフ STEP 2: 体制構築（人材雇用）")
+    print_header("立ち上げ準備 STEP 2: 体制構築（人材雇用）")
     print(f"初期予算: ¥{project.budget:,}  |  初期納期: {project.deadline_weeks} 週間")
     print(f"要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
     print("プロジェクトを運営するチームメンバーをアサインしてください。")
@@ -132,11 +136,11 @@ def main():
     input("[Enterキーで詳細ヒアリングへ]")
 
     # --- STEP 3: 詳細ヒアリング（PL同行要件定義） ---
-    print_header("キックオフ STEP 3: 詳細ヒアリング（PL同行要件定義）")
+    print_header("立ち上げ準備 STEP 3: 詳細ヒアリング（PL同行要件定義）")
     print(f"アサインした {selected_pl.name} を同行させて、顧客との詳細ヒアリングに臨みますか？")
     print("1: 丁寧なヒアリングを行う (アサインしたPLを同行させる。要求具体度星+2〜3、納期消費により納期妥当性星-1)")
-    print("2: 簡易ヒアリングで済ませる (PMが一人で行う。即日キックオフ、星変動なし)")
-    print("3: ヒアリングを省いて即開始 (即日キックオフ。納期バッファ+1週間獲得し、納期妥当性星+1。ただし顧客満足度-15、具体度星-1、初期バグ率上昇)")
+    print("2: 簡易ヒアリングで済ませる (PMが一人で行う。即日スプリント開始、星変動なし)")
+    print("3: ヒアリングを省いて即開始 (即日スプリント開始。納期バッファ+1週間獲得し、納期妥当性星+1。ただし顧客満足度-15、具体度星-1、初期バグ率上昇)")
     hear_choice = input("選択 (デフォルト: 2): ")
     
     if hear_choice == "1":
@@ -178,7 +182,7 @@ def main():
     input("[Enterキーで事前交渉へ]")
 
     # --- STEP 4: 初期交渉（エビデンスベース） ---
-    print_header("キックオフ STEP 4: 初期契約交渉")
+    print_header("立ち上げ準備 STEP 4: 初期契約交渉")
     print(f"現在の予算: ¥{project.budget:,}  |  納期: {project.deadline_weeks} 週間")
     print(f"現在のレベル: 要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
     print(f"{selected_pl.name} から提出された見積もりレポート(エビデンス)を元に、初期の納期・予算・スコープ交渉を行いますか？")
@@ -242,7 +246,7 @@ def main():
     else:
         print("\n🤝 現状維持でプロジェクトをスタートします。")
         
-    input("\n[キックオフ完了。Enterキーを押して開発第1スプリントを開始...]")
+    input("\n[プロジェクト立ち上げ・事前準備完了. Enterキーを押して開発第1スプリントを開始...]")
 
     overtime_ids = set()
     resting_ids = set()
