@@ -7,7 +7,7 @@ class Developer:
         self.salary = salary  # 日当 (1日のコスト)
         self.personality_tags = personality_tags
         self.role = role  # "PL" / "DEV"
-        self.specialty = specialty  # "FE" / "BE" / "MANAGEMENT"
+        self.specialty = specialty  # "FE" / "BE"
         
         # 隠しパラメータ
         self._morale = 80.0  # 士気 (0-100)
@@ -39,6 +39,12 @@ class Developer:
                 return "「メンバーも疲弊してますし、私ももう限界です……。進捗管理どころではありません。」"
             elif self.fatigue >= 50 or self.morale <= 50:
                 return "「PM、現場に直接口を出しすぎではないですか？私への相談を通してください。」"
+            
+            # PLの専門性に応じたメッセージ
+            if self.specialty == "BE":
+                return "「バックエンドの設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
+            elif self.specialty == "FE":
+                return "「UIや画面周りの設計は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
             return "「進捗管理は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
 
         if self.fatigue >= 80 or self.morale <= 20:

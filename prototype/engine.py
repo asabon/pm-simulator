@@ -7,6 +7,57 @@ def calculate_work_factor(dev: Developer) -> float:
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
     return morale_factor * fatigue_factor
 
+
+def run_detailed_hearing(project: Project, tasks: list[Task]) -> str:
+    """PL同行による詳細ヒアリング（要件定義）を実行し、効果メッセージを返す"""
+    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    if not pl:
+        return "⚠️ PLがアサインされていません。"
+        
+    # プロジェクトのタスク特性比率の集計
+    incomplete_tasks = [t for t in tasks if t.status != "DONE"]
+    be_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
+    fe_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "FE")
+    
+    # BEが50%以上なら BE中心のプロジェクト、それ以外は FE中心
+    project_domain = "BE" if be_hours >= fe_hours else "FE"
+    
+    # 納期を1週消費
+    project.deadline_weeks -= 1
+    project.hearing_type = "DEEP"
+    
+    # 要件あいまい顧客（渡辺部長）の場合
+    if project.customer.type == "VAGUE_REQUIREMENTS":
+        # PLの専門性とプロジェクトドメインの一致チェック
+        if pl.specialty == project_domain:
+            # 一致している場合、有能なPLが要件をクリアにする
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 45.0)
+            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
+            return (f"🤝 【ヒアリング成功】\n"
+                    f"  {pl.name}が専門知識({pl.specialty})を活かして渡辺部長のあいまいな要望を的確に言語化しました！\n"
+                    f"  (納期: -1週間 / 初期顧客満足度 +15 / 要求あいまい度: -45% ➔ 現在: {project.customer.vague_level:.1f}%)")
+        else:
+            # ミスマッチの場合、時間だけ浪費（要件定義の罠）
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 15.0)
+            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
+            domain_jp = "バックエンド" if project_domain == "BE" else "フロントエンド"
+            pl_spec_jp = "バックエンド" if pl.specialty == "BE" else "フロントエンド"
+            return (f"🚨 【ヒアリングミスマッチ（要件定義の罠）】\n"
+                    f"  今回は{domain_jp}中心の要件に対し、{pl.name}の専門知識({pl_spec_jp})が合致しませんでした。\n"
+                    f"  技術的な議論が噛み合わず、時間（1週間）を浪費した割には要件があまり明確になりませんでした。\n"
+                    f"  (納期: -1週間 / 初期顧客満足度 +5 / 要求あいまい度: -15% ➔ 現在: {project.customer.vague_level:.1f}%)")
+    else:
+        # 通常の顧客（品質・スピード重視）は、PLが同行すれば基本クリア
+        if pl.specialty == project_domain:
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 50.0)
+            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
+            return f"🤝 {pl.name}の専門的リードにより、顧客の要求仕様が完璧にクリアになりました！ (初期顧客満足度 +15 / 要求あいまい度大幅低下)"
+        else:
+            project.customer.vague_level = max(0.0, project.customer.vague_level - 25.0)
+            project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
+            return f"🤝 専門分野に少しズレがありましたが、{pl.name}のサポートにより要求仕様が整理されました。 (初期顧客満足度 +10 / 要求あいまい度低下)"
+
+
 def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     """PLによるスケジュール妥当性見積もりレポートを生成する"""
     pl = next((d for d in project.assigned_developers if d.role == "PL"), None)

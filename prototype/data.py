@@ -5,23 +5,23 @@ def get_pl_candidates() -> list[Developer]:
     return [
         Developer(
             dev_id="pl_ken",
-            name="ケン (ケンPL / ベテラン)",
+            name="ケン (ケンPL / BE知識豊富)",
             work_speed=1.0,
             base_bug_rate=0.02,
             salary=18000,
             personality_tags=["TECH_GEEK"],
             role="PL",
-            specialty="MANAGEMENT"
+            specialty="BE"
         ),
         Developer(
             dev_id="pl_ren",
-            name="レン (レンPL / 若手)",
+            name="レン (レンPL / FE知識豊富)",
             work_speed=0.7,
             base_bug_rate=0.05,
             salary=10000,
             personality_tags=[],
             role="PL",
-            specialty="MANAGEMENT"
+            specialty="FE"
         )
     ]
 
