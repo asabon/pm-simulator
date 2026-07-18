@@ -86,31 +86,47 @@ def main():
     print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5) ➔ 予算額: ¥{project.budget:,}")
     print(f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期期間: {project.deadline_weeks} 週間")
     
-    print("\nPMのアクション: この要求特性に合致する専門知識（サーバー側寄りか、画面側寄りか）を持ったPLをアサインする必要があります。")
+    # 要求比率の計算と開示
+    be_tasks = [t for t in tasks if t.skill_type == "BE"]
+    fe_tasks = [t for t in tasks if t.skill_type == "FE"]
+    be_pct = (len(be_tasks) / len(tasks)) * 100
+    fe_pct = (len(fe_tasks) / len(tasks)) * 100
+    print("\n今回のプロジェクトの主たる要求分野:")
+    print(f"  - 『データ・処理』要件: {len(be_tasks)}件 ({be_pct:.0f}%) ➔ データベース構築、API連携、計算ロジックなど")
+    print(f"  - 『画面・UI』要件    : {len(fe_tasks)}件 ({fe_pct:.0f}%) ➔ 管理画面、グラフ描画、操作画面など")
+    
+    print("\nPMのアクション: 要求比率の高い分野（『データ・処理』または『画面・UI』）に対して「知識レベル」が高いPLをアサインする必要があります。")
     input("[Enterキーで体制構築へ]")
 
-    # --- STEP 2: 体制構築（要員雇用）） ---
+    # --- STEP 2: 体制構築（要員雇用） ---
     print_header("キックオフ STEP 2: 体制構築（人材雇用）")
     print(f"初期予算: ¥{project.budget:,}  |  初期納期: {project.deadline_weeks} 週間")
     print(f"要求具体度: {'🌟' * project.clarity_level} | 予算妥当性: {'🌟' * project.budget_level} | 納期妥当性: {'🌟' * project.schedule_level}")
     print("プロジェクトを運営するチームメンバーをアサインしてください。")
     
+    # 主要スキルの判定（どちらのタスクの方が多いか）
+    main_skill_type = "BE" if len(be_tasks) >= len(fe_tasks) else "FE"
+    main_skill_jp = "データ・処理" if main_skill_type == "BE" else "画面・UI"
+    
     # PLの選択
-    print("\n[PLを選択してください (必須・1名)]:")
+    print(f"\n[PLを選択してください (必須・1名)]:")
+    print(f"※今回のメイン要求分野『{main_skill_jp}』に対する知識レベルが提示されます。")
     pl_candidates = get_pl_candidates()
     for idx, pl_cand in enumerate(pl_candidates):
-        spec_desc = "サーバー側(ロジック)の知識豊富" if pl_cand.specialty == "BE" else "画面側(UI)の知識豊富"
-        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 得意領域: {spec_desc})")
+        knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if pl_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"
+        print(f"{idx+1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 今回の要件への知識レベル: {knowledge_stars})")
     pl_choice = input("選択: ")
     selected_pl = pl_candidates[1] if pl_choice == "2" else pl_candidates[0]
     project.assigned_developers.append(selected_pl)
     print(f"➔ {selected_pl.name} をPLとしてアサインしました。")
     
     # DEVの選択
-    print("\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
+    print(f"\n[DEV (開発メンバー) をアサインしてください (1名以上)]:")
+    print(f"※今回のメイン要求分野『{main_skill_jp}』に対する知識レベルが提示されます。")
     dev_candidates = get_dev_candidates()
     for dev_cand in dev_candidates:
-        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 専門: {SKILL_LABEL.get(dev_cand.specialty, dev_cand.specialty)}開発)")
+        knowledge_stars = "🌟🌟🌟🌟🌟 (極めて高い)" if dev_cand.specialty == main_skill_type else "🌟🌟 (知識が薄い)"
+        print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,} / 今回の要件への知識レベル: {knowledge_stars})")
         u_input = input(f"  このメンバーを雇用しますか？ (y/n): ")
         if u_input.lower() == 'y':
             project.assigned_developers.append(dev_cand)
