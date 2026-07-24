@@ -24,7 +24,7 @@ def print_header(title: str):
 def show_member_details(developers: list):
     print_header("チームメンバー詳細パラメータ・解像度一覧")
     for dev in developers:
-        print(f" - {dev.name:<10} ({dev.role})")
+        print(f" - {dev.name:<10} ({dev.assigned_role})")
         print(f"   ステータス情報 ➔ {dev.get_status_display()}")
     print("=" * 60)
 
@@ -56,7 +56,7 @@ def show_status(project, developers, tasks, pm: PM):
     print(f"【開発手法】: {method_label}  |  【上司信頼度】: {project.manager_satisfaction:.1f}%")
 
     # PL管理状況
-    pl = next((d for d in developers if d.role == "PL"), None)
+    pl = next((d for d in developers if d.assigned_role == "PL"), None)
     pl_status = f"自律稼働中 ({pl.name})" if pl else "アサインなし"
     if pl and not project.pl_active:
         pl_status = f"🚨 ボイコット中 ({pl.name})"
@@ -71,7 +71,7 @@ def show_status(project, developers, tasks, pm: PM):
         )
         task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.0f}%)" if assigned_task else "担当: なし"
 
-        print(f" - {dev.name:<22} ({dev.role:<3}) {task_info}")
+        print(f" - {dev.name:<22} ({dev.assigned_role:<3}) {task_info}")
         print(f"   ステータス情報 ➔ {dev.get_status_display()}")
         print(f"   発言: {dev.speak(assigned_task)}")
 
@@ -128,25 +128,28 @@ def main():
             f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期: {project.deadline_weeks} 週間"
         )
 
-        # 体制構築（自動アサイン）
+        # 体制構築（動的アサイン: 統率力 leadership_skill に基づく選出）
         print_header("キックオフ Step 2: 体制確定（チーム自動アサイン）")
 
-        # PLの自動アサイン
-        selected_pl = next((p for p in pl_pool if not getattr(p, "is_retired", False)), pl_pool[0])
+        all_candidates = pl_pool + team_pool
+        # PLの選出 (統率力 leadership_skill >= 3 かつ未退職のメンバー)
+        selected_pl = next(
+            (p for p in all_candidates if getattr(p, "is_pl_qualified", False) and not getattr(p, "is_retired", False)),
+            all_candidates[0],
+        )
+        selected_pl.assigned_role = "PL"
         project.assigned_developers.append(selected_pl)
 
         # DEVの自動アサイン
-        for dev_cand in team_pool:
-            if getattr(dev_cand, "is_retired", False):
+        for dev_cand in all_candidates:
+            if dev_cand == selected_pl or getattr(dev_cand, "is_retired", False):
                 continue
+            dev_cand.assigned_role = "DEV"
             project.assigned_developers.append(dev_cand)
 
-        if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0 and team_pool:
-            project.assigned_developers.append(team_pool[0])
-
-        pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
-        devs = [d for d in project.assigned_developers if d.role == "DEV"]
-        pl_str = f"{pl.name} (PL)" if pl else "なし"
+        pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
+        devs = [d for d in project.assigned_developers if d.assigned_role == "DEV"]
+        pl_str = f"{pl.name} (PL/統率力:{pl.leadership_skill})" if pl else "なし"
         devs_str = ", ".join([f"{d.name} (DEV)" for d in devs])
 
         print("今期の開発体制が確定しました:")

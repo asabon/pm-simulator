@@ -23,22 +23,22 @@ class Developer(Person):
         self,
         dev_id: str,
         name: str,
-        role: str = "DEV",
         tech_skill: int = 3,
         comm_skill: int = 3,
+        leadership_skill: int = 3,
         speed_skill: int = 3,
-        quality_skill: int = 3,
         mental_skill: int = 3,
         age: int = 25,
         resolution: int = 0,
     ):
-        super().__init__(dev_id, name, role)
+        super().__init__(dev_id, name, "MEMBER")
         self.tech_skill = tech_skill
         self.comm_skill = comm_skill
+        self.leadership_skill = leadership_skill
         self.speed_skill = speed_skill
-        self.quality_skill = quality_skill
         self.mental_skill = mental_skill
 
+        self.assigned_role = "DEV"  # プロジェクト内での動的役割 ("PL" または "DEV")
         self.age = age
         self.resolution = resolution
         self.is_retired = False
@@ -46,6 +46,16 @@ class Developer(Person):
         self._morale = 80.0
         self._fatigue = 0.0
         self.reveal_duration = 0
+
+    @property
+    def is_pl_qualified(self) -> bool:
+        """統率力 (leadership_skill >= 3) が一定以上であればPL（現場リーダー）適性あり"""
+        return self.leadership_skill >= 3
+
+    @property
+    def quality_skill(self) -> int:
+        """品質能力 (技術力と統率力のバランスから算出)"""
+        return max(1, min(5, round((self.tech_skill + self.leadership_skill) / 2)))
 
     @property
     def work_speed(self) -> float:
@@ -74,20 +84,21 @@ class Developer(Person):
         self._fatigue = max(0.0, min(100.0, value))
 
     def get_status_display(self) -> str:
+        pl_qualified_tag = " [PL適性✨]" if self.is_pl_qualified else ""
         if self.resolution == 0:
-            return f"年齢: {self.age}歳 | レーダーチャート: 未知 [❓❓❓❓❓] (協働で解像度向上)"
+            return f"年齢: {self.age}歳{pl_qualified_tag} | レーダーチャート: 未知 [❓❓❓❓❓] (協働で解像度向上)"
         elif self.resolution == 1:
             fatigue_label = (
                 "高 (限界近し)" if self.fatigue >= 70 else ("中 (疲労蓄積)" if self.fatigue >= 40 else "低 (良好)")
             )
             return (
-                f"年齢: {self.age}歳 | 5軸評価(シルエット): [技術:{self.tech_skill} コミュ:{self.comm_skill} "
-                f"速度:{self.speed_skill} 品質:{self.quality_skill} メンタル:{self.mental_skill}] | 疲労感: {fatigue_label}"
+                f"年齢: {self.age}歳{pl_qualified_tag} | 5軸評価(シルエット): [技術:{self.tech_skill} コミュ:{self.comm_skill} "
+                f"統率:{self.leadership_skill} 速度:{self.speed_skill} メンタル:{self.mental_skill}] | 疲労感: {fatigue_label}"
             )
         else:
             return (
-                f"年齢: {self.age}歳 | 🕸️ 5軸レーダー: 🛠️技術:{self.tech_skill} 🤝コミュ:{self.comm_skill} "
-                f"⚡速度:{self.speed_skill} 🛡️品質:{self.quality_skill} 🧠メンタル:{self.mental_skill} | "
+                f"年齢: {self.age}歳{pl_qualified_tag} | 🕸️ 5軸レーダー: 🛠️技術:{self.tech_skill} 🤝コミュ:{self.comm_skill} "
+                f"👑統率:{self.leadership_skill} ⚡速度:{self.speed_skill} 🧠メンタル:{self.mental_skill} | "
                 f"疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100"
             )
 
@@ -95,7 +106,7 @@ class Developer(Person):
         return self.get_sign(current_task)
 
     def get_sign(self, current_task=None) -> str:
-        if self.role == "PL":
+        if self.assigned_role == "PL":
             if self.fatigue >= 80 or self.morale <= 20:
                 return "「メンバーも疲弊してますし、私ももう限界です……。進捗管理どころではありません。」"
             elif self.fatigue >= 50 or self.morale <= 50:

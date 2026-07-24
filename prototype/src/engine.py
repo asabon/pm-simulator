@@ -13,7 +13,7 @@ def calculate_work_factor(dev: Developer) -> float:
 
 def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> str:
     """PL同行による詳細ヒアリング（要件定義）を実行し、効果メッセージを返す"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return "⚠️ PLがアサインされていません。"
 
@@ -82,7 +82,7 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
 
 def generate_pl_initial_estimation_summary(project: Project, tasks: list[Task]) -> str:
     """PLからPMへ提出される着任時の概算試算報告メッセージを生成する"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     pl_name = pl.name if pl else "現場リーダー"
 
     total_hours = sum(t.estimated_hours for t in tasks if not t.id.startswith("BUG_FIX_"))
@@ -153,7 +153,7 @@ def request_phased_release(project: Project, pm: PM = None) -> str:
 
 def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     """PLによるスケジュール妥当性見積もりレポートを生成する"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return "⚠️ PLがアサインされていません。"
 
@@ -196,7 +196,7 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
     if not project.pl_active:
         return
 
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return
 
@@ -208,7 +208,7 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
     # 空いているDEVメンバー（担当中のタスクがないメンバー）の取得
     free_devs = []
     for dev in project.assigned_developers:
-        if dev.role != "DEV":
+        if dev.assigned_role != "DEV":
             continue
         is_busy = any(t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS" for t in tasks)
         if not is_busy:
@@ -260,7 +260,7 @@ def run_weekly_sprint(
 
         # 開発者の作業進行
         for dev in developers:
-            if dev.role == "PL":
+            if dev.assigned_role == "PL":
                 # PL自身の状態更新
                 if dev.id in resting_ids:
                     dev.fatigue = max(0.0, dev.fatigue - 20.0)
@@ -295,30 +295,15 @@ def run_weekly_sprint(
             )
 
             if assigned_task:
-                # 専門性とタスクスキルのミスマッチ判定
-                if dev.specialty == "BE" and assigned_task.skill_type == "FE":
-                    speed_mult = 0.6
-                elif dev.specialty == "FE" and assigned_task.skill_type == "BE":
-                    speed_mult = 0.5
-                elif dev.specialty == "BE" and assigned_task.skill_type == "BE":
-                    speed_mult = 1.3
-                elif dev.specialty == "FE" and assigned_task.skill_type == "FE":
-                    speed_mult = 1.3
-                else:
-                    speed_mult = 1.0
-
                 work_factor = calculate_work_factor(dev)
-                actual_progress = hours * dev.work_speed * speed_mult * work_factor
+                actual_progress = hours * dev.work_speed * work_factor
                 assigned_task.progress += (actual_progress / assigned_task.estimated_hours) * 100.0
 
                 # 疲労と士気の計算
                 dev.fatigue += 6.0 if is_overtime else 3.0
                 dev.morale -= 4.0 if is_overtime else 1.0
 
-                mismatch_sign = " ⚠️[スキル相性低下中]" if speed_mult < 1.0 else ""
-                logs.append(
-                    f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%){mismatch_sign}"
-                )
+                logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%)")
 
                 # タスク完了判定
                 if assigned_task.progress >= 100.0:
@@ -401,7 +386,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
     chance = rework_chances.get(project.clarity_level, 0.30)
 
     if random.random() < chance:
-        target_dev = random.choice([d for d in developers if d.role == "DEV"])
+        target_dev = random.choice([d for d in developers if d.assigned_role == "DEV"])
         return {
             "id": "rework_request",
             "title": "顧客からの追加要望（手戻り）",

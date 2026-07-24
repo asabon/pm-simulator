@@ -4,16 +4,15 @@ from prototype.src.entities import Customer, Developer, Project, Task
 
 
 def get_pl_candidates() -> list[Developer]:
-    """PL（プロジェクトリーダー）の雇用候補者を返す"""
+    """PL（プロジェクトリーダー）適性を持つメンバーの候補者を返す"""
     return [
         Developer(
             dev_id="pl_ken",
             name="ケン",
-            role="PL",
             tech_skill=5,
             comm_skill=2,
+            leadership_skill=4,
             speed_skill=4,
-            quality_skill=5,
             mental_skill=3,
             age=38,
             resolution=0,
@@ -21,11 +20,10 @@ def get_pl_candidates() -> list[Developer]:
         Developer(
             dev_id="pl_ren",
             name="レン",
-            role="PL",
             tech_skill=2,
             comm_skill=5,
+            leadership_skill=4,
             speed_skill=3,
-            quality_skill=2,
             mental_skill=4,
             age=29,
             resolution=0,
@@ -34,16 +32,15 @@ def get_pl_candidates() -> list[Developer]:
 
 
 def get_dev_candidates() -> list[Developer]:
-    """DEV（開発者）の雇用候補者を返す"""
+    """DEV（開発メンバー）候補者を返す"""
     return [
         Developer(
             dev_id="dev_taku",
             name="タク",
-            role="DEV",
             tech_skill=3,
             comm_skill=3,
+            leadership_skill=2,
             speed_skill=4,
-            quality_skill=2,
             mental_skill=3,
             age=32,
             resolution=0,
@@ -51,11 +48,10 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_yui",
             name="ユイ",
-            role="DEV",
             tech_skill=3,
             comm_skill=4,
+            leadership_skill=2,
             speed_skill=3,
-            quality_skill=4,
             mental_skill=2,
             age=27,
             resolution=0,
@@ -63,11 +59,10 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_tetsu",
             name="テツ",
-            role="DEV",
             tech_skill=5,
             comm_skill=3,
+            leadership_skill=5,
             speed_skill=4,
-            quality_skill=5,
             mental_skill=5,
             age=64,  # 定年間近 (65歳で退職)
             resolution=1,  # 長年の社歴により粗い解像度は開示済
@@ -82,11 +77,10 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
     return Developer(
         dev_id=f"dev_new_{dev_id_suffix}",
         name=name,
-        role="DEV",
         tech_skill=1,
         comm_skill=2,
+        leadership_skill=1,
         speed_skill=2,
-        quality_skill=1,
         mental_skill=2,
         age=22,
         resolution=0,  # 完全未知
