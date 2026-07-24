@@ -21,14 +21,10 @@ def print_header(title: str):
     print("=" * 60)
 
 
-SKILL_LABEL = {"BE": "サーバー側", "FE": "画面側"}
-
-
 def show_member_details(developers: list):
     print_header("チームメンバー詳細パラメータ・解像度一覧")
     for dev in developers:
-        role_label = f"({dev.role} / {SKILL_LABEL.get(dev.specialty, dev.specialty)}専門)"
-        print(f" - {dev.name:<15} {role_label:<14}")
+        print(f" - {dev.name:<10} ({dev.role})")
         print(f"   ステータス情報 ➔ {dev.get_status_display()}")
     print("=" * 60)
 
@@ -75,8 +71,7 @@ def show_status(project, developers, tasks, pm: PM):
         )
         task_info = f"担当: {assigned_task.name} ({assigned_task.progress:.0f}%)" if assigned_task else "担当: なし"
 
-        role_label = f"({dev.role} / {SKILL_LABEL.get(dev.specialty, dev.specialty)}専門)"
-        print(f" - {dev.name:<22} {role_label:<14} {task_info}")
+        print(f" - {dev.name:<22} ({dev.role:<3}) {task_info}")
         print(f"   ステータス情報 ➔ {dev.get_status_display()}")
         print(f"   発言: {dev.speak(assigned_task)}")
 
@@ -86,21 +81,13 @@ def show_status(project, developers, tasks, pm: PM):
     done_tasks = [t for t in tasks if t.status == "DONE" and not t.id.startswith("BUG_FIX_")]
 
     print(
-        f" [TODO]        ({len(todo_tasks)}件): "
-        + ", ".join(
-            [f"{t.name}({t.estimated_hours}h/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in todo_tasks]
-        )
+        f" [TODO]        ({len(todo_tasks)}件): " + ", ".join([f"{t.name}({t.estimated_hours}h)" for t in todo_tasks])
     )
     print(
         f" [IN PROGRESS] ({len(in_progress_tasks)}件): "
-        + ", ".join(
-            [f"{t.name}({t.progress:.0f}%/{SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in in_progress_tasks]
-        )
+        + ", ".join([f"{t.name}({t.progress:.0f}%)" for t in in_progress_tasks])
     )
-    print(
-        f" [DONE]        ({len(done_tasks)}件): "
-        + ", ".join([f"{t.name}({SKILL_LABEL.get(t.skill_type, t.skill_type)})" for t in done_tasks])
-    )
+    print(f" [DONE]        ({len(done_tasks)}件): " + ", ".join([f"{t.name}" for t in done_tasks]))
     print("=" * 60)
 
 
@@ -159,8 +146,8 @@ def main():
 
         pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
         devs = [d for d in project.assigned_developers if d.role == "DEV"]
-        pl_str = f"{pl.name} ({SKILL_LABEL.get(pl.specialty, pl.specialty)}専門)" if pl else "なし"
-        devs_str = ", ".join([f"{d.name} ({SKILL_LABEL.get(d.specialty, d.specialty)}専門)" for d in devs])
+        pl_str = f"{pl.name} (PL)" if pl else "なし"
+        devs_str = ", ".join([f"{d.name} (DEV)" for d in devs])
 
         print("今期の開発体制が確定しました:")
         print(f"  ・PL  : {pl_str}")

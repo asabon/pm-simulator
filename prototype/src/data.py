@@ -13,7 +13,8 @@ def get_pl_candidates() -> list[Developer]:
             base_bug_rate=0.02,
             personality_tags=["TECH_GEEK"],
             role="PL",
-            specialty="BE",
+            tech_skill=5,
+            comm_skill=2,
             age=38,
             experience_level="VETERAN",
             resolution=0,
@@ -25,7 +26,8 @@ def get_pl_candidates() -> list[Developer]:
             base_bug_rate=0.04,
             personality_tags=[],
             role="PL",
-            specialty="FE",
+            tech_skill=2,
+            comm_skill=5,
             age=29,
             experience_level="MIDDLE",
             resolution=0,
@@ -43,7 +45,8 @@ def get_dev_candidates() -> list[Developer]:
             base_bug_rate=0.02,
             personality_tags=["DRINK_LOVER"],
             role="DEV",
-            specialty="BE",
+            tech_skill=3,
+            comm_skill=3,
             age=32,
             experience_level="MIDDLE",
             resolution=0,
@@ -55,7 +58,8 @@ def get_dev_candidates() -> list[Developer]:
             base_bug_rate=0.01,
             personality_tags=["PRIVATE_FIRST"],
             role="DEV",
-            specialty="FE",
+            tech_skill=3,
+            comm_skill=4,
             age=27,
             experience_level="MIDDLE",
             resolution=0,
@@ -67,7 +71,8 @@ def get_dev_candidates() -> list[Developer]:
             base_bug_rate=0.005,
             personality_tags=["VETERAN_MASTER"],
             role="DEV",
-            specialty="BE",
+            tech_skill=5,
+            comm_skill=3,
             age=64,  # 定年間近 (65歳で退職)
             experience_level="VETERAN",
             resolution=1,  # 長年の社歴により粗い解像度は開示済
@@ -79,7 +84,6 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
     """年度更新時に配属される新入社員を生成する"""
     first_names = ["アオイ", "ヒナタ", "ソラ", "リク", "ハル"]
     name = f"{random.choice(first_names)} (新入社員)"
-    specialty = random.choice(["BE", "FE"])
     return Developer(
         dev_id=f"dev_new_{dev_id_suffix}",
         name=name,
@@ -87,7 +91,8 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
         base_bug_rate=0.08,
         personality_tags=["ROOKIE"],
         role="DEV",
-        specialty=specialty,
+        tech_skill=1,
+        comm_skill=2,
         age=22,
         experience_level="JUNIOR",
         resolution=0,  # 完全未知
@@ -162,18 +167,18 @@ def get_initial_project_data(project_index: int = 1, customer_type: str = None):
         domain_name=config["domain_name"],
     )
 
-    # タスク一覧の定義 (FE / BE の割り振り)
+    # タスク一覧の定義
     tasks = [
-        Task("T01", "DBスキーマ構築", 16.0, "BE"),
-        Task("T02", "API共通認証実装", 24.0, "BE"),
-        Task("T03", "データ移行スクリプト作成", 16.0, "BE"),
-        Task("T04", "ユーザー管理画面実装", 32.0, "FE"),
-        Task("T05", "レポート集計ロジック実装", 24.0, "BE"),
-        Task("T06", "決済連携モジュール開発", 40.0, "BE"),
-        Task("T07", "管理画面ダッシュボード構築", 24.0, "FE"),
-        Task("T08", "単体テストコード作成", 20.0, "BE"),
-        Task("T09", "統合シナリオテスト実施", 32.0, "FE"),
-        Task("T10", "本番サーバーへのデプロイ", 16.0, "BE"),
+        Task("T01", "DBスキーマ構築", 16.0),
+        Task("T02", "API共通認証実装", 24.0),
+        Task("T03", "データ移行スクリプト作成", 16.0),
+        Task("T04", "ユーザー管理画面実装", 32.0),
+        Task("T05", "レポート集計ロジック実装", 24.0),
+        Task("T06", "決済連携モジュール開発", 40.0),
+        Task("T07", "管理画面ダッシュボード構築", 24.0),
+        Task("T08", "単体テストコード作成", 20.0),
+        Task("T09", "統合シナリオテスト実施", 32.0),
+        Task("T10", "本番サーバーへのデプロイ", 16.0),
     ]
 
     return project, tasks
