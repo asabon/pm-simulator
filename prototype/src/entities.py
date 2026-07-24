@@ -23,8 +23,6 @@ class Developer(Person):
         self,
         dev_id: str,
         name: str,
-        work_speed: float,
-        base_bug_rate: float,
         personality_tags: list,
         role: str = "DEV",
         tech_skill: int = 3,
@@ -37,8 +35,6 @@ class Developer(Person):
         resolution: int = 0,
     ):
         super().__init__(dev_id, name, role)
-        self.work_speed = work_speed
-        self.base_bug_rate = base_bug_rate
         self.personality_tags = personality_tags
         self.tech_skill = tech_skill
         self.comm_skill = comm_skill
@@ -54,6 +50,16 @@ class Developer(Person):
         self._morale = 80.0
         self._fatigue = 0.0
         self.reveal_duration = 0
+
+    @property
+    def work_speed(self) -> float:
+        """speed_skill (1~5) から算定される動的作業スピード (0.7倍 〜 1.5倍)"""
+        return 0.5 + 0.2 * self.speed_skill
+
+    @property
+    def base_bug_rate(self) -> float:
+        """quality_skill (1~5) から算定される動的基礎バグ率 (5.0% 〜 1.0%)"""
+        return max(0.005, 0.06 - 0.01 * self.quality_skill)
 
     @property
     def morale(self):

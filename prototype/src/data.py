@@ -9,8 +9,6 @@ def get_pl_candidates() -> list[Developer]:
         Developer(
             dev_id="pl_ken",
             name="ケン",
-            work_speed=1.2,
-            base_bug_rate=0.02,
             personality_tags=["TECH_GEEK"],
             role="PL",
             tech_skill=5,
@@ -25,8 +23,6 @@ def get_pl_candidates() -> list[Developer]:
         Developer(
             dev_id="pl_ren",
             name="レン",
-            work_speed=0.8,
-            base_bug_rate=0.04,
             personality_tags=[],
             role="PL",
             tech_skill=2,
@@ -47,8 +43,6 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_taku",
             name="タク",
-            work_speed=1.0,
-            base_bug_rate=0.02,
             personality_tags=["DRINK_LOVER"],
             role="DEV",
             tech_skill=3,
@@ -63,8 +57,6 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_yui",
             name="ユイ",
-            work_speed=1.1,
-            base_bug_rate=0.01,
             personality_tags=["PRIVATE_FIRST"],
             role="DEV",
             tech_skill=3,
@@ -79,8 +71,6 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_tetsu",
             name="テツ",
-            work_speed=1.5,
-            base_bug_rate=0.005,
             personality_tags=["VETERAN_MASTER"],
             role="DEV",
             tech_skill=5,
@@ -102,8 +92,6 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
     return Developer(
         dev_id=f"dev_new_{dev_id_suffix}",
         name=name,
-        work_speed=0.6,
-        base_bug_rate=0.08,
         personality_tags=["ROOKIE"],
         role="DEV",
         tech_skill=1,
