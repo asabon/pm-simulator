@@ -1,12 +1,23 @@
-# Python cache
+# Python cache & tool artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .venv/
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.log
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Godot cache & export
 .godot/
 *.translation
 export_presets.cfg
+
