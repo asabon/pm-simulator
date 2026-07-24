@@ -1,5 +1,5 @@
 import random
-from prototype.entities import Project, Developer, Task, Customer
+from prototype.src.entities import Project, Developer, Task, Customer
 
 def calculate_work_factor(dev: Developer) -> float:
     """士気と疲労による作業効率補正を計算する"""
@@ -117,7 +117,7 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
         if project.direction == "BUG_FIRST" and project.bugs_total > 0:
             bug_task_id = f"BUG_FIX_W{project.week}D{day_in_week}_{dev.id}"
             if not any(t.id == bug_task_id for t in tasks):
-                from prototype.entities import Task
+                from prototype.src.entities import Task
                 bug_task = Task(bug_task_id, f"[緊急] バグ修正 ({dev.name})", 8.0)
                 bug_task.assigned_developer_id = dev.id
                 bug_task.status = "IN_PROGRESS"
@@ -376,7 +376,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
 # アクション関数
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
     project.budget += 200000
-    from prototype.entities import Task
+    from prototype.src.entities import Task
     new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0, "FE")
     tasks.append(new_task)
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
@@ -397,7 +397,7 @@ def hide_bugs(project: Project) -> str:
     return "バグを報告せず、順調であると回答しました。顧客は納得したようですが、バグが残ったままです。"
 
 def pass_through_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
-    from prototype.entities import Task
+    from prototype.src.entities import Task
     new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE")
     tasks.append(new_task)
     dev.morale -= 30.0
@@ -405,7 +405,7 @@ def pass_through_rework(project: Project, developers: list[Developer], tasks: li
     return f"顧客の要望をそのまま {dev.name} に丸投げしました。{dev.name} の士気が著しく低下しました。"
 
 def buffer_rework(project: Project, developers: list[Developer], tasks: list[Task], dev: Developer) -> str:
-    from prototype.entities import Task
+    from prototype.src.entities import Task
     new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE")
     tasks.append(new_task)
     project.budget -= 30000

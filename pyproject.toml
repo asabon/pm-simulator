@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.scripts]
-play-sim = "prototype.main:main"
+play-sim = "prototype.src.main:main"
 
 [tool.uv]
 package = true

@@ -1,6 +1,6 @@
 import sys
-from prototype.data import get_pl_candidates, get_dev_candidates, get_initial_project_data
-from prototype.engine import run_weekly_sprint, trigger_event, generate_pl_estimation_report, run_detailed_hearing
+from prototype.src.data import get_pl_candidates, get_dev_candidates, get_initial_project_data
+from prototype.src.engine import run_weekly_sprint, trigger_event, generate_pl_estimation_report, run_detailed_hearing
 
 def print_header(title: str):
     print("\n" + "=" * 60)

@@ -1,4 +1,4 @@
-from prototype.entities import Developer, Task, Customer, Project
+from prototype.src.entities import Developer, Task, Customer, Project
 
 def get_pl_candidates() -> list[Developer]:
     """PL（プロジェクトリーダー）の雇用候補者を返す"""
