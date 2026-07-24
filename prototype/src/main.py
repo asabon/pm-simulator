@@ -4,7 +4,10 @@ from prototype.src.data import get_dev_candidates, get_initial_project_data, get
 from prototype.src.engine import (
     check_urgent_events,
     generate_pl_estimation_report,
+    generate_pl_initial_estimation_summary,
     process_yearly_closing,
+    request_boss_escalation,
+    request_phased_release,
     run_detailed_hearing,
     run_weekly_sprint,
     trigger_event,
@@ -32,10 +35,20 @@ def show_status(project, developers, tasks, pm: PM):
     print(f"【総バグ数】: {project.bugs_total} 件 (報告済: {project.reported_bugs} 件)")
 
     # 顧客情報
-    print(
-        f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / タイプ: {project.customer.type})"
+    cust_type_label = (
+        {
+            "QUALITY_ORIENTED": "品質重視",
+            "SPEED_ORIENTED": "スピード重視",
+            "VAGUE_REQUIREMENTS": "要件探り出し",
+        }.get(project.customer.type, project.customer.type)
+        if project.customer.revealed
+        else "隠蔽中 [?] (対話・ヒアリングで確定)"
     )
-    print(f"【上司信頼度】: {project.manager_satisfaction:.1f}%")
+    method_label = "🌊 ウォーターフォール型" if project.methodology == "WATERFALL" else "🔄 アジャイル型"
+    print(
+        f"【顧客満足度】: {project.customer.satisfaction:.1f}% ({project.customer.name} / 優先特性: {cust_type_label})"
+    )
+    print(f"【開発手法】: {method_label}  |  【上司信頼度】: {project.manager_satisfaction:.1f}%")
 
     # PL管理状況
     pl = next((d for d in developers if d.role == "PL"), None)
@@ -104,21 +117,14 @@ def main():
     while True:
         print_header(f"第 {project_counter} 期 プロジェクト開始 (PMキャリア {pm.career_years}年目)")
 
-        # 顧客タイプの選択
-        print("顧客のタイプを選択してください:")
-        print("1: 品質重視 (品質に妥協がなく、未報告のバグがあると満足度が激しく低下する)")
-        print("2: スピード重視 (とにかく納期優先。進捗が遅れると満足度が徐々に低下する)")
-        print("3: 要件あいまい (仕様が未確定で追加要求・手戻りが多発。PMの防波堤能力が試される)")
-        choice = input("選択 (デフォルト: 1): ")
-
-        c_type = "SPEED_ORIENTED" if choice == "2" else ("VAGUE_REQUIREMENTS" if choice == "3" else "QUALITY_ORIENTED")
-
-        project, tasks = get_initial_project_data(project_counter, customer_type=c_type)
+        project, tasks = get_initial_project_data(project_counter)
 
         # --- PHASE 1: プロジェクトキックオフフェーズ ---
         print_header("PHASE 1: プロジェクトキックオフ")
         print(f"【上司からの打診】: {project.name} のPMを担当してください。")
+        print(f"【案件のドメイン特性】: {project.domain_name}")
         print(f"【上司の最優先期待】: 『{project.priority_expectation}』 を最も重視して運営してください！")
+        print(f"\n【顧客 ({project.customer.name}) の第一声】:\n  {project.customer.speak()}")
         print("\n現在の初期レベル感:")
         print(f"  - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5)")
         print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5)")
@@ -150,18 +156,52 @@ def main():
         if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0 and team_pool:
             project.assigned_developers.append(team_pool[0])
 
-        # 事前防衛交渉（ヒアリング等）
-        print_header("キックオフ Step 3: 前提確認と事前交渉")
-        print(f"現在のアクションポイント (PM AP: {pm.ap}/{pm.max_ap})")
-        print("1: 丁寧な要件ヒアリングを行う (AP 1消費, 要求具体度向上、納期1週消費)")
-        print("2: PLの見積もり監査レポートを確認する (無料、リスク状況を可視化)")
-        print("3: 交渉を行わずすぐにプロジェクトを開始する")
-        k_choice = input("選択 (デフォルト: 2): ")
+        print("\n" + generate_pl_initial_estimation_summary(project, tasks))
 
-        if k_choice == "1":
-            print(run_detailed_hearing(project, tasks, pm))
-        elif k_choice == "2":
-            print(generate_pl_estimation_report(project, tasks))
+        # キックオフ Step 3: 開発手法選択 ＆ 初期防衛交渉
+        print_header("キックオフ Step 3: 開発手法選択 ＆ 初期防衛交渉")
+
+        # 決断①: 開発手法の決定
+        print("\n【決断①: 開発手法を選択してください】")
+        print(" 1: 🌊 ウォーターフォール開発 (計画・品質重視。要件固定に強く手戻りに弱い)")
+        print(" 2: 🔄 アジャイル開発 (変化対応・スピード重視。柔軟だがドキュメント粗くスコープ膨張リスク)")
+        m_choice = input("選択 (デフォルト: 1): ")
+        project.methodology = "AGILE" if m_choice == "2" else "WATERFALL"
+        m_label = "🌊 ウォーターフォール開発" if project.methodology == "WATERFALL" else "🔄 アジャイル開発"
+        print(f"➔ 開発手法を 『{m_label}』 に決定しました。")
+
+        # 決断②: 防衛交渉・調査アクション
+        print("\n【決断②: 初期防衛交渉・調査アクション (AP消費)】")
+        while True:
+            print(f"\n現在のアクションポイント (PM AP: {pm.ap}/{pm.max_ap}) | 残り納期: {project.deadline_weeks}週")
+            print(" 1: 丁寧な要件ヒアリングを行う (AP 1消費: 顧客タイプ開示, 要求具体度🌟+2〜3, 納期1週消費)")
+            print(" 2: PLの見積もり監査レポートを確認する (無料: リスク可視化・エビデンス保持)")
+            print(" 3: 上司へ初期予備費・増員を直訴する (AP 1消費: 予算妥当性🌟+1, 上司信頼度+5, 期待品質上昇)")
+            print(" 4: 顧客へ段階リリースを提案する (AP 1消費: 納期妥当性🌟+1, 顧客初期満足度-10)")
+            print(" 5: 交渉を終了し、プロジェクトを開始する")
+
+            k_choice = input("選択 (デフォルト: 5): ")
+
+            if k_choice == "1":
+                if pm.ap > 0:
+                    print(run_detailed_hearing(project, tasks, pm))
+                else:
+                    print("⚠️ APが不足しています。")
+            elif k_choice == "2":
+                print(generate_pl_estimation_report(project, tasks))
+            elif k_choice == "3":
+                if pm.ap > 0:
+                    print(request_boss_escalation(project, pm))
+                else:
+                    print("⚠️ APが不足しています。")
+            elif k_choice == "4":
+                if pm.ap > 0:
+                    print(request_phased_release(project, pm))
+                else:
+                    print("⚠️ APが不足しています。")
+            else:
+                print("➔ 初期防衛交渉を完了し、プロジェクトを正式開始します。")
+                break
 
         input("\n[Enterキーで第2フェーズ（プロジェクト進行）へ]")
 

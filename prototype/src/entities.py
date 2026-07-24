@@ -123,14 +123,23 @@ class Task:
 
 
 class Customer(Person):
-    def __init__(self, customer_id: str, name: str, customer_type: str):
+    def __init__(self, customer_id: str, name: str, customer_type: str, stance_quote: str = ""):
         super().__init__(customer_id, name, "CUSTOMER")
         self.type = customer_type
         self.satisfaction = 80.0
         self.vague_level = 80.0
+        self.stance_quote = stance_quote
+        self.revealed = False
 
     def speak(self, current_task=None) -> str:
-        return f"「私は{self.name}です。タイプは{self.type}です。」"
+        if self.revealed:
+            type_jp = {
+                "QUALITY_ORIENTED": "品質重視",
+                "SPEED_ORIENTED": "スピード重視",
+                "VAGUE_REQUIREMENTS": "要件探り出し",
+            }.get(self.type, self.type)
+            return f"「私は{self.name}です。当社が最も重要視しているのは『{type_jp}』です。」"
+        return f"「{self.stance_quote}」"
 
 
 class Project:
@@ -143,6 +152,8 @@ class Project:
         budget_level: int = 3,
         schedule_level: int = 3,
         priority_expectation: str = "SCHEDULE",
+        domain_type: str = "MISSION_CRITICAL",
+        domain_name: str = "基幹決済システム改修",
     ):
         self.name = name
         self.deadline_weeks = deadline_weeks
@@ -153,6 +164,10 @@ class Project:
         self.schedule_level = schedule_level
 
         self.priority_expectation = priority_expectation
+
+        self.domain_type = domain_type
+        self.domain_name = domain_name
+        self.methodology = "WATERFALL"  # "WATERFALL" or "AGILE"
 
         self.bugs_total = 0
         self.reported_bugs = 0

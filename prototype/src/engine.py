@@ -22,6 +22,9 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
     else:
         ap_msg = ""
 
+    # 顧客の隠しタイプを開示
+    project.customer.revealed = True
+
     # プロジェクトのタスク特性比率の集計
     incomplete_tasks = [t for t in tasks if t.status != "DONE"]
     be_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
@@ -36,6 +39,12 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
 
     old_clarity = project.clarity_level
 
+    type_jp = {
+        "QUALITY_ORIENTED": "品質重視",
+        "SPEED_ORIENTED": "スピード重視",
+        "VAGUE_REQUIREMENTS": "要件探り出し",
+    }.get(project.customer.type, project.customer.type)
+
     if pl.specialty == project_domain:
         # 一致している場合、有能なPLが要件をクリアにする (要求具体度の星+3)
         project.clarity_level = min(5, project.clarity_level + 3)
@@ -43,6 +52,7 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
         return (
             f"🤝 【ヒアリング成功】{ap_msg}\n"
             f"  {pl.name}が専門知識({pl.specialty})を活かして顧客の要望を的確に言語化・整理しました！\n"
+            f"  🔍 顧客の本音タイプが判明: 『{type_jp}』\n"
             f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+3)\n"
             f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
             f"  - 初期顧客満足度 +15"
@@ -56,11 +66,83 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
         return (
             f"🚨 【ヒアリングミスマッチ（要件定義の罠）】{ap_msg}\n"
             f"  今回は{domain_jp}中心の要件に対し、{pl.name}の専門知識({pl_spec_jp})が合致しませんでした。\n"
+            f"  🔍 顧客の本音タイプが判明: 『{type_jp}』\n"
             f"  技術的な議論が噛み合わず、時間（1週間）を浪費した割には要件があまり明確になりませんでした。\n"
             f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+1)\n"
             f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
             f"  - 初期顧客満足度 +5"
         )
+
+
+def generate_pl_initial_estimation_summary(project: Project, tasks: list[Task]) -> str:
+    """PLからPMへ提出される着任時の概算試算報告メッセージを生成する"""
+    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl_name = pl.name if pl else "現場リーダー"
+
+    total_hours = sum(t.estimated_hours for t in tasks if not t.id.startswith("BUG_FIX_"))
+    devs = [d for d in project.assigned_developers if d.role == "DEV"]
+    weekly_capacity = sum(d.work_speed * 40.0 for d in devs) if devs else 120.0
+    required_weeks = round(total_hours / weekly_capacity, 1) if weekly_capacity > 0 else 2.0
+    initial_buffer = round(project.deadline_weeks - required_weeks, 1)
+
+    buffer_status = (
+        "✨ 【安全バッファ十分】"
+        if initial_buffer >= 1.5
+        else ("⚠️ 【バッファ僅少・注意】" if initial_buffer >= 0.5 else "🚨 【危険・バッファ不足/過密】")
+    )
+
+    report = (
+        f"📊 【{pl_name} からの着任時概算試算報告】\n"
+        f"  ・全タスク総工数   : {len(tasks)} 件 (合計 {total_hours:.1f} 人時)\n"
+        f"  ・チーム週消化能力 : {len(devs)}名体制 (約 {weekly_capacity:.1f} 人時/週)\n"
+        f"  ・理論上の最短所要 : 約 {required_weeks} 週間 (順調に開発が進んだ場合)\n"
+        f"  ・現在の契約納期   : {project.deadline_weeks}.0 週間\n"
+        f"  ・初期納期バッファ : 約 {initial_buffer} 週間 {buffer_status}\n"
+    )
+    return report
+
+
+def request_boss_escalation(project: Project, pm: PM = None) -> str:
+    """上司への初期条件直訴（予備費・増員交渉）"""
+    if pm and pm.ap > 0:
+        pm.ap -= 1
+        ap_msg = " (PM AP 1消費)"
+    else:
+        ap_msg = ""
+
+    old_budget = project.budget_level
+    project.budget_level = min(5, project.budget_level + 1)
+    project.manager_satisfaction = min(100.0, project.manager_satisfaction + 5.0)
+    project.priority_expectation = "QUALITY"
+
+    return (
+        f"🗣️ 【上司への初期条件直訴】{ap_msg}\n"
+        f"  「着任時の初期試算の通り、この予算と体制ではリスクが高すぎます」とプロアクティブに直訴し、予備費を獲得しました！\n"
+        f"  - 予算妥当性: {'🌟' * old_budget} ➔ {'🌟' * project.budget_level} (+1)\n"
+        f"  - 上司信頼度: +5.0 向上 (「開始前の早期リスク発見」として評価)\n"
+        f"  - 上司期待: 『QUALITY（品質絶対）』へ引き上げ (「予算を出した以上ミスは許さない」)"
+    )
+
+
+def request_phased_release(project: Project, pm: PM = None) -> str:
+    """顧客への段階リリース（フェーズ分け）打診"""
+    if pm and pm.ap > 0:
+        pm.ap -= 1
+        ap_msg = " (PM AP 1消費)"
+    else:
+        ap_msg = ""
+
+    old_schedule = project.schedule_level
+    project.deadline_weeks += 1
+    project.schedule_level = min(5, project.schedule_level + 1)
+    project.customer.satisfaction = max(0.0, project.customer.satisfaction - 10.0)
+
+    return (
+        f"📄 【顧客への段階リリース提案】{ap_msg}\n"
+        f"  「第1期はコア機能に絞り、段階的に納品しましょう」と提案し、納期バッファを獲得しました！\n"
+        f"  - 納期妥当性: {'🌟' * old_schedule} ➔ {'🌟' * project.schedule_level} (+1 / 納期+1週間)\n"
+        f"  - 顧客初期満足度: 10.0 低下 (「初日から全機能使えないのか」と不満)"
+    )
 
 
 def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
