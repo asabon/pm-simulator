@@ -2,26 +2,57 @@ class Person:
     def __init__(self, person_id: str, name: str, role: str):
         self.id = person_id
         self.name = name
-        self.role = role  # "PL" / "DEV" / "CUSTOMER" / "BOSS" など
+        self.role = role  # "PM" / "PL" / "DEV" / "CUSTOMER" / "BOSS" など
 
     def speak(self, current_task=None) -> str:
         """キャラクターの発言を取得する（子クラスでオーバーライド）"""
         return ""
 
 
+class PM(Person):
+    def __init__(self, person_id: str = "pm_player", name: str = "プレイヤーPM", max_ap: int = 3):
+        super().__init__(person_id, name, "PM")
+        self.max_ap = max_ap
+        self.ap = max_ap
+        self.career_years = 1
+        self.completed_projects = 0
+        self.overall_score = 100.0
+
+    def reset_ap(self):
+        self.ap = self.max_ap
+
+
 class Developer(Person):
-    def __init__(self, dev_id: str, name: str, work_speed: float, base_bug_rate: float, salary: int, personality_tags: list, role: str = "DEV", specialty: str = "BE"):
+    def __init__(
+        self,
+        dev_id: str,
+        name: str,
+        work_speed: float,
+        base_bug_rate: float,
+        salary: int,
+        personality_tags: list,
+        role: str = "DEV",
+        specialty: str = "BE",
+        age: int = 25,
+        experience_level: str = "MIDDLE",
+        resolution: int = 0,
+    ):
         super().__init__(dev_id, name, role)
         self.work_speed = work_speed
         self.base_bug_rate = base_bug_rate
         self.salary = salary  # 日当 (1日のコスト)
         self.personality_tags = personality_tags
         self.specialty = specialty  # "FE" / "BE"
-        
+
+        self.age = age
+        self.experience_level = experience_level  # "JUNIOR", "MIDDLE", "VETERAN"
+        self.resolution = resolution  # 0: 未知, 1: 粗い粒度 (高/中/低), 2: 精緻数値
+        self.is_retired = False
+
         # 隠しパラメータ
         self._morale = 80.0  # 士気 (0-100)
         self._fatigue = 0.0  # 疲労 (0-100)
-        
+
         # パラメータ一時開示期限（週数）
         self.reveal_duration = 0
 
@@ -41,18 +72,31 @@ class Developer(Person):
     def fatigue(self, value):
         self._fatigue = max(0.0, min(100.0, value))
 
+    def get_status_display(self) -> str:
+        """解像度レベル(0:未知, 1:粗い粒度, 2:精緻数値)に応じたステータス文字列を返す"""
+        if self.resolution == 0:
+            return f"年齢: {self.age}歳 | 経験: {self.experience_level} | パラメータ: 未知 [?] (協働で解像度向上)"
+        elif self.resolution == 1:
+            fatigue_label = (
+                "高 (限界近し)" if self.fatigue >= 70 else ("中 (疲労蓄積)" if self.fatigue >= 40 else "低 (良好)")
+            )
+            morale_label = "良好" if self.morale >= 70 else ("普通" if self.morale >= 40 else "低下 (危険)")
+            return f"年齢: {self.age}歳 | 疲労感: {fatigue_label} | 士気: {morale_label} | 専門性: {self.specialty}"
+        else:
+            return f"年齢: {self.age}歳 | 疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100 | 速度: {self.work_speed:.1f} | バグ率: {self.base_bug_rate * 100:.1f}%"
+
     def speak(self, current_task=None) -> str:
-        """開発者の状態に応じた『ひと言サイン』を出力する"""
+        """開発者の状態に応じた『ひ言サイン』を出力する"""
         return self.get_sign(current_task)
 
     def get_sign(self, current_task=None) -> str:
-        """開発者の状態に応じた『ひと言サイン』を出力する"""
+        """開発者の状態に応じた『ひ言サイン』を出力する"""
         if self.role == "PL":
             if self.fatigue >= 80 or self.morale <= 20:
                 return "「メンバーも疲弊してますし、私ももう限界です……。進捗管理どころではありません。」"
             elif self.fatigue >= 50 or self.morale <= 50:
                 return "「PM、現場に直接口を出しすぎではないですか？私への相談を通してください。」"
-            
+
             # PLの専門性（相性）に応じたメッセージ
             if self.specialty == "BE":  # システム内部でのマッチング
                 return "「今回のプロジェクト要件は私の得意ドメインなので、設計は任せてください。PMは交渉に専念を。」"
@@ -64,23 +108,23 @@ class Developer(Person):
         # 1. 限界状態
         if self.fatigue >= 80 or self.morale <= 20:
             return "「……うう、頭が痛いです。体調が優れないので作業が遅れるかもしれません……」"
-            
+
         # 2. ミスマッチ状態（現在作業中のタスクがある場合）
         if current_task and current_task.skill_type != self.specialty:
             if self.fatigue >= 50 or self.morale <= 50:
                 return "「経験の薄い分野のタスクで、しかも疲れが溜まっていて全然頭が回りません……」"
             return "「今回の案件の要件はあまり経験がない分野なんですよね……少し手探りです」"
-            
+
         # 3. 疲労蓄積（要注意）
         if self.fatigue >= 50 or self.morale <= 50:
             return "「最近ちょっと寝不足ですね……。仕様がコロコロ変わると心身ともにキツいです」"
-        
+
         # 通常・良好な時
         if "DRINK_LOVER" in self.personality_tags and self.morale >= 85:
             return "担当タスクを笑顔でこなしています。「今度みんなで飲みに行きませんか？」"
         if "TECH_GEEK" in self.personality_tags and self.morale >= 85:
             return "黙々と作業しています。「新しい設計フレームを導入したら、品質が上がりました！」"
-        
+
         return "「今週も順調です！タスクを進めていきます」"
 
 
@@ -101,41 +145,54 @@ class Customer(Person):
         super().__init__(customer_id, name, "CUSTOMER")
         self.type = customer_type  # "SPEED_ORIENTED", "QUALITY_ORIENTED", "VAGUE_REQUIREMENTS"
         self.satisfaction = 80.0  # 0 - 100
-        self.vague_level = 80.0   # あいまい度 (0 - 100)
+        self.vague_level = 80.0  # あいまい度 (0 - 100)
 
     def speak(self, current_task=None) -> str:
         return f"「私は{self.name}です。タイプは{self.type}です。」"
 
 
 class Project:
-    def __init__(self, name: str, budget: int, deadline_weeks: int, customer: Customer, clarity_level: int = 3, budget_level: int = 3, schedule_level: int = 3):
+    def __init__(
+        self,
+        name: str,
+        budget: int,
+        deadline_weeks: int,
+        customer: Customer,
+        clarity_level: int = 3,
+        budget_level: int = 3,
+        schedule_level: int = 3,
+        priority_expectation: str = "SCHEDULE",
+    ):
         self.name = name
         self.budget = budget
         self.deadline_weeks = deadline_weeks
         self.customer = customer
-        
+
         # 3つのレベル感パラメータ (1〜5)
         self.clarity_level = clarity_level
         self.budget_level = budget_level
         self.schedule_level = schedule_level
-        
+
+        # 上司が重視する最優先期待項目 ("SCHEDULE" / "BUDGET" / "QUALITY" / "SATISFACTION")
+        self.priority_expectation = priority_expectation
+
         self.bugs_total = 0
         self.reported_bugs = 0  # 顧客・上司に報告済みのバグ数
-        
+
         self.manager_satisfaction = 80.0  # 上級マネージャー満足度 (0 - 100)
         self.week = 1
-        
+
         # 交渉による約束・猶予
         self.deadline_extension_weeks = 0  # 顧客に認められた延長週数
-        self.extra_budget = 0             # 上司から獲得した追加予算
+        self.extra_budget = 0  # 上司から獲得した追加予算
 
         # PL関連ステータス
-        self.pl_active = True       # PLが自律稼働しているか
-        self.direction = "NORMAL"   # 現在の開発方針 ("NORMAL" / "BUG_FIRST")
-        
+        self.pl_active = True  # PLが自律稼働しているか
+        self.direction = "NORMAL"  # 現在の開発方針 ("NORMAL" / "BUG_FIRST")
+
         # 雇用中のメンバーリスト (ゲーム中の体制)
         self.assigned_developers = []  # List of Developer
 
         # プロジェクト立ち上げ・事前準備状態管理用
-        self.hearing_type = None    # ヒアリングのタイプ ("DEEP" / "LIGHT" / "NONE")
-        self.has_evidence = False   # エビデンス（見積もりレポート確認済）の有無
+        self.hearing_type = None  # ヒアリングのタイプ ("DEEP" / "LIGHT" / "NONE")
+        self.has_evidence = False  # エビデンス（見積もりレポート確認済）の有無

@@ -28,6 +28,7 @@
   * **Python (プロトタイプ)**:
     * エントリポイントで標準出力をUTF-8に再設定（`sys.stdout.reconfigure(encoding='utf-8')` など）すること。
     * オブジェクト指向の明確な責務分け（データモデルとゲームエンジン）を意識すること。
+    * コード変更時は `uv run ruff check --fix prototype/` および `uv run ruff format prototype/` を実行し、コードの静的解析・自動整形を行うこと。
   * **Godot 4 / GDScript (将来の移植時)**:
     * 静的型ヒント（型アノテーション）を徹底すること（例: `var score: int = 0`, `func update() -> void`）。
     * Controlノードのアンカーとコンテナ（HBox/VBox/Grid）を正しく設定し、レスポンシブなレイアウトにすること。
