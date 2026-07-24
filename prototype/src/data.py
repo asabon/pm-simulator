@@ -9,7 +9,6 @@ def get_pl_candidates() -> list[Developer]:
         Developer(
             dev_id="pl_ken",
             name="ケン",
-            personality_tags=["TECH_GEEK"],
             role="PL",
             tech_skill=5,
             comm_skill=2,
@@ -17,13 +16,11 @@ def get_pl_candidates() -> list[Developer]:
             quality_skill=5,
             mental_skill=3,
             age=38,
-            experience_level="VETERAN",
             resolution=0,
         ),
         Developer(
             dev_id="pl_ren",
             name="レン",
-            personality_tags=[],
             role="PL",
             tech_skill=2,
             comm_skill=5,
@@ -31,7 +28,6 @@ def get_pl_candidates() -> list[Developer]:
             quality_skill=2,
             mental_skill=4,
             age=29,
-            experience_level="MIDDLE",
             resolution=0,
         ),
     ]
@@ -43,7 +39,6 @@ def get_dev_candidates() -> list[Developer]:
         Developer(
             dev_id="dev_taku",
             name="タク",
-            personality_tags=["DRINK_LOVER"],
             role="DEV",
             tech_skill=3,
             comm_skill=3,
@@ -51,13 +46,11 @@ def get_dev_candidates() -> list[Developer]:
             quality_skill=2,
             mental_skill=3,
             age=32,
-            experience_level="MIDDLE",
             resolution=0,
         ),
         Developer(
             dev_id="dev_yui",
             name="ユイ",
-            personality_tags=["PRIVATE_FIRST"],
             role="DEV",
             tech_skill=3,
             comm_skill=4,
@@ -65,13 +58,11 @@ def get_dev_candidates() -> list[Developer]:
             quality_skill=4,
             mental_skill=2,
             age=27,
-            experience_level="MIDDLE",
             resolution=0,
         ),
         Developer(
             dev_id="dev_tetsu",
             name="テツ",
-            personality_tags=["VETERAN_MASTER"],
             role="DEV",
             tech_skill=5,
             comm_skill=3,
@@ -79,7 +70,6 @@ def get_dev_candidates() -> list[Developer]:
             quality_skill=5,
             mental_skill=5,
             age=64,  # 定年間近 (65歳で退職)
-            experience_level="VETERAN",
             resolution=1,  # 長年の社歴により粗い解像度は開示済
         ),
     ]
@@ -92,7 +82,6 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
     return Developer(
         dev_id=f"dev_new_{dev_id_suffix}",
         name=name,
-        personality_tags=["ROOKIE"],
         role="DEV",
         tech_skill=1,
         comm_skill=2,
@@ -100,7 +89,6 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
         quality_skill=1,
         mental_skill=2,
         age=22,
-        experience_level="JUNIOR",
         resolution=0,  # 完全未知
     )
 

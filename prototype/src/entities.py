@@ -23,7 +23,6 @@ class Developer(Person):
         self,
         dev_id: str,
         name: str,
-        personality_tags: list,
         role: str = "DEV",
         tech_skill: int = 3,
         comm_skill: int = 3,
@@ -31,11 +30,9 @@ class Developer(Person):
         quality_skill: int = 3,
         mental_skill: int = 3,
         age: int = 25,
-        experience_level: str = "MIDDLE",
         resolution: int = 0,
     ):
         super().__init__(dev_id, name, role)
-        self.personality_tags = personality_tags
         self.tech_skill = tech_skill
         self.comm_skill = comm_skill
         self.speed_skill = speed_skill
@@ -43,7 +40,6 @@ class Developer(Person):
         self.mental_skill = mental_skill
 
         self.age = age
-        self.experience_level = experience_level
         self.resolution = resolution
         self.is_retired = False
 
@@ -79,7 +75,7 @@ class Developer(Person):
 
     def get_status_display(self) -> str:
         if self.resolution == 0:
-            return f"年齢: {self.age}歳 | 経験: {self.experience_level} | レーダーチャート: 未知 [❓❓❓❓❓]"
+            return f"年齢: {self.age}歳 | レーダーチャート: 未知 [❓❓❓❓❓] (協働で解像度向上)"
         elif self.resolution == 1:
             fatigue_label = (
                 "高 (限界近し)" if self.fatigue >= 70 else ("中 (疲労蓄積)" if self.fatigue >= 40 else "低 (良好)")
@@ -117,10 +113,8 @@ class Developer(Person):
         if self.fatigue >= 50 or self.morale <= 50:
             return "「最近ちょっと寝不足ですね……。仕様変更が重なると心身ともにキツいです」"
 
-        if "DRINK_LOVER" in self.personality_tags and self.morale >= 85:
-            return "担当タスクを笑顔でこなしています。「今度みんなで飲みに行きませんか？」"
-        if "TECH_GEEK" in self.personality_tags and self.morale >= 85:
-            return "黙々と作業しています。「新しいリファクタリングを試したら、品質が上がりました！」"
+        if self.morale >= 85:
+            return "担当タスクを順調にこなしています。「チームの雰囲気も良好ですね！」"
 
         return "「今週も順調です！タスクを進めていきます」"
 
