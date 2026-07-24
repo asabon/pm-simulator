@@ -3,11 +3,11 @@ import random
 from prototype.src.entities import Customer, Developer, Project, Task
 
 
-def get_pl_candidates() -> list[Developer]:
-    """PL（プロジェクトリーダー）適性を持つメンバーの候補者を返す"""
+def get_initial_developer_pool() -> list[Developer]:
+    """社内の初期開発メンバープール（全開発メンバー一覧）を返す"""
     return [
         Developer(
-            dev_id="pl_ken",
+            dev_id="dev_ken",
             name="ケン",
             tech_skill=5,
             comm_skill=2,
@@ -18,7 +18,7 @@ def get_pl_candidates() -> list[Developer]:
             resolution=0,
         ),
         Developer(
-            dev_id="pl_ren",
+            dev_id="dev_ren",
             name="レン",
             tech_skill=2,
             comm_skill=5,
@@ -28,12 +28,6 @@ def get_pl_candidates() -> list[Developer]:
             age=29,
             resolution=0,
         ),
-    ]
-
-
-def get_dev_candidates() -> list[Developer]:
-    """DEV（開発メンバー）候補者を返す"""
-    return [
         Developer(
             dev_id="dev_taku",
             name="タク",

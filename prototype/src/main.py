@@ -1,6 +1,6 @@
 import sys
 
-from prototype.src.data import get_dev_candidates, get_initial_project_data, get_pl_candidates
+from prototype.src.data import get_initial_developer_pool, get_initial_project_data
 from prototype.src.engine import (
     check_urgent_events,
     generate_pl_estimation_report,
@@ -103,9 +103,8 @@ def main():
     print("ゲームの目的: PMとして長年にわたりプロジェクトを成功させ、キャリア評価を高めること。")
     print("万能の解決策はありません。現場のPLを信頼しつつ、APを適切に配分してタイムマネジメントを行いましょう。")
 
-    # チームプール（年度を跨いで引き継がれる開発メンバー）
-    team_pool = get_dev_candidates()
-    pl_pool = get_pl_candidates()
+    # チームプール（年度を跨いで引き継がれる開発メンバー一覧）
+    team_pool = get_initial_developer_pool()
 
     project_counter = 1
 
@@ -131,17 +130,16 @@ def main():
         # 体制構築（動的アサイン: 統率力 leadership_skill に基づく選出）
         print_header("キックオフ Step 2: 体制確定（チーム自動アサイン）")
 
-        all_candidates = pl_pool + team_pool
         # PLの選出 (統率力 leadership_skill >= 3 かつ未退職のメンバー)
         selected_pl = next(
-            (p for p in all_candidates if getattr(p, "is_pl_qualified", False) and not getattr(p, "is_retired", False)),
-            all_candidates[0],
+            (p for p in team_pool if getattr(p, "is_pl_qualified", False) and not getattr(p, "is_retired", False)),
+            team_pool[0],
         )
         selected_pl.assigned_role = "PL"
         project.assigned_developers.append(selected_pl)
 
         # DEVの自動アサイン
-        for dev_cand in all_candidates:
+        for dev_cand in team_pool:
             if dev_cand == selected_pl or getattr(dev_cand, "is_retired", False):
                 continue
             dev_cand.assigned_role = "DEV"
