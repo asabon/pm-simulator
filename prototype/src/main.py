@@ -24,6 +24,15 @@ def print_header(title: str):
 SKILL_LABEL = {"BE": "サーバー側", "FE": "画面側"}
 
 
+def show_member_details(developers: list):
+    print_header("チームメンバー詳細パラメータ・解像度一覧")
+    for dev in developers:
+        role_label = f"({dev.role} / {SKILL_LABEL.get(dev.specialty, dev.specialty)}専門)"
+        print(f" - {dev.name:<15} {role_label:<14}")
+        print(f"   ステータス情報 ➔ {dev.get_status_display()}")
+    print("=" * 60)
+
+
 def show_status(project, developers, tasks, pm: PM):
     print_header(f"WEEK {project.week} - スプリント状況 (PM AP: {pm.ap}/{pm.max_ap})")
     print(f"【プロジェクト】: {project.name} (PMキャリア: {pm.career_years}年目)")
@@ -134,27 +143,28 @@ def main():
 
         # 体制構築（自動アサイン）
         print_header("キックオフ Step 2: 体制確定（チーム自動アサイン）")
-        print("所属メンバープールから今期のPLおよび開発メンバーが自動配置されました。")
 
         # PLの自動アサイン
         selected_pl = next((p for p in pl_pool if not getattr(p, "is_retired", False)), pl_pool[0])
         project.assigned_developers.append(selected_pl)
-        print(
-            f"\n[PL (プロジェクトリーダー)]: {selected_pl.name} ({SKILL_LABEL.get(selected_pl.specialty, selected_pl.specialty)}専門) ➔ {selected_pl.get_status_display()}"
-        )
 
         # DEVの自動アサイン
-        print("\n[開発メンバー (DEV)]:")
         for dev_cand in team_pool:
             if getattr(dev_cand, "is_retired", False):
                 continue
             project.assigned_developers.append(dev_cand)
-            print(
-                f" - {dev_cand.name} ({SKILL_LABEL.get(dev_cand.specialty, dev_cand.specialty)}専門) ➔ {dev_cand.get_status_display()}"
-            )
 
         if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0 and team_pool:
             project.assigned_developers.append(team_pool[0])
+
+        pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+        devs = [d for d in project.assigned_developers if d.role == "DEV"]
+        pl_str = f"{pl.name} ({SKILL_LABEL.get(pl.specialty, pl.specialty)}専門)" if pl else "なし"
+        devs_str = ", ".join([f"{d.name} ({SKILL_LABEL.get(d.specialty, d.specialty)}専門)" for d in devs])
+
+        print("今期の開発体制が確定しました:")
+        print(f"  ・PL  : {pl_str}")
+        print(f"  ・DEV : {devs_str}")
 
         print("\n" + generate_pl_initial_estimation_summary(project, tasks))
 
@@ -176,11 +186,12 @@ def main():
             print(f"\n現在のアクションポイント (PM AP: {pm.ap}/{pm.max_ap}) | 残り納期: {project.deadline_weeks}週")
             print(" 1: 丁寧な要件ヒアリングを行う (AP 1消費: 顧客タイプ開示, 要求具体度🌟+2〜3, 納期1週消費)")
             print(" 2: PLの見積もり監査レポートを確認する (無料: リスク可視化・エビデンス保持)")
-            print(" 3: 上司へ初期予備費・増員を直訴する (AP 1消費: 予算妥当性🌟+1, 上司信頼度+5, 期待品質上昇)")
-            print(" 4: 顧客へ段階リリースを提案する (AP 1消費: 納期妥当性🌟+1, 顧客初期満足度-10)")
-            print(" 5: 交渉を終了し、プロジェクトを開始する")
+            print(" 3: メンバーの詳細パラメータ・解像度を確認する (無料)")
+            print(" 4: 上司へ初期予備費・増員を直訴する (AP 1消費: 予算妥当性🌟+1, 上司信頼度+5, 期待品質上昇)")
+            print(" 5: 顧客へ段階リリースを提案する (AP 1消費: 納期妥当性🌟+1, 顧客初期満足度-10)")
+            print(" 6: 交渉を終了し、プロジェクトを開始する")
 
-            k_choice = input("選択 (デフォルト: 5): ")
+            k_choice = input("選択 (デフォルト: 6): ")
 
             if k_choice == "1":
                 if pm.ap > 0:
@@ -190,11 +201,13 @@ def main():
             elif k_choice == "2":
                 print(generate_pl_estimation_report(project, tasks))
             elif k_choice == "3":
+                show_member_details(project.assigned_developers)
+            elif k_choice == "4":
                 if pm.ap > 0:
                     print(request_boss_escalation(project, pm))
                 else:
                     print("⚠️ APが不足しています。")
-            elif k_choice == "4":
+            elif k_choice == "5":
                 if pm.ap > 0:
                     print(request_phased_release(project, pm))
                 else:
