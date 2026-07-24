@@ -11,7 +11,6 @@ def get_pl_candidates() -> list[Developer]:
             name="ケン (ケンPL)",
             work_speed=1.2,
             base_bug_rate=0.02,
-            salary=18000,
             personality_tags=["TECH_GEEK"],
             role="PL",
             specialty="BE",
@@ -24,7 +23,6 @@ def get_pl_candidates() -> list[Developer]:
             name="レン (レンPL)",
             work_speed=0.8,
             base_bug_rate=0.04,
-            salary=11000,
             personality_tags=[],
             role="PL",
             specialty="FE",
@@ -43,7 +41,6 @@ def get_dev_candidates() -> list[Developer]:
             name="タク (タクDEV)",
             work_speed=1.0,
             base_bug_rate=0.02,
-            salary=15000,
             personality_tags=["DRINK_LOVER"],
             role="DEV",
             specialty="BE",
@@ -56,7 +53,6 @@ def get_dev_candidates() -> list[Developer]:
             name="ユイ (ユイDEV)",
             work_speed=1.1,
             base_bug_rate=0.01,
-            salary=13000,
             personality_tags=["PRIVATE_FIRST"],
             role="DEV",
             specialty="FE",
@@ -69,7 +65,6 @@ def get_dev_candidates() -> list[Developer]:
             name="山田さん (ベテランDEV)",
             work_speed=1.5,
             base_bug_rate=0.005,
-            salary=22000,
             personality_tags=["VETERAN_MASTER"],
             role="DEV",
             specialty="BE",
@@ -90,7 +85,6 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
         name=name,
         work_speed=0.6,
         base_bug_rate=0.08,
-        salary=8000,
         personality_tags=["ROOKIE"],
         role="DEV",
         specialty=specialty,
@@ -123,10 +117,6 @@ def get_initial_project_data(project_index: int = 1, customer_type="QUALITY_ORIE
 
     customer = Customer(customer_id=f"cust_{project_index}", name=c_name, customer_type=customer_type)
 
-    # 予算妥当性星レベルマッピング
-    budget_map = {1: 600000, 2: 800000, 3: 1000000, 4: 1200000, 5: 1500000}
-    init_budget = budget_map.get(budget_level, 1000000)
-
     # 納期妥当性星レベルマッピング
     schedule_map = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
     init_deadline = schedule_map.get(schedule_level, 4)
@@ -134,7 +124,6 @@ def get_initial_project_data(project_index: int = 1, customer_type="QUALITY_ORIE
     project_name = f"第{project_index}期 基幹システム改修プロジェクト"
     project = Project(
         name=project_name,
-        budget=init_budget,
         deadline_weeks=init_deadline,
         customer=customer,
         clarity_level=clarity_level,
