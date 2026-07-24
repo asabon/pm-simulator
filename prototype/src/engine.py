@@ -170,10 +170,6 @@ def run_weekly_sprint(
         # タスクアサインの実行
         auto_assign_tasks(project, tasks, logs, day)
 
-        # メンバーの給料（日当）の消費
-        daily_cost = sum(d.salary for d in developers)
-        project.budget -= daily_cost
-
         # 開発者の作業進行
         for dev in developers:
             if dev.role == "PL":
@@ -328,7 +324,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
                     "action": lambda p, d, t: pass_through_rework(p, d, t, target_dev),
                 },
                 {
-                    "text": f"防波堤としてPMが間に入り調整する (調整費用 ¥30,000 消費, 顧客満足度+5, {target_dev.name} の士気-5)",
+                    "text": f"防波堤としてPMが間に入り調整する (予算妥当性🌟-1, 顧客満足度+5, {target_dev.name} の士気-5)",
                     "action": lambda p, d, t: buffer_rework(p, d, t, target_dev),
                 },
                 {
@@ -345,10 +341,10 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
         {
             "id": "spec_change",
             "title": "仕様変更の打診",
-            "description": f"顧客の{project.customer.name}から、「ダッシュボードのグラフ分析機能を追加してほしい」と打診がありました。予算は ¥200,000 追加されますが、納期は据え置きです。",
+            "description": f"顧客の{project.customer.name}から、「ダッシュボードのグラフ分析機能を追加してほしい」と打診がありました。予算妥当性が向上 (🌟+1) されますが、納期は据え置きです。",
             "choices": [
                 {
-                    "text": "受け入れる (予算+20万, 追加タスク「グラフ描画機能」登録, 顧客満足度+10)",
+                    "text": "受け入れる (予算妥当性🌟+1, 追加タスク「グラフ描画機能」登録, 顧客満足度+10)",
                     "action": lambda p, d, t: accept_spec_change(p, t),
                 },
                 {"text": "交渉して断る (顧客満足度-15)", "action": lambda p, d, t: refuse_spec_change(p)},
@@ -376,13 +372,13 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
 
 # アクション関数
 def accept_spec_change(project: Project, tasks: list[Task]) -> str:
-    project.budget += 200000
+    project.budget_level = min(5, project.budget_level + 1)
     from prototype.src.entities import Task
 
     new_task = Task("T_EXTRA", "[追加] グラフ描画機能実装", 24.0, "FE")
     tasks.append(new_task)
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 10.0)
-    return "仕様変更を受け入れました。新たなタスクが追加され、予算が ¥200,000 増加しました。"
+    return "仕様変更を受け入れました。新たなタスクが追加され、予算妥当性が 🌟+1 に向上しました。"
 
 
 def refuse_spec_change(project: Project) -> str:
@@ -417,10 +413,10 @@ def buffer_rework(project: Project, developers: list[Developer], tasks: list[Tas
 
     new_task = Task("T_REWORK", "[追加手戻り] 画面レイアウトの再調整", 24.0, "FE")
     tasks.append(new_task)
-    project.budget -= 30000
+    project.budget_level = max(1, project.budget_level - 1)
     dev.morale -= 5.0
     project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
-    return f"PMが調整に入り、納得感を持って {dev.name} に作業を依頼しました。費用 ¥30,000 を消費しましたが、士気の低下を抑えられました。"
+    return f"PMが調整に入り、納得感を持って {dev.name} に作業を依頼しました。予算妥当性が 🌟-1 ダウンしましたが、士気の低下を抑えられました。"
 
 
 def reject_rework(project: Project) -> str:

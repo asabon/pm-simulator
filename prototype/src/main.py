@@ -24,7 +24,7 @@ SKILL_LABEL = {"BE": "サーバー側", "FE": "画面側"}
 def show_status(project, developers, tasks, pm: PM):
     print_header(f"WEEK {project.week} - スプリント状況 (PM AP: {pm.ap}/{pm.max_ap})")
     print(f"【プロジェクト】: {project.name} (PMキャリア: {pm.career_years}年目)")
-    print(f"【 残 予 算 】: ¥{project.budget:,}  |  【 納 期 】: あと {project.deadline_weeks} 週間")
+    print(f"【 納 期 】: あと {project.deadline_weeks} 週間")
     print(
         f"【要求具体度】: {'🌟' * project.clarity_level:<5} | 【予算妥当性】: {'🌟' * project.budget_level:<5} | 【納期妥当性】: {'🌟' * project.schedule_level:<5}"
     )
@@ -121,9 +121,7 @@ def main():
         print(f"【上司の最優先期待】: 『{project.priority_expectation}』 を最も重視して運営してください！")
         print("\n現在の初期レベル感:")
         print(f"  - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5)")
-        print(
-            f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5) ➔ 予算額: ¥{project.budget:,}"
-        )
+        print(f"  - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5)")
         print(
             f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期: {project.deadline_weeks} 週間"
         )
@@ -135,9 +133,7 @@ def main():
         # PLのアサイン
         print("\n[PL（プロジェクトリーダー）を選択してください]:")
         for idx, pl_cand in enumerate(pl_pool):
-            print(
-                f"{idx + 1}: {pl_cand.name} (日当: ¥{pl_cand.salary:,} / 専門: {pl_cand.specialty}) - {pl_cand.get_status_display()}"
-            )
+            print(f"{idx + 1}: {pl_cand.name} (専門: {pl_cand.specialty}) - {pl_cand.get_status_display()}")
         pl_choice = input("選択 (デフォルト: 1): ")
         selected_pl = pl_pool[1] if pl_choice == "2" else pl_pool[0]
         project.assigned_developers.append(selected_pl)
@@ -148,7 +144,7 @@ def main():
         for dev_cand in team_pool:
             if dev_cand.is_retired:
                 continue
-            print(f" - {dev_cand.name} (日当: ¥{dev_cand.salary:,}) ➔ {dev_cand.get_status_display()}")
+            print(f" - {dev_cand.name} ➔ {dev_cand.get_status_display()}")
             u_input = input("  アサインしますか？ (y/n, デフォルト: y): ")
             if u_input.lower() != "n":
                 project.assigned_developers.append(dev_cand)
@@ -189,7 +185,7 @@ def main():
                 print("1: 【面談/ケア】対象者と緊急面談・1on1を実施する (AP 1消費: 疲労回復・解像度開示)")
                 print("2: 【顧客交渉】顧客と打ち合わせ、納期の延長を要請する (AP 1消費: 納期+1週, 満足度少し低下)")
                 print(
-                    "3: 【上司報告】上司に緊急エスカレーションする (AP 1消費: 追加予算 ¥200,000 獲得, 上司評価少し低下)"
+                    "3: 【上司報告】上司に緊急エスカレーションする (AP 1消費: 予算妥当性 🌟+1 獲得, 上司評価少し低下)"
                 )
                 print("4: 【方針変更】開発方針を『バグ優先』に変更する (AP 0消費)")
                 print("5: 特に何もしない (放置)")
@@ -210,9 +206,9 @@ def main():
                     print("➔ 顧客との粘り強い交渉により、納期を1週間延長させました！")
                 elif u_act == "3" and pm.ap > 0:
                     pm.ap -= 1
-                    project.budget += 200000
+                    project.budget_level = min(5, project.budget_level + 1)
                     project.manager_satisfaction = max(0.0, project.manager_satisfaction - 5.0)
-                    print("➔ 上司へエスカレーションし、追加予算 ¥200,000 を獲得しました！")
+                    print("➔ 上司へエスカレーションし、予算妥当性が 🌟+1 向上しました！")
                 elif u_act == "4":
                     project.direction = "BUG_FIRST"
                     print("➔ 開発方針を『バグ優先』に変更しました。")
@@ -299,7 +295,6 @@ def main():
         print(f"【最終タスク完了率】: {completion_rate:.1f}%")
         print(f"【最終顧客満足度  】: {project.customer.satisfaction:.1f}%")
         print(f"【最終上司信頼度  】: {project.manager_satisfaction:.1f}%")
-        print(f"【最終残予算      】: ¥{project.budget:,}")
 
         # プレイスコア算出
         proj_score = (
