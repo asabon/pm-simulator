@@ -4,15 +4,16 @@ from prototype.src.entities import PM, Developer, Project, Task
 
 
 def calculate_work_factor(dev: Developer) -> float:
-    """士気と疲労による作業効率補正を計算する"""
+    """士気・疲労およびスピード能力(speed_skill)による作業効率補正を計算する"""
     morale_factor = 0.5 + 0.5 * (dev.morale / 100.0)
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
-    return morale_factor * fatigue_factor
+    speed_factor = 0.7 + 0.1 * getattr(dev, "speed_skill", 3)
+    return morale_factor * fatigue_factor * speed_factor
 
 
 def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> str:
     """PL同行による詳細ヒアリング（要件定義）を実行し、効果メッセージを返す"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return "⚠️ PLがアサインされていません。"
 
@@ -24,12 +25,6 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
 
     # 顧客の隠しタイプを開示
     project.customer.revealed = True
-
-    # プロジェクトのタスク特性比率の集計
-    incomplete_tasks = [t for t in tasks if t.status != "DONE"]
-    be_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "BE")
-    fe_hours = sum(t.estimated_hours for t in incomplete_tasks if t.skill_type == "FE")
-    project_domain = "BE" if be_hours >= fe_hours else "FE"
 
     # 納期を1週消費 (納期妥当性の星が1ダウン)
     project.deadline_weeks -= 1
@@ -45,29 +40,40 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
         "VAGUE_REQUIREMENTS": "要件探り出し",
     }.get(project.customer.type, project.customer.type)
 
-    if pl.specialty == project_domain:
-        # 一致している場合、有能なPLが要件をクリアにする (要求具体度の星+3)
+    # 顧客タイプとPL能力特性（コミュニケーション力 vs 技術力）のマッチング判定
+    is_synergy = False
+    synergy_reason = ""
+    if project.customer.type == "VAGUE_REQUIREMENTS" and pl.comm_skill >= 4:
+        is_synergy = True
+        synergy_reason = f"{pl.name}の高いコミュニケーション力 (コミュ力 {pl.comm_skill}/5) が本領発揮し、あやふやな顧客の要望を見事に聞き出し整理しました！"
+    elif project.customer.type == "QUALITY_ORIENTED" and pl.tech_skill >= 4:
+        is_synergy = True
+        synergy_reason = f"{pl.name}の高い技術力 (技術力 {pl.tech_skill}/5) が本領発揮し、品質要求と非機能要件を的確に言語化しました！"
+    elif project.customer.type == "SPEED_ORIENTED" and (pl.comm_skill >= 4 or pl.tech_skill >= 4):
+        is_synergy = True
+        synergy_reason = f"{pl.name}の推進力と対話力により、スピード重視の顧客の最優先範囲を明確化しました！"
+
+    if is_synergy:
+        # シナジー一致: 要求具体度 +3、満足度 +15
         project.clarity_level = min(5, project.clarity_level + 3)
         project.customer.satisfaction = min(100.0, project.customer.satisfaction + 15.0)
         return (
-            f"🤝 【ヒアリング成功】{ap_msg}\n"
-            f"  {pl.name}が専門知識({pl.specialty})を活かして顧客の要望を的確に言語化・整理しました！\n"
+            f"🤝 【ヒアリング大成功】{ap_msg}\n"
+            f"  {synergy_reason}\n"
             f"  🔍 顧客の本音タイプが判明: 『{type_jp}』\n"
             f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+3)\n"
             f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
             f"  - 初期顧客満足度 +15"
         )
     else:
-        # ミスマッチの場合、時間だけ浪費（要件定義の罠 / 要求具体度の星+1）
+        # 部分一致 / 噛み合わせ不足: 要求具体度 +1、満足度 +5
         project.clarity_level = min(5, project.clarity_level + 1)
         project.customer.satisfaction = min(100.0, project.customer.satisfaction + 5.0)
-        domain_jp = "バックエンド" if project_domain == "BE" else "フロントエンド"
-        pl_spec_jp = "バックエンド" if pl.specialty == "BE" else "フロントエンド"
         return (
-            f"🚨 【ヒアリングミスマッチ（要件定義の罠）】{ap_msg}\n"
-            f"  今回は{domain_jp}中心の要件に対し、{pl.name}の専門知識({pl_spec_jp})が合致しませんでした。\n"
+            f"🚨 【ヒアリング噛み合わせ不足（要件定義の罠）】{ap_msg}\n"
+            f"  『{type_jp}』な顧客に対し、{pl.name}の得意スタイル（技術力 {pl.tech_skill}/5, コミュ力 {pl.comm_skill}/5）の強みを十分に活かしきれませんでした。\n"
             f"  🔍 顧客の本音タイプが判明: 『{type_jp}』\n"
-            f"  技術的な議論が噛み合わず、時間（1週間）を浪費した割には要件があまり明確になりませんでした。\n"
+            f"  対話がやや平行線をたどり、時間（1週間）を消費した割には要件があまり明確になりませんでした。\n"
             f"  - 要求具体度: {'🌟' * old_clarity} ➔ {'🌟' * project.clarity_level} (+1)\n"
             f"  - 納期妥当性: {'🌟' * old_schedule_level} ➔ {'🌟' * project.schedule_level} (-1 / 納期1週間消費)\n"
             f"  - 初期顧客満足度 +5"
@@ -76,7 +82,7 @@ def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> 
 
 def generate_pl_initial_estimation_summary(project: Project, tasks: list[Task]) -> str:
     """PLからPMへ提出される着任時の概算試算報告メッセージを生成する"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     pl_name = pl.name if pl else "現場リーダー"
 
     total_hours = sum(t.estimated_hours for t in tasks if not t.id.startswith("BUG_FIX_"))
@@ -147,7 +153,7 @@ def request_phased_release(project: Project, pm: PM = None) -> str:
 
 def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     """PLによるスケジュール妥当性見積もりレポートを生成する"""
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return "⚠️ PLがアサインされていません。"
 
@@ -190,7 +196,7 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
     if not project.pl_active:
         return
 
-    pl = next((d for d in project.assigned_developers if d.role == "PL"), None)
+    pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
     if not pl:
         return
 
@@ -202,7 +208,7 @@ def auto_assign_tasks(project: Project, tasks: list[Task], logs: list[str], day_
     # 空いているDEVメンバー（担当中のタスクがないメンバー）の取得
     free_devs = []
     for dev in project.assigned_developers:
-        if dev.role != "DEV":
+        if dev.assigned_role != "DEV":
             continue
         is_busy = any(t.assigned_developer_id == dev.id and t.status == "IN_PROGRESS" for t in tasks)
         if not is_busy:
@@ -254,7 +260,7 @@ def run_weekly_sprint(
 
         # 開発者の作業進行
         for dev in developers:
-            if dev.role == "PL":
+            if dev.assigned_role == "PL":
                 # PL自身の状態更新
                 if dev.id in resting_ids:
                     dev.fatigue = max(0.0, dev.fatigue - 20.0)
@@ -289,30 +295,15 @@ def run_weekly_sprint(
             )
 
             if assigned_task:
-                # 専門性とタスクスキルのミスマッチ判定
-                if dev.specialty == "BE" and assigned_task.skill_type == "FE":
-                    speed_mult = 0.6
-                elif dev.specialty == "FE" and assigned_task.skill_type == "BE":
-                    speed_mult = 0.5
-                elif dev.specialty == "BE" and assigned_task.skill_type == "BE":
-                    speed_mult = 1.3
-                elif dev.specialty == "FE" and assigned_task.skill_type == "FE":
-                    speed_mult = 1.3
-                else:
-                    speed_mult = 1.0
-
                 work_factor = calculate_work_factor(dev)
-                actual_progress = hours * dev.work_speed * speed_mult * work_factor
+                actual_progress = hours * dev.work_speed * work_factor
                 assigned_task.progress += (actual_progress / assigned_task.estimated_hours) * 100.0
 
                 # 疲労と士気の計算
                 dev.fatigue += 6.0 if is_overtime else 3.0
                 dev.morale -= 4.0 if is_overtime else 1.0
 
-                mismatch_sign = " ⚠️[スキル相性低下中]" if speed_mult < 1.0 else ""
-                logs.append(
-                    f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%){mismatch_sign}"
-                )
+                logs.append(f"🛠 {dev.name} が「{assigned_task.name}」を作業中... ({assigned_task.progress:.0f}%)")
 
                 # タスク完了判定
                 if assigned_task.progress >= 100.0:
@@ -395,7 +386,7 @@ def trigger_event(project: Project, tasks: list[Task]) -> dict:
     chance = rework_chances.get(project.clarity_level, 0.30)
 
     if random.random() < chance:
-        target_dev = random.choice([d for d in developers if d.role == "DEV"])
+        target_dev = random.choice([d for d in developers if d.assigned_role == "DEV"])
         return {
             "id": "rework_request",
             "title": "顧客からの追加要望（手戻り）",
@@ -538,6 +529,6 @@ def process_yearly_closing(pm: PM, developers: list[Developer]) -> list[str]:
 
     new_grad = generate_new_graduate(pm.completed_projects)
     developers.append(new_grad)
-    logs.append(f"✨ チームに新入社員 {new_grad.name} (22歳 / {new_grad.specialty}専門) が配属されました！")
+    logs.append(f"✨ チームに新入社員 {new_grad.name} (22歳) が配属されました！")
 
     return logs

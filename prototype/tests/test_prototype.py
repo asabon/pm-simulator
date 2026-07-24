@@ -12,7 +12,7 @@ def test_pm_ap_reset():
 
 
 def test_developer_resolution_display():
-    dev = Developer("dev1", "テスト太郎", 1.0, 0.02, [], age=25, resolution=0)
+    dev = Developer("dev1", "テスト太郎", age=25, resolution=0)
     assert "未知" in dev.get_status_display()
 
     dev.resolution = 1
@@ -26,7 +26,7 @@ def test_urgent_events():
     customer = Customer("c1", "テスト顧客", "QUALITY_ORIENTED")
     project = Project("テストPJ", 4, customer)
     pm = PM()
-    dev = Developer("dev1", "テスト開発者", 1.0, 0.02, [], age=30)
+    dev = Developer("dev1", "テスト開発者", age=30)
     project.assigned_developers = [dev]
 
     # 正常時はアラートなし
@@ -41,8 +41,8 @@ def test_urgent_events():
 
 def test_process_yearly_closing():
     pm = PM()
-    dev_young = Developer("dev_y", "若手", 1.0, 0.02, [], age=24, resolution=0)
-    dev_old = Developer("dev_o", "ベテラン", 1.5, 0.01, [], age=64, resolution=1)
+    dev_young = Developer("dev_y", "若手", age=24, resolution=0)
+    dev_old = Developer("dev_o", "ベテラン", age=64, resolution=1)
     developers = [dev_young, dev_old]
 
     logs = process_yearly_closing(pm, developers)

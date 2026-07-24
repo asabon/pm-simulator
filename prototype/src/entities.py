@@ -23,29 +23,49 @@ class Developer(Person):
         self,
         dev_id: str,
         name: str,
-        work_speed: float,
-        base_bug_rate: float,
-        personality_tags: list,
-        role: str = "DEV",
-        specialty: str = "BE",
+        tech_skill: int = 3,
+        comm_skill: int = 3,
+        leadership_skill: int = 3,
+        speed_skill: int = 3,
+        mental_skill: int = 3,
         age: int = 25,
-        experience_level: str = "MIDDLE",
         resolution: int = 0,
     ):
-        super().__init__(dev_id, name, role)
-        self.work_speed = work_speed
-        self.base_bug_rate = base_bug_rate
-        self.personality_tags = personality_tags
-        self.specialty = specialty
+        super().__init__(dev_id, name, "MEMBER")
+        self.tech_skill = tech_skill
+        self.comm_skill = comm_skill
+        self.leadership_skill = leadership_skill
+        self.speed_skill = speed_skill
+        self.mental_skill = mental_skill
 
+        self.assigned_role = "DEV"  # プロジェクト内での動的役割 ("PL" または "DEV")
         self.age = age
-        self.experience_level = experience_level
         self.resolution = resolution
         self.is_retired = False
 
         self._morale = 80.0
         self._fatigue = 0.0
         self.reveal_duration = 0
+
+    @property
+    def is_pl_qualified(self) -> bool:
+        """統率力 (leadership_skill >= 3) が一定以上であればPL（現場リーダー）適性あり"""
+        return self.leadership_skill >= 3
+
+    @property
+    def quality_skill(self) -> int:
+        """品質能力 (技術力と統率力のバランスから算出)"""
+        return max(1, min(5, round((self.tech_skill + self.leadership_skill) / 2)))
+
+    @property
+    def work_speed(self) -> float:
+        """speed_skill (1~5) から算定される動的作業スピード (0.7倍 〜 1.5倍)"""
+        return 0.5 + 0.2 * self.speed_skill
+
+    @property
+    def base_bug_rate(self) -> float:
+        """quality_skill (1~5) から算定される動的基礎バグ率 (5.0% 〜 1.0%)"""
+        return max(0.005, 0.06 - 0.01 * self.quality_skill)
 
     @property
     def morale(self):
@@ -64,54 +84,54 @@ class Developer(Person):
         self._fatigue = max(0.0, min(100.0, value))
 
     def get_status_display(self) -> str:
+        pl_qualified_tag = " [PL適性✨]" if self.is_pl_qualified else ""
         if self.resolution == 0:
-            return f"年齢: {self.age}歳 | 経験: {self.experience_level} | パラメータ: 未知 [?] (協働で解像度向上)"
+            return f"年齢: {self.age}歳{pl_qualified_tag} | レーダーチャート: 未知 [❓❓❓❓❓] (協働で解像度向上)"
         elif self.resolution == 1:
             fatigue_label = (
                 "高 (限界近し)" if self.fatigue >= 70 else ("中 (疲労蓄積)" if self.fatigue >= 40 else "低 (良好)")
             )
-            morale_label = "良好" if self.morale >= 70 else ("普通" if self.morale >= 40 else "低下 (危険)")
-            return f"年齢: {self.age}歳 | 疲労感: {fatigue_label} | 士気: {morale_label} | 専門性: {self.specialty}"
+            return (
+                f"年齢: {self.age}歳{pl_qualified_tag} | 5軸評価(シルエット): [技術:{self.tech_skill} コミュ:{self.comm_skill} "
+                f"統率:{self.leadership_skill} 速度:{self.speed_skill} メンタル:{self.mental_skill}] | 疲労感: {fatigue_label}"
+            )
         else:
-            return f"年齢: {self.age}歳 | 疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100 | 速度: {self.work_speed:.1f} | バグ率: {self.base_bug_rate * 100:.1f}%"
+            return (
+                f"年齢: {self.age}歳{pl_qualified_tag} | 🕸️ 5軸レーダー: 🛠️技術:{self.tech_skill} 🤝コミュ:{self.comm_skill} "
+                f"👑統率:{self.leadership_skill} ⚡速度:{self.speed_skill} 🧠メンタル:{self.mental_skill} | "
+                f"疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100"
+            )
 
     def speak(self, current_task=None) -> str:
         return self.get_sign(current_task)
 
     def get_sign(self, current_task=None) -> str:
-        if self.role == "PL":
+        if self.assigned_role == "PL":
             if self.fatigue >= 80 or self.morale <= 20:
                 return "「メンバーも疲弊してますし、私ももう限界です……。進捗管理どころではありません。」"
             elif self.fatigue >= 50 or self.morale <= 50:
                 return "「PM、現場に直接口を出しすぎではないですか？私への相談を通してください。」"
 
-            if self.specialty == "BE":
-                return "「今回のプロジェクト要件は私の得意ドメインなので、設計は任せてください。PMは交渉に専念を。」"
-            elif self.specialty == "FE":
-                return "「今回のシステム要件は以前にも同様の経験があります。現場管理は私に任せてください。」"
+            if self.tech_skill >= 4:
+                return "「技術的な堅牢性と見積もり監査は私に任せてください。PMは顧客交渉に専念を。」"
+            elif self.comm_skill >= 4:
+                return "「要件のヒアリングや現場の雰囲気づくりは任せてください。顧客対話もサポートします。」"
             return "「進捗管理は私に任せて、PMは顧客交渉やリスク対策に集中してください。」"
 
         if self.fatigue >= 80 or self.morale <= 20:
             return "「……うう、頭が痛いです。体調が優れないので作業が遅れるかもしれません……」"
 
-        if current_task and current_task.skill_type != self.specialty:
-            if self.fatigue >= 50 or self.morale <= 50:
-                return "「経験の薄い分野のタスクで、しかも疲れが溜まっていて全然頭が回りません……」"
-            return "「今回の案件の要件はあまり経験がない分野なんですよね……少し手探りです」"
-
         if self.fatigue >= 50 or self.morale <= 50:
-            return "「最近ちょっと寝不足ですね……。仕様がコロコロ変わると心身ともにキツいです」"
+            return "「最近ちょっと寝不足ですね……。仕様変更が重なると心身ともにキツいです」"
 
-        if "DRINK_LOVER" in self.personality_tags and self.morale >= 85:
-            return "担当タスクを笑顔でこなしています。「今度みんなで飲みに行きませんか？」"
-        if "TECH_GEEK" in self.personality_tags and self.morale >= 85:
-            return "黙々と作業しています。「新しい設計フレームを導入したら、品質が上がりました！」"
+        if self.morale >= 85:
+            return "担当タスクを順調にこなしています。「チームの雰囲気も良好ですね！」"
 
         return "「今週も順調です！タスクを進めていきます」"
 
 
 class Task:
-    def __init__(self, task_id: str, name: str, estimated_hours: float, skill_type: str = "BE"):
+    def __init__(self, task_id: str, name: str, estimated_hours: float):
         self.id = task_id
         self.name = name
         self.estimated_hours = estimated_hours
@@ -119,7 +139,6 @@ class Task:
         self.progress = 0.0
         self.assigned_developer_id = None
         self.status = "TODO"
-        self.skill_type = skill_type
 
 
 class Customer(Person):
