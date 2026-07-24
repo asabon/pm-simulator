@@ -154,7 +154,7 @@ def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
     project.has_evidence = True  # レポートを確認したためエビデンスを保持
 
     if pl.id == "pl_ken":
-        report = "📋 【ケンPLの見積もり監査レポート】\n"
+        report = f"📋 【{pl.name}の見積もり監査レポート】\n"
         report += "  ■ 分析内容:\n"
         report += f"    - 要求具体度: {'🌟' * project.clarity_level} (レベル {project.clarity_level}/5)\n"
         report += f"    - 予算妥当性: {'🌟' * project.budget_level} (レベル {project.budget_level}/5)\n"
@@ -173,7 +173,7 @@ def generate_pl_estimation_report(project: Project, tasks: list[Task]) -> str:
             report += "    ✅ 納期内に十分に完了可能なスケジュール設計です。"
         return report
     else:
-        report = "📋 【レンPLの状況報告レポート (※見積もり精度: 粗め)】\n"
+        report = f"📋 【{pl.name}の状況報告レポート (※見積もり精度: 粗め)】\n"
         report += "  ■ 妥当性判定:\n"
 
         if project.schedule_level <= 2:

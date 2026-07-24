@@ -8,7 +8,7 @@ def get_pl_candidates() -> list[Developer]:
     return [
         Developer(
             dev_id="pl_ken",
-            name="ケン (ケンPL)",
+            name="ケン",
             work_speed=1.2,
             base_bug_rate=0.02,
             personality_tags=["TECH_GEEK"],
@@ -20,7 +20,7 @@ def get_pl_candidates() -> list[Developer]:
         ),
         Developer(
             dev_id="pl_ren",
-            name="レン (レンPL)",
+            name="レン",
             work_speed=0.8,
             base_bug_rate=0.04,
             personality_tags=[],
@@ -38,7 +38,7 @@ def get_dev_candidates() -> list[Developer]:
     return [
         Developer(
             dev_id="dev_taku",
-            name="タク (タクDEV)",
+            name="タク",
             work_speed=1.0,
             base_bug_rate=0.02,
             personality_tags=["DRINK_LOVER"],
@@ -50,7 +50,7 @@ def get_dev_candidates() -> list[Developer]:
         ),
         Developer(
             dev_id="dev_yui",
-            name="ユイ (ユイDEV)",
+            name="ユイ",
             work_speed=1.1,
             base_bug_rate=0.01,
             personality_tags=["PRIVATE_FIRST"],
@@ -61,8 +61,8 @@ def get_dev_candidates() -> list[Developer]:
             resolution=0,
         ),
         Developer(
-            dev_id="dev_sasaki",
-            name="佐々木さん (ベテランDEV)",
+            dev_id="dev_gen",
+            name="ゲン",
             work_speed=1.5,
             base_bug_rate=0.005,
             personality_tags=["VETERAN_MASTER"],
