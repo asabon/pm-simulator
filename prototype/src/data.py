@@ -61,8 +61,8 @@ def get_dev_candidates() -> list[Developer]:
             resolution=0,
         ),
         Developer(
-            dev_id="dev_yamada",
-            name="山田さん (ベテランDEV)",
+            dev_id="dev_sasaki",
+            name="佐々木さん (ベテランDEV)",
             work_speed=1.5,
             base_bug_rate=0.005,
             personality_tags=["VETERAN_MASTER"],
