@@ -29,6 +29,9 @@ class Developer(Person):
         role: str = "DEV",
         tech_skill: int = 3,
         comm_skill: int = 3,
+        speed_skill: int = 3,
+        quality_skill: int = 3,
+        mental_skill: int = 3,
         age: int = 25,
         experience_level: str = "MIDDLE",
         resolution: int = 0,
@@ -39,6 +42,9 @@ class Developer(Person):
         self.personality_tags = personality_tags
         self.tech_skill = tech_skill
         self.comm_skill = comm_skill
+        self.speed_skill = speed_skill
+        self.quality_skill = quality_skill
+        self.mental_skill = mental_skill
 
         self.age = age
         self.experience_level = experience_level
@@ -67,19 +73,20 @@ class Developer(Person):
 
     def get_status_display(self) -> str:
         if self.resolution == 0:
-            return f"年齢: {self.age}歳 | 経験: {self.experience_level} | パラメータ: 未知 [?] (協働で解像度向上)"
+            return f"年齢: {self.age}歳 | 経験: {self.experience_level} | レーダーチャート: 未知 [❓❓❓❓❓]"
         elif self.resolution == 1:
             fatigue_label = (
                 "高 (限界近し)" if self.fatigue >= 70 else ("中 (疲労蓄積)" if self.fatigue >= 40 else "低 (良好)")
             )
             return (
-                f"年齢: {self.age}歳 | 技術力: {'🌟' * self.tech_skill} ({self.tech_skill}/5) | "
-                f"コミュ力: {'🌟' * self.comm_skill} ({self.comm_skill}/5) | 疲労感: {fatigue_label}"
+                f"年齢: {self.age}歳 | 5軸評価(シルエット): [技術:{self.tech_skill} コミュ:{self.comm_skill} "
+                f"速度:{self.speed_skill} 品質:{self.quality_skill} メンタル:{self.mental_skill}] | 疲労感: {fatigue_label}"
             )
         else:
             return (
-                f"年齢: {self.age}歳 | 技術力: {self.tech_skill}/5 | コミュ力: {self.comm_skill}/5 | "
-                f"疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100 | 速度: {self.work_speed:.1f}"
+                f"年齢: {self.age}歳 | 🕸️ 5軸レーダー: 🛠️技術:{self.tech_skill} 🤝コミュ:{self.comm_skill} "
+                f"⚡速度:{self.speed_skill} 🛡️品質:{self.quality_skill} 🧠メンタル:{self.mental_skill} | "
+                f"疲労度: {self.fatigue:.0f}/100 | 士気: {self.morale:.0f}/100"
             )
 
     def speak(self, current_task=None) -> str:

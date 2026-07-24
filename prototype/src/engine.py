@@ -4,10 +4,11 @@ from prototype.src.entities import PM, Developer, Project, Task
 
 
 def calculate_work_factor(dev: Developer) -> float:
-    """士気と疲労による作業効率補正を計算する"""
+    """士気・疲労およびスピード能力(speed_skill)による作業効率補正を計算する"""
     morale_factor = 0.5 + 0.5 * (dev.morale / 100.0)
     fatigue_factor = 1.0 - 0.5 * (dev.fatigue / 100.0)
-    return morale_factor * fatigue_factor
+    speed_factor = 0.7 + 0.1 * getattr(dev, "speed_skill", 3)
+    return morale_factor * fatigue_factor * speed_factor
 
 
 def run_detailed_hearing(project: Project, tasks: list[Task], pm: PM = None) -> str:
