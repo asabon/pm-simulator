@@ -1,4 +1,7 @@
-from prototype.src.entities import Developer, Task, Customer, Project
+import random
+
+from prototype.src.entities import Customer, Developer, Project, Task
+
 
 def get_pl_candidates() -> list[Developer]:
     """PL（プロジェクトリーダー）の雇用候補者を返す"""
@@ -6,24 +9,31 @@ def get_pl_candidates() -> list[Developer]:
         Developer(
             dev_id="pl_ken",
             name="ケン (ケンPL)",
-            work_speed=1.0,
+            work_speed=1.2,
             base_bug_rate=0.02,
             salary=18000,
             personality_tags=["TECH_GEEK"],
             role="PL",
-            specialty="BE"
+            specialty="BE",
+            age=38,
+            experience_level="VETERAN",
+            resolution=0,
         ),
         Developer(
             dev_id="pl_ren",
             name="レン (レンPL)",
-            work_speed=0.7,
-            base_bug_rate=0.05,
-            salary=10000,
+            work_speed=0.8,
+            base_bug_rate=0.04,
+            salary=11000,
             personality_tags=[],
             role="PL",
-            specialty="FE"
-        )
+            specialty="FE",
+            age=29,
+            experience_level="MIDDLE",
+            resolution=0,
+        ),
     ]
+
 
 def get_dev_candidates() -> list[Developer]:
     """DEV（開発者）の雇用候補者を返す"""
@@ -36,61 +46,101 @@ def get_dev_candidates() -> list[Developer]:
             salary=15000,
             personality_tags=["DRINK_LOVER"],
             role="DEV",
-            specialty="BE"
+            specialty="BE",
+            age=32,
+            experience_level="MIDDLE",
+            resolution=0,
         ),
         Developer(
             dev_id="dev_yui",
             name="ユイ (ユイDEV)",
-            work_speed=1.0,
+            work_speed=1.1,
             base_bug_rate=0.01,
-            salary=12000,
+            salary=13000,
             personality_tags=["PRIVATE_FIRST"],
             role="DEV",
-            specialty="FE"
-        )
+            specialty="FE",
+            age=27,
+            experience_level="MIDDLE",
+            resolution=0,
+        ),
+        Developer(
+            dev_id="dev_yamada",
+            name="山田さん (ベテランDEV)",
+            work_speed=1.5,
+            base_bug_rate=0.005,
+            salary=22000,
+            personality_tags=["VETERAN_MASTER"],
+            role="DEV",
+            specialty="BE",
+            age=64,  # 定年間近 (65歳で退職)
+            experience_level="VETERAN",
+            resolution=1,  # 長年の社歴により粗い解像度は開示済
+        ),
     ]
 
-def get_initial_project_data(customer_type="QUALITY_ORIENTED"):
+
+def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
+    """年度更新時に配属される新入社員を生成する"""
+    first_names = ["アオイ", "ヒナタ", "ソラ", "リク", "ハル"]
+    name = f"{random.choice(first_names)} (新入社員)"
+    specialty = random.choice(["BE", "FE"])
+    return Developer(
+        dev_id=f"dev_new_{dev_id_suffix}",
+        name=name,
+        work_speed=0.6,
+        base_bug_rate=0.08,
+        salary=8000,
+        personality_tags=["ROOKIE"],
+        role="DEV",
+        specialty=specialty,
+        age=22,
+        experience_level="JUNIOR",
+        resolution=0,  # 完全未知
+    )
+
+
+def get_initial_project_data(project_index: int = 1, customer_type="QUALITY_ORIENTED"):
     # 顧客の定義と星パラメータの初期化
     if customer_type == "SPEED_ORIENTED":
         c_name = "スピード重視顧客 (B社)"
         clarity_level = 4
         budget_level = 3
-        schedule_level = 1  # 納期妥当性が非常に厳しい (弾丸スケジュール)
+        schedule_level = 1  # 納期妥当性が非常に厳しい
+        priority_expectation = "SCHEDULE"
     elif customer_type == "VAGUE_REQUIREMENTS":
         c_name = "渡辺部長 (A社)"
         clarity_level = 1  # 要求具体度が非常に曖昧
         budget_level = 3
         schedule_level = 3
+        priority_expectation = "SATISFACTION"
     else:  # QUALITY_ORIENTED
         c_name = "品質重視顧客 (C社)"
         clarity_level = 3
         budget_level = 2  # 予算がカツカツ
         schedule_level = 3
+        priority_expectation = "QUALITY"
 
-    customer = Customer(
-        customer_id="cust_watanabe",
-        name=c_name,
-        customer_type=customer_type
-    )
+    customer = Customer(customer_id=f"cust_{project_index}", name=c_name, customer_type=customer_type)
 
-    # 予算妥当性星レベルマッピング: 1=60万, 2=80万, 3=100万, 4=120万, 5=150万
+    # 予算妥当性星レベルマッピング
     budget_map = {1: 600000, 2: 800000, 3: 1000000, 4: 1200000, 5: 1500000}
     init_budget = budget_map.get(budget_level, 1000000)
 
-    # 納期妥当性星レベルマッピング: 1=2週間, 2=3週間, 3=4週間, 4=5週間, 5=6週間
+    # 納期妥当性星レベルマッピング
     schedule_map = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
     init_deadline = schedule_map.get(schedule_level, 4)
 
-    # プロジェクトの定義
+    project_name = f"第{project_index}期 基幹システム改修プロジェクト"
     project = Project(
-        name="新システム構築プロジェクト",
+        name=project_name,
         budget=init_budget,
         deadline_weeks=init_deadline,
         customer=customer,
         clarity_level=clarity_level,
         budget_level=budget_level,
-        schedule_level=schedule_level
+        schedule_level=schedule_level,
+        priority_expectation=priority_expectation,
     )
 
     # タスク一覧の定義 (FE / BE の割り振り)
@@ -104,7 +154,7 @@ def get_initial_project_data(customer_type="QUALITY_ORIENTED"):
         Task("T07", "管理画面ダッシュボード構築", 24.0, "FE"),
         Task("T08", "単体テストコード作成", 20.0, "BE"),
         Task("T09", "統合シナリオテスト実施", 32.0, "FE"),
-        Task("T10", "本番サーバーへのデプロイ", 16.0, "BE")
+        Task("T10", "本番サーバーへのデプロイ", 16.0, "BE"),
     ]
 
     return project, tasks

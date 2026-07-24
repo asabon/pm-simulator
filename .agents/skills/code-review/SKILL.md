@@ -29,5 +29,6 @@ description: PR発行前に変更されたソースコード（Python/GDScript�
 
 ## 🛠 実行手順
 1. `git diff` で差分のあるソースコード（`.py`, `.gd` 等）を特定する。
-2. 上記のチェック項目を1つずつ検証する。
-3. 問題が見つかった場合はPR発行前に修正を完了させる。
+2. Python コードの変更がある場合、`uv run ruff check --fix prototype/` および `uv run ruff format prototype/` を実行してLint・フォーマットを適用する。
+3. 上記のチェック項目を1つずつ検証する。
+4. 問題が見つかった場合はPR発行前に修正を完了させる。

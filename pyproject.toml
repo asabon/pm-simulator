@@ -12,3 +12,28 @@ play-sim = "prototype.src.main:main"
 [tool.uv]
 package = true
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes (unused imports, etc.)
+    "I",   # isort (import sorting)
+]
+ignore = [
+    "E501", # 日本語メッセージ・長いprint文の行長警告を無視
+]
+
+
+
+
