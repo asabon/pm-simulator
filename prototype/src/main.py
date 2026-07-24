@@ -126,32 +126,28 @@ def main():
             f"  - 納期妥当性: {'🌟' * project.schedule_level} (レベル {project.schedule_level}/5) ➔ 納期: {project.deadline_weeks} 週間"
         )
 
-        # 体制構築
-        print_header("キックオフ Step 2: 体制構築（メンバー選定）")
-        print("所属メンバープールから今期のPLおよび開発メンバーをアサインしてください。")
+        # 体制構築（自動アサイン）
+        print_header("キックオフ Step 2: 体制確定（チーム自動アサイン）")
+        print("所属メンバープールから今期のPLおよび開発メンバーが自動配置されました。")
 
-        # PLのアサイン
-        print("\n[PL（プロジェクトリーダー）を選択してください]:")
-        for idx, pl_cand in enumerate(pl_pool):
-            print(f"{idx + 1}: {pl_cand.name} (専門: {pl_cand.specialty}) - {pl_cand.get_status_display()}")
-        pl_choice = input("選択 (デフォルト: 1): ")
-        selected_pl = pl_pool[1] if pl_choice == "2" else pl_pool[0]
+        # PLの自動アサイン
+        selected_pl = next((p for p in pl_pool if not getattr(p, "is_retired", False)), pl_pool[0])
         project.assigned_developers.append(selected_pl)
-        print(f"➔ {selected_pl.name} をPLとしてアサインしました。")
+        print(
+            f"\n[PL (プロジェクトリーダー)]: {selected_pl.name} ({SKILL_LABEL.get(selected_pl.specialty, selected_pl.specialty)}専門) ➔ {selected_pl.get_status_display()}"
+        )
 
-        # DEVのアサイン
-        print("\n[開発メンバーをチームに組み込みます]:")
+        # DEVの自動アサイン
+        print("\n[開発メンバー (DEV)]:")
         for dev_cand in team_pool:
-            if dev_cand.is_retired:
+            if getattr(dev_cand, "is_retired", False):
                 continue
-            print(f" - {dev_cand.name} ➔ {dev_cand.get_status_display()}")
-            u_input = input("  アサインしますか？ (y/n, デフォルト: y): ")
-            if u_input.lower() != "n":
-                project.assigned_developers.append(dev_cand)
-                print(f"  ➔ {dev_cand.name} をアサインしました。")
+            project.assigned_developers.append(dev_cand)
+            print(
+                f" - {dev_cand.name} ({SKILL_LABEL.get(dev_cand.specialty, dev_cand.specialty)}専門) ➔ {dev_cand.get_status_display()}"
+            )
 
-        if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0:
-            print("⚠️ DEVメンバーが0名のため、自動的に候補を追加アサインしました。")
+        if len([d for d in project.assigned_developers if d.role == "DEV"]) == 0 and team_pool:
             project.assigned_developers.append(team_pool[0])
 
         # 事前防衛交渉（ヒアリング等）

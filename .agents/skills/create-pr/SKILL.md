@@ -42,8 +42,9 @@ description: PR作成依頼（「PR出してください」等）を受けた際
   - [x] ドキュメント整合性・リンクチェック: クリア
 ```
 
-2. サンドボックス環境のダミートークン干渉を防ぐため、事前に環境変数を無効化して `gh` コマンドを実行する:
+2. PowerShell環境でのバッククォートエスケープ事故（不要な `\` の混入）を防ぐため、PR本文を一時ファイル（`.git/pr_body.md` 等）に書き出し、`--body-file` オプションを使用して `gh` コマンドを実行する。また、サンドボックス環境のダミートークン干渉を防ぐため、事前に環境変数を無効化する:
    ```powershell
-   $env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "..." --body "..."
+   # PR本文を一時ファイル .git/pr_body.md に作成した上で実行
+   $env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "..." --body-file .git/pr_body.md
    ```
 3. 生成された PR のリンクをユーザーに報告する。
