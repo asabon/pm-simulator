@@ -94,42 +94,72 @@ def generate_new_graduate(dev_id_suffix: int = 1) -> Developer:
     )
 
 
-def get_initial_project_data(project_index: int = 1, customer_type="QUALITY_ORIENTED"):
-    # 顧客の定義と星パラメータの初期化
-    if customer_type == "SPEED_ORIENTED":
-        c_name = "スピード重視顧客 (B社)"
-        clarity_level = 4
-        budget_level = 3
-        schedule_level = 1  # 納期妥当性が非常に厳しい
-        priority_expectation = "SCHEDULE"
-    elif customer_type == "VAGUE_REQUIREMENTS":
-        c_name = "渡辺部長 (A社)"
-        clarity_level = 1  # 要求具体度が非常に曖昧
-        budget_level = 3
-        schedule_level = 3
-        priority_expectation = "SATISFACTION"
-    else:  # QUALITY_ORIENTED
-        c_name = "品質重視顧客 (C社)"
-        clarity_level = 3
-        budget_level = 2  # 予算がカツカツ
-        schedule_level = 3
-        priority_expectation = "QUALITY"
+def get_initial_project_data(project_index: int = 1, customer_type: str = None):
+    # ドメイン特性と顧客スタンスの選定
+    domain_configs = [
+        {
+            "domain_type": "MISSION_CRITICAL",
+            "domain_name": "基幹決済システム改修",
+            "c_type": "QUALITY_ORIENTED",
+            "c_name": "渡辺部長 (決済事業部)",
+            "clarity_level": 3,
+            "budget_level": 2,
+            "schedule_level": 3,
+            "priority_expectation": "QUALITY",
+            "stance_quote": "今回の基幹決済システム改修は我が社の信用に関わる最重要案件です。障害やバグは絶対に許されませんよ。",
+        },
+        {
+            "domain_type": "NEW_BUSINESS",
+            "domain_name": "新規Webサービス立ち上げ",
+            "c_type": "SPEED_ORIENTED",
+            "c_name": "高橋室長 (新規事業室)",
+            "clarity_level": 4,
+            "budget_level": 3,
+            "schedule_level": 1,
+            "priority_expectation": "SCHEDULE",
+            "stance_quote": "競合他社が来月類似サービスを出すらしいんだ！細かい不備は後回しでいいから、とにかく1日でも早くリリースだ！",
+        },
+        {
+            "domain_type": "DX_REFACTORING",
+            "domain_name": "基幹業務プロセスDX刷新",
+            "c_type": "VAGUE_REQUIREMENTS",
+            "c_name": "佐藤局長 (デジタル推進局)",
+            "clarity_level": 1,
+            "budget_level": 3,
+            "schedule_level": 3,
+            "priority_expectation": "SATISFACTION",
+            "stance_quote": "役員会からの急な指示で始まったDX企画でね…現場でも具体的な業務仕様が固まりきっていないんだ。相談しながら進めたい。",
+        },
+    ]
 
-    customer = Customer(customer_id=f"cust_{project_index}", name=c_name, customer_type=customer_type)
+    if customer_type:
+        config = next((c for c in domain_configs if c["c_type"] == customer_type), domain_configs[0])
+    else:
+        # project_index に応じて順番に割り当て
+        config = domain_configs[(project_index - 1) % len(domain_configs)]
+
+    customer = Customer(
+        customer_id=f"cust_{project_index}",
+        name=config["c_name"],
+        customer_type=config["c_type"],
+        stance_quote=config["stance_quote"],
+    )
 
     # 納期妥当性星レベルマッピング
     schedule_map = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
-    init_deadline = schedule_map.get(schedule_level, 4)
+    init_deadline = schedule_map.get(config["schedule_level"], 4)
 
-    project_name = f"第{project_index}期 基幹システム改修プロジェクト"
+    project_name = f"第{project_index}期 {config['domain_name']}"
     project = Project(
         name=project_name,
         deadline_weeks=init_deadline,
         customer=customer,
-        clarity_level=clarity_level,
-        budget_level=budget_level,
-        schedule_level=schedule_level,
-        priority_expectation=priority_expectation,
+        clarity_level=config["clarity_level"],
+        budget_level=config["budget_level"],
+        schedule_level=config["schedule_level"],
+        priority_expectation=config["priority_expectation"],
+        domain_type=config["domain_type"],
+        domain_name=config["domain_name"],
     )
 
     # タスク一覧の定義 (FE / BE の割り振り)
