@@ -1,5 +1,5 @@
 from prototype.src.engine import check_urgent_events, process_yearly_closing
-from prototype.src.entities import PM, Customer, Developer, Project
+from prototype.src.entities import PM, Customer, Developer, Project, Team
 
 
 def test_pm_ap_reset():
@@ -22,12 +22,30 @@ def test_developer_resolution_display():
     assert "疲労度:" in dev.get_status_display()
 
 
+def test_team_structure():
+    team = Team("team_1", "開発チームA")
+    pl = Developer("pl_1", "リーダー", leadership_skill=4)
+    dev = Developer("dev_1", "メンバー", tech_skill=3)
+
+    team.set_leader(pl)
+    team.assign_member(dev)
+
+    assert team.leader == pl
+    assert len(team.members) == 1
+    assert team.all_members == [pl, dev]
+    assert pl.assigned_role == "PL"
+    assert dev.assigned_role == "DEV"
+
+
 def test_urgent_events():
     customer = Customer("c1", "テスト顧客", "QUALITY_ORIENTED")
     project = Project("テストPJ", 4, customer)
     pm = PM()
+
+    team = Team("team_1", "開発チーム")
     dev = Developer("dev1", "テスト開発者", age=30)
-    project.assigned_developers = [dev]
+    team.assign_member(dev)
+    project.register_team(team)
 
     # 正常時はアラートなし
     assert check_urgent_events(project, pm) is None
@@ -57,3 +75,28 @@ def test_process_yearly_closing():
     assert not any(d.id == "dev_o" for d in developers)
     # 新入社員が配属されている
     assert any("新入社員" in d.name for d in developers)
+
+
+def test_project_public_methods():
+    customer = Customer("c1", "テスト顧客", "QUALITY_ORIENTED")
+    project = Project("テストPJ", 4, customer)
+
+    pl = Developer("pl_1", "リーダー", leadership_skill=4)
+    dev = Developer("dev_1", "開発者", tech_skill=3)
+
+    # PL と Member のアサイン
+    assert project.assign_pl(pl)
+    assert project.assign_member(dev)
+
+    assert len(project.teams) == 1
+    assert project.main_team.leader == pl
+    assert len(project.main_team.members) == 1
+
+    # 状態取得テスト
+    summary = project.get_status_summary()
+    assert "テストPJ" in summary
+    assert "テスト顧客" in summary
+
+    status_dict = project.get_status_dict()
+    assert status_dict["name"] == "テストPJ"
+    assert status_dict["total_developers"] == 2

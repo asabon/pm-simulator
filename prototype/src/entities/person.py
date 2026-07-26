@@ -1,4 +1,12 @@
 class Person:
+    """ゲーム内に登場する人物の基底クラス。
+
+    Attributes:
+        id (str): 人物識別ID。
+        name (str): 表示名。
+        role (str): 役割カテゴリー ("PM", "MEMBER", "CUSTOMER")。
+    """
+
     def __init__(self, person_id: str, name: str, role: str):
         self.id = person_id
         self.name = name
@@ -6,6 +14,16 @@ class Person:
 
 
 class PM(Person):
+    """プレイヤーであるプロジェクトマネージャーを表すクラス。
+
+    Attributes:
+        max_ap (int): 1ターンあたりの最大行動力 (Action Points)。
+        ap (int): 現在の残り行動力。
+        career_years (int): 通算キャリア年数。
+        completed_projects (int): 完遂したプロジェクト数。
+        overall_score (float): 総合評価スコア。
+    """
+
     def __init__(self, person_id: str = "pm_player", name: str = "プレイヤーPM", max_ap: int = 3):
         super().__init__(person_id, name, "PM")
         self.max_ap = max_ap
@@ -15,6 +33,7 @@ class PM(Person):
         self.overall_score = 100.0
 
     def reset_ap(self):
+        """ターンの開始時に行動力を最大値まで回復する"""
         self.ap = self.max_ap
 
 
@@ -145,78 +164,3 @@ class Developer(Person):
             return "担当タスクを順調にこなしています。「チームの雰囲気も良好ですね！」"
 
         return "「今週も順調です！タスクを進めていきます」"
-
-
-class Task:
-    def __init__(self, task_id: str, name: str, estimated_hours: float):
-        self.id = task_id
-        self.name = name
-        self.estimated_hours = estimated_hours
-        self.actual_hours = 0.0
-        self.progress = 0.0
-        self.assigned_developer_id = None
-        self.status = "TODO"
-
-
-class Customer(Person):
-    def __init__(self, customer_id: str, name: str, customer_type: str, stance_quote: str = ""):
-        super().__init__(customer_id, name, "CUSTOMER")
-        self.type = customer_type
-        self.satisfaction = 80.0
-        self.vague_level = 80.0
-        self.stance_quote = stance_quote
-        self.revealed = False
-
-    def speak(self, current_task=None) -> str:
-        if self.revealed:
-            type_jp = {
-                "QUALITY_ORIENTED": "品質重視",
-                "SPEED_ORIENTED": "スピード重視",
-                "VAGUE_REQUIREMENTS": "要件探り出し",
-            }.get(self.type, self.type)
-            return f"「私は{self.name}です。当社が最も重要視しているのは『{type_jp}』です。」"
-        return f"「{self.stance_quote}」"
-
-
-class Project:
-    def __init__(
-        self,
-        name: str,
-        deadline_weeks: int,
-        customer: Customer,
-        clarity_level: int = 3,
-        budget_level: int = 3,
-        schedule_level: int = 3,
-        priority_expectation: str = "SCHEDULE",
-        domain_type: str = "MISSION_CRITICAL",
-        domain_name: str = "基幹決済システム改修",
-    ):
-        self.name = name
-        self.deadline_weeks = deadline_weeks
-        self.customer = customer
-
-        self.clarity_level = clarity_level
-        self.budget_level = budget_level
-        self.schedule_level = schedule_level
-
-        self.priority_expectation = priority_expectation
-
-        self.domain_type = domain_type
-        self.domain_name = domain_name
-        self.methodology = "WATERFALL"  # "WATERFALL" or "AGILE"
-
-        self.bugs_total = 0
-        self.reported_bugs = 0
-
-        self.manager_satisfaction = 80.0
-        self.week = 1
-
-        self.deadline_extension_weeks = 0
-
-        self.pl_active = True
-        self.direction = "NORMAL"
-
-        self.assigned_developers = []
-
-        self.hearing_type = None
-        self.has_evidence = False
