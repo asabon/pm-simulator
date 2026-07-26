@@ -12,7 +12,7 @@ from prototype.src.engine import (
     run_weekly_sprint,
     trigger_event,
 )
-from prototype.src.entities import PM
+from prototype.src.entities import PM, Team
 
 
 def print_header(title: str):
@@ -130,23 +130,25 @@ def main():
         # 体制構築（動的アサイン: 統率力 leadership_skill に基づく選出）
         print_header("キックオフ Step 2: 体制確定（チーム自動アサイン）")
 
+        team = Team(team_id="main_dev_team", name="メイン開発チーム")
+
         # PLの選出 (統率力 leadership_skill >= 3 かつ未退職のメンバー)
         selected_pl = next(
             (p for p in team_pool if getattr(p, "is_pl_qualified", False) and not getattr(p, "is_retired", False)),
             team_pool[0],
         )
-        selected_pl.assigned_role = "PL"
-        project.assigned_developers.append(selected_pl)
+        team.set_leader(selected_pl)
 
         # DEVの自動アサイン
         for dev_cand in team_pool:
             if dev_cand == selected_pl or getattr(dev_cand, "is_retired", False):
                 continue
-            dev_cand.assigned_role = "DEV"
-            project.assigned_developers.append(dev_cand)
+            team.assign_member(dev_cand)
 
-        pl = next((d for d in project.assigned_developers if d.assigned_role == "PL"), None)
-        devs = [d for d in project.assigned_developers if d.assigned_role == "DEV"]
+        project.register_team(team)
+
+        pl = team.leader
+        devs = team.members
         pl_str = f"{pl.name} (PL/統率力:{pl.leadership_skill})" if pl else "なし"
         devs_str = ", ".join([f"{d.name} (DEV)" for d in devs])
 
