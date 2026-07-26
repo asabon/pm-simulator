@@ -10,6 +10,12 @@ __pycache__/
 .mypy_cache/
 *.log
 
+# Coverage artifacts
+.coverage
+coverage.xml
+coverage.md
+htmlcov/
+
 # IDE & OS files
 .vscode/
 .idea/
