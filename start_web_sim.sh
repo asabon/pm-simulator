@@ -11,4 +11,4 @@ elif command -v xdg-open > /dev/null; then
   xdg-open http://localhost:8000
 fi
 
-python3 -m http.server 8000 --directory web
+uv run python -m http.server 8000 --directory web
