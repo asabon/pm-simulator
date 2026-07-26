@@ -19,6 +19,23 @@ class PM(Person):
 
 
 class Developer(Person):
+    """開発メンバー（開発者）を表すクラス。
+
+    Attributes:
+        tech_skill (int): 技術力 (1~5)。品質能力やバグ発生率の算出に影響。
+        comm_skill (int): コミュニケーション力 (1~5)。解像度向上や対話イベントに影響。
+        leadership_skill (int): 統率力 (1~5)。3以上でPL（現場リーダー）適性あり。
+        speed_skill (int): 速度 (1~5)。作業消化速度 (work_speed: 0.7~1.5倍) に影響。
+        mental_skill (int): メンタル (1~5)。疲労蓄積や士気変動への耐性に影響。
+        age (int): 年齢。
+        resolution (int): ステータス開示解像度 (0: 未知[❓], 1: 概算, 2: 完全開示)。
+        assigned_role (str): プロジェクト内での割り当て役割 ("PL" または "DEV")。
+        is_retired (bool): 離職フラグ。
+        _morale (float): 士気 (0.0 ～ 100.0)。
+        _fatigue (float): 疲労度 (0.0 ～ 100.0)。
+        reveal_duration (int): 一時的な開示効果などの継続ターン数。
+    """
+
     def __init__(
         self,
         dev_id: str,
