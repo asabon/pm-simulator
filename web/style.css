@@ -1,0 +1,298 @@
+/* PM Simulator - Core Design System & Styling */
+
+:root {
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --border-color: #475569;
+  
+  --primary: #3b82f6;
+  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Header */
+header {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 28px;
+}
+
+.logo-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pm-status-badge {
+  display: flex;
+  gap: 16px;
+  background: var(--bg-card);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+}
+
+.ap-tag {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+/* Main Container */
+main {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Glassmorphism Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Grid Layouts */
+.grid-2col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.grid-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Metric Display Boxes */
+.metric-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.metric-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* Custom Progress Bars */
+.progress-bar-container {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+.fill-primary { background: var(--primary); }
+.fill-success { background: var(--accent-green); }
+.fill-warning { background: var(--accent-warning); }
+.fill-danger  { background: var(--accent-danger); }
+
+/* Member Cards Grid */
+.member-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.member-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.member-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.role-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.role-pl { background: rgba(139, 92, 246, 0.3); color: #c4b5fd; border: 1px solid #8b5cf6; }
+.role-dev { background: rgba(59, 130, 246, 0.3); color: #93c5fd; border: 1px solid #3b82f6; }
+
+/* Interactive Command Buttons */
+.command-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-cmd {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.btn-cmd:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-cmd:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  border: none;
+  color: #fff;
+}
+
+/* Event Log Display */
+.log-box {
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-item {
+  color: #cbd5e1;
+}
+
+/* Dialog & Result Screen Overlay */
+.overlay-screen {
+  text-align: center;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.result-rank {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 13px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}

@@ -12,6 +12,9 @@ play-sim = "prototype.src.main:main"
 [tool.uv]
 package = true
 
+[tool.setuptools.packages.find]
+include = ["prototype*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 addopts = "--cov=prototype --cov-report=term-missing"
