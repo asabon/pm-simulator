@@ -532,3 +532,66 @@ def process_yearly_closing(pm: PM, developers: list[Developer]) -> list[str]:
     logs.append(f"✨ チームに新入社員 {new_grad.name} (22歳) が配属されました！")
 
     return logs
+
+
+def evaluate_project_status(project: Project, tasks: list[Task]) -> str:
+    """プロジェクトの結末・状態を判定する。
+
+    Returns:
+        "SUCCESS": 全タスク完了かつ納期内
+        "FAILED_DEADLINE": 納期超過
+        "FAILED_OVERWORK": 開発メンバーの過半数が極度な過労(fatigue >= 90)または士気潰散
+        "FAILED_CUSTOMER": 顧客満足度が0
+        "IN_PROGRESS": 進行中
+    """
+    devs = project.get_all_developers()
+    if devs:
+        overworked_count = sum(1 for d in devs if d.fatigue >= 90.0 or d.morale <= 10.0)
+        if overworked_count > len(devs) / 2:
+            return "FAILED_OVERWORK"
+
+    if project.customer.satisfaction <= 0.0:
+        return "FAILED_CUSTOMER"
+
+    remaining_weeks = project.deadline_weeks + project.deadline_extension_weeks - project.week + 1
+
+    todo_or_in_progress = [t for t in tasks if t.status in ("TODO", "IN_PROGRESS")]
+    if not todo_or_in_progress:
+        return "SUCCESS"
+
+    if remaining_weeks < 0:
+        return "FAILED_DEADLINE"
+
+    return "IN_PROGRESS"
+
+
+def calculate_final_score(project: Project, pm: PM) -> dict:
+    """プロジェクト終了時の最終評価スコアおよび評価ランクを算出する"""
+    devs = project.get_all_developers()
+    avg_fatigue = sum(d.fatigue for d in devs) / len(devs) if devs else 0.0
+    avg_morale = sum(d.morale for d in devs) / len(devs) if devs else 80.0
+
+    cust_score = project.customer.satisfaction * 0.4
+    mgr_score = project.manager_satisfaction * 0.3
+    team_score = (avg_morale * 0.5 + (100.0 - avg_fatigue) * 0.5) * 0.3
+
+    total_score = round(cust_score + mgr_score + team_score, 1)
+
+    if total_score >= 85.0:
+        rank = "S (最高評価)"
+    elif total_score >= 70.0:
+        rank = "A (良好)"
+    elif total_score >= 50.0:
+        rank = "B (標準)"
+    else:
+        rank = "C (要改善)"
+
+    return {
+        "total_score": total_score,
+        "rank": rank,
+        "customer_score": round(cust_score, 1),
+        "manager_score": round(mgr_score, 1),
+        "team_score": round(team_score, 1),
+        "avg_fatigue": round(avg_fatigue, 1),
+        "avg_morale": round(avg_morale, 1),
+    }
