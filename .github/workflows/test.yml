@@ -30,15 +30,18 @@ jobs:
       - name: Run Ruff Lint Check
         run: uv run ruff check prototype/
 
-      - name: Run Pytest with Coverage
-        run: uv run pytest prototype/tests --cov-report=term-missing --cov-report=markdown
+      - name: Run Pytest with Coverage & Test Report
+        run: uv run pytest prototype/tests --cov-report=term-missing --cov-report=markdown --md-report --md-report-output=test_report.md
 
-      - name: Add Coverage Summary
+      - name: Add Test & Coverage Summary
         if: always()
         run: |
+          echo "## 🧪 Test Execution Report" >> $GITHUB_STEP_SUMMARY
+          if [ -f test_report.md ]; then
+            cat test_report.md >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
           if [ -f coverage.md ]; then
             cat coverage.md >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Coverage report file missing." >> $GITHUB_STEP_SUMMARY
           fi

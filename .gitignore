@@ -10,10 +10,11 @@ __pycache__/
 .mypy_cache/
 *.log
 
-# Coverage artifacts
+# Coverage & Test artifacts
 .coverage
 coverage.xml
 coverage.md
+test_report.md
 htmlcov/
 
 # IDE & OS files

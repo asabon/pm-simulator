@@ -20,6 +20,7 @@ addopts = "--cov=prototype --cov-report=term-missing"
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
+    "pytest-md-report>=0.8.0",
     "ruff>=0.16.0",
 ]
 
