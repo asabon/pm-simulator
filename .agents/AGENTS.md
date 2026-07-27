@@ -35,12 +35,13 @@
     * 辞書（Dictionary）変換可能なセーブデータシリアライズ設計を行うこと。
   * ※ PR発行前の詳細な品質検証項目・チェック手順については `.agents/skills/code-review/SKILL.md` を参照すること。
 
-### 4. Git・ブランチ管理 ＆ PR自動化ルール
+### 4. Git・Issue・ブランチ管理 ＆ PR自動化ルール
 * `main` ブランチへの直接のコミットおよびプッシュは**厳禁**とする。
-* 新機能の開発やリファクタリング、ドキュメントの更新などすべての作業は、必ず `main` ブランチから切ったフィーチャーブランチ（例: `feature/xxx`）で行うこと。
-* **PR作成フロー (`create-pr` スキルの実行)**:
+* **Issue起票・ブランチ作成フロー (`create-issue` スキルの実行)**:
+  * やるべきタスクや仕様が確定した際は、原則として GitHub Issue を作成（`create-issue` スキル実行）し、その Issue 番号を冠したフィーチャーブランチ（例: `feature/issue-36-xxx` や `fix/issue-37-xxx`）を `main` から切り出して作業を開始すること。
+* **PR作成・自動クローズフロー (`create-pr` スキルの実行)**:
   * ユーザーから PR の作成を依頼された場合（例: 「PR出してください」「PR作成」等）は、必ず `.agents/skills/create-pr/SKILL.md` のワークフローに従うこと。
-  * スキル実行時に専門スキル（`code-review`, `doc-review`, `run-tests`）による自動検証・自動修正を行い、統一PRテンプレート（目的・概要・検証/自動修正結果）を適用して GitHub CLI (`gh`) からPRを発行すること。
+  * スキル実行時に専門スキル（`code-review`, `doc-review`, `run-tests`）による自動検証・自動修正を行い、関連 Issue があれば `Closes #XX` を含めた統一PRテンプレートを適用して GitHub CLI (`gh`) からPRを発行すること。
 
 ---
 
