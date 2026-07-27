@@ -296,3 +296,38 @@ footer {
   border-top: 1px solid var(--border-color);
   margin-top: auto;
 }
+
+/* Phase Stepper */
+.phase-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+}
+
+.step-item {
+  color: var(--text-dim);
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+}
+
+.step-item.active {
+  color: #ffffff;
+  background: var(--primary-gradient);
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.step-arrow {
+  color: var(--text-dim);
+  font-size: 11px;
+  user-select: none;
+}
+
+
