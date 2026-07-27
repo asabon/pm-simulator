@@ -17,13 +17,16 @@ export function getInitialProjectData(projectNumber) {
   const project = new Project(`第${projectNumber}期 基幹決済システム改修`, 4, customer);
   
   const tasks = [
-    new Task("t1", "要件定義ヒアリング", 20.0),
-    new Task("t2", "DBスキーマ・決済API設計", 30.0),
-    new Task("t3", "決済コアモジュール開発", 50.0),
-    new Task("t4", "単体テストコード作成", 20.0),
-    new Task("t5", "管理画面ダッシュボード構築", 24.0),
-    new Task("t6", "統合シナリオテスト実施", 32.0),
-    new Task("t7", "本番サーバーへのデプロイ", 16.0)
+    new Task("t1", "DBスキーマ・テーブル設計", 24.0),
+    new Task("t2", "API共通認証・セキュリティ実装", 32.0),
+    new Task("t3", "データ移行スクリプト作成", 24.0),
+    new Task("t4", "決済コア処理ロジック開発", 48.0),
+    new Task("t5", "ユーザー管理画面実装", 32.0),
+    new Task("t6", "レポート集計画面構築", 28.0),
+    new Task("t7", "管理画面ダッシュボード構築", 24.0),
+    new Task("t8", "単体テストコード作成", 24.0),
+    new Task("t9", "統合シナリオテスト実施", 32.0),
+    new Task("t10", "本番サーバーへのデプロイ", 16.0)
   ];
 
   return { project, tasks };
@@ -35,6 +38,7 @@ export function runWeeklySprint(project, tasks, overtimeIds = new Set(), pm) {
 
   if (devs.length === 0) {
     logs.push("⚠️ 開発担当メンバーがいません。進捗は停止しています。");
+    project.deadlineWeeks -= 1;
     project.week += 1;
     pm.resetAp();
     return logs;
@@ -53,18 +57,23 @@ export function runWeeklySprint(project, tasks, overtimeIds = new Set(), pm) {
     }
   });
 
-  // 進捗消化計算
+  // 進捗消化計算 (1週間 = 5日換算の現実的な作業量計算)
   devs.forEach(dev => {
     const currentTask = tasks.find(t => t.assignedDeveloperId === dev.id && t.status === "IN_PROGRESS");
     if (currentTask) {
       const isOvertime = overtimeIds.has(dev.id);
-      const speedMult = project.direction === "SPEED" ? 1.3 : 1.0;
-      const hoursPerWeek = (isOvertime ? 55.0 : 40.0) * (0.5 + 0.2 * dev.speedSkill) * speedMult;
+      const speedMult = project.direction === "SPEED" ? 1.25 : 1.0;
+      const fatigueFactor = Math.max(0.4, 1.0 - (dev.fatigue / 100.0) * 0.4);
+      const speedFactor = 0.7 + 0.1 * dev.speedSkill;
+
+      // 1人あたりの1週間あたりの実質消化時間
+      const baseHours = isOvertime ? 55.0 : 40.0;
+      const hoursPerWeek = baseHours * speedFactor * fatigueFactor * speedMult;
       
       const addedProgress = (hoursPerWeek / currentTask.estimatedHours) * 100.0;
       currentTask.progress = Math.min(100.0, currentTask.progress + addedProgress);
 
-      const fatigueInc = (isOvertime ? 25.0 : 10.0) * (project.direction === "SPEED" ? 1.2 : 1.0);
+      const fatigueInc = (isOvertime ? 20.0 : 8.0) * (project.direction === "SPEED" ? 1.2 : 1.0);
       dev.fatigue = Math.min(100.0, dev.fatigue + fatigueInc);
 
       logs.push(`  ・${dev.name}: 『${currentTask.name}』 進捗 +${addedProgress.toFixed(0)}% (累計 ${currentTask.progress.toFixed(0)}%) [疲労: ${dev.fatigue.toFixed(0)}]`);
