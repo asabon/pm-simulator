@@ -47,7 +47,7 @@
 * **ローカル環境で起動してプレイ**:
   * **Windows**: リポジトリ直下の `start_web_sim.bat` をダブルクリック
   * **Mac / Linux**: `./start_web_sim.sh` を実行
-  * *(または `uv run python -m http.server 8000 --directory web` を実行して `http://localhost:8000` へアクセス)*
+  * *(または `uv run python -m http.server 8000 --bind 127.0.0.1 --directory web` を実行して `http://127.0.0.1:8000` へアクセス)*
 
 ### 💻 2. CLI プロトタイプ版
 ターミナル上の対話的インターフェースで動作確認が可能です。

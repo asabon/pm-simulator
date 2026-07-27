@@ -2,13 +2,13 @@
 echo "==================================================="
 echo "  PM Simulator - Local Web Prototype"
 echo "==================================================="
-echo "Starting web server at http://localhost:8000 ..."
+echo "Starting web server at http://127.0.0.1:8000 ..."
 echo ""
 
 if command -v open > /dev/null; then
-  open http://localhost:8000
+  (sleep 2 && open http://127.0.0.1:8000) &
 elif command -v xdg-open > /dev/null; then
-  xdg-open http://localhost:8000
+  (sleep 2 && xdg-open http://127.0.0.1:8000) &
 fi
 
-uv run python -m http.server 8000 --directory web
+uv run python -m http.server 8000 --bind 127.0.0.1 --directory web
