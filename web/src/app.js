@@ -36,12 +36,6 @@ function updateHeader() {
   elPmAp.textContent = state.pm.ap;
 }
 
-function setDebugScreenName(screenName) {
-  const badge = document.getElementById("debug-screen-badge");
-  if (badge) {
-    badge.textContent = `[DEBUG] Screen: ${screenName}`;
-  }
-}
 
 function updatePhaseStepper(phase) {
   const kickoff = document.getElementById("step-kickoff");
@@ -78,7 +72,6 @@ function startNewProject() {
 
 function renderKickoffView() {
   updateHeader();
-  setDebugScreenName("KickoffView (キックオフ画面)");
   updatePhaseStepper("kickoff");
   const proj = state.currentProject;
   const pl = proj.mainTeam.leader;
@@ -119,7 +112,6 @@ function renderKickoffView() {
 // 2. メイン開発ダッシュボードの表示
 function renderDashboardView() {
   updateHeader();
-  setDebugScreenName("DashboardView (メインダッシュボード画面)");
   updatePhaseStepper("dashboard");
   const proj = state.currentProject;
   const status = evaluateProjectStatus(proj, state.tasks);
@@ -295,7 +287,6 @@ function addLog(msg) {
 // 3. リザルト ＆ クロージング画面
 function renderResultView(status) {
   updateHeader();
-  setDebugScreenName("ResultView (プロジェクト結果画面)");
   updatePhaseStepper("result");
   const proj = state.currentProject;
   const scoreInfo = calculateFinalScore(proj, state.pm);
