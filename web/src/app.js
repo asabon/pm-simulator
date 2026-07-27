@@ -36,6 +36,23 @@ function updateHeader() {
   elPmAp.textContent = state.pm.ap;
 }
 
+function setDebugScreenName(screenName) {
+  const badge = document.getElementById("debug-screen-badge");
+  if (badge) {
+    badge.textContent = `[DEBUG] Screen: ${screenName}`;
+  }
+}
+
+function updatePhaseStepper(phase) {
+  const kickoff = document.getElementById("step-kickoff");
+  const dashboard = document.getElementById("step-dashboard");
+  const result = document.getElementById("step-result");
+
+  if (kickoff) kickoff.classList.toggle("active", phase === "kickoff");
+  if (dashboard) dashboard.classList.toggle("active", phase === "dashboard");
+  if (result) result.classList.toggle("active", phase === "result");
+}
+
 // 1. キックオフフェーズの表示
 function startNewProject() {
   const { project, tasks } = getInitialProjectData(state.projectCounter);
@@ -61,6 +78,8 @@ function startNewProject() {
 
 function renderKickoffView() {
   updateHeader();
+  setDebugScreenName("KickoffView (キックオフ画面)");
+  updatePhaseStepper("kickoff");
   const proj = state.currentProject;
   const pl = proj.mainTeam.leader;
   const devs = proj.mainTeam.members;
@@ -100,6 +119,8 @@ function renderKickoffView() {
 // 2. メイン開発ダッシュボードの表示
 function renderDashboardView() {
   updateHeader();
+  setDebugScreenName("DashboardView (メインダッシュボード画面)");
+  updatePhaseStepper("dashboard");
   const proj = state.currentProject;
   const status = evaluateProjectStatus(proj, state.tasks);
 
@@ -274,6 +295,8 @@ function addLog(msg) {
 // 3. リザルト ＆ クロージング画面
 function renderResultView(status) {
   updateHeader();
+  setDebugScreenName("ResultView (プロジェクト結果画面)");
+  updatePhaseStepper("result");
   const proj = state.currentProject;
   const scoreInfo = calculateFinalScore(proj, state.pm);
   const closingLogs = processYearlyClosing(state.pm, state.developerPool);
@@ -337,4 +360,9 @@ function renderResultView(status) {
 }
 
 // 起動開始
-window.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
