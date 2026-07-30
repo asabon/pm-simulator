@@ -237,7 +237,7 @@ function renderKickoffView() {
         </div>
 
         <button id="btn-to-step3" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${apLeft === 0 || history.length >= 2 ? "" : ""}>
-          ${apLeft === 0 ? "AP使い切り！ 開発手法の選定(Step 3)へ ▶" : "開発手法の選定(Step 3)へ進む ▶"}
+          ${apLeft === 0 ? "AP使い切り！ デリバリー戦略(推進方針)の宣言(Step 3)へ ▶" : "デリバリー戦略(推進方針)の宣言(Step 3)へ進む ▶"}
         </button>
       </div>
     `;
@@ -261,7 +261,7 @@ function renderKickoffView() {
     });
 
   } else if (ks.step === 3) {
-    // Step 3: 開発手法決定 ＆ 下準備★完了診断サマリー
+    // Step 3: デリバリー戦略宣言 ＆ 下準備★完了診断サマリー
     const selectedMethod = ks.selectedMethod || "WATERFALL";
     const diagnosis = calculateKickoffDiagnosis(proj, ks.actionHistory, selectedMethod);
     ks.diagnosis = diagnosis;
@@ -270,9 +270,9 @@ function renderKickoffView() {
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
-        <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 3/3: 開発手法決定 ＆ 診断]</h2>
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 3/3: デリバリー戦略の宣言 ＆ 診断]</h2>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          危険度とネゴシエーション結果を踏まえ、本プロジェクトで採用する開発手法を選択してください。
+          関係者とのヒアリング・交渉結果を踏まえ、PMとして本プロジェクトのデリバリー戦略（推進方針）を宣言・合意選定してください。
         </p>
 
         <!-- 開発手法カード選定 -->
