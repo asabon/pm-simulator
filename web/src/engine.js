@@ -37,13 +37,14 @@ export function getInitialProjectData(projectNumber) {
 // =========================================================================
 
 export const KICKOFF_ACTIONS = {
-  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
-  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
-  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
-  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", defaultSpeaker: "上司", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
-  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", defaultSpeaker: "上司", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
-  TEAM_RISK_CHECK: { id: "TEAM_RISK_CHECK", name: "🛠️ PLと技術リスク・工数見積もり精査", category: "TEAM", defaultSpeaker: "PL", defaultComment: "PMさん、先に現場のリスクと実工数を精査してくれて助かります！" },
-  TEAM_KICKOFF_MEETING: { id: "TEAM_KICKOFF_MEETING", name: "🔥 チームキックオフ決起 ＆ ビジョン共有", category: "TEAM", defaultSpeaker: "PL", defaultComment: "このプロジェクトの意義がわかりました！全員でモチベーション高く頑張ります！" }
+  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", tags: ["要件確定度UP", "AP 1"], defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
+  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", tags: ["初期スコープ削減", "事前精査推奨", "AP 1"], defaultSpeaker: "顧客", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
+  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", tags: ["期待値ギャップ減", "顧客信頼調整", "AP 1"], defaultSpeaker: "顧客", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
+  CLIENT_PROTOTYPE: { id: "CLIENT_PROTOTYPE", name: "📱 画面モック・プロトタイプ先行提示", category: "CLIENT", tags: ["要件確定度UP", "認識ズレ防止", "AP 1"], defaultSpeaker: "顧客", defaultComment: "事前に画面イメージが見られると安心だな！これなら大きな勘違いは防げそうだ。" },
+  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", tags: ["納期猶予確保", "上司信頼度-1", "AP 1"], defaultSpeaker: "上司", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
+  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", tags: ["開発力強化", "直訴後コンボあり", "AP 1"], defaultSpeaker: "上司", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
+  TEAM_RISK_CHECK: { id: "TEAM_RISK_CHECK", name: "🛠️ PLと技術リスク・工数見積もり精査", category: "TEAM", tags: ["チーム安全度UP", "段階リリース根拠", "AP 1"], defaultSpeaker: "PL", defaultComment: "PMさん、先に現場のリスクと実工数を精査してくれて助かります！" },
+  TEAM_RETROSPECTIVE: { id: "TEAM_RETROSPECTIVE", name: "📚 過去案件の失敗教訓(レトロ)共有", category: "TEAM", tags: ["事故率低減", "チーム安全度UP", "AP 1"], defaultSpeaker: "PL", defaultComment: "過去の炎上パターンを先に共有してもらえて助かります。同じ落とし穴にはハマりません！" }
 };
 
 export const KICKOFF_SYNERGY_RULES = [
@@ -143,6 +144,14 @@ export function calculateKickoffDiagnosis(project, actionHistory, selectedMethod
   if (actionHistory.includes("CLIENT_PHASED")) {
     expectationGapStars += 1;
   }
+  if (actionHistory.includes("CLIENT_TRADEOFF")) {
+    expectationGapStars += 1;
+    project.customer.satisfaction = Math.min(100, project.customer.satisfaction + 3);
+  }
+  if (actionHistory.includes("CLIENT_PROTOTYPE")) {
+    planHealthStars += 1;
+    project.clarityLevel = Math.min(5, project.clarityLevel + 1);
+  }
   if (actionHistory.includes("BOSS_DEADLINE")) {
     project.deadlineWeeks += 1;
     expectationGapStars += 1;
@@ -151,6 +160,9 @@ export function calculateKickoffDiagnosis(project, actionHistory, selectedMethod
     teamSafetyStars += 1;
   }
   if (actionHistory.includes("TEAM_RISK_CHECK")) {
+    teamSafetyStars += 1;
+  }
+  if (actionHistory.includes("TEAM_RETROSPECTIVE")) {
     teamSafetyStars += 1;
   }
 
@@ -207,6 +219,36 @@ export function calculateKickoffDiagnosis(project, actionHistory, selectedMethod
 
   return {
     method: selectedMethod,
+    planHealthStars,
+    expectationGapStars,
+    teamSafetyStars,
+    totalScore,
+    rank,
+    summaryComment,
+    rallySpeech: getKickoffRallySpeech(totalScore, selectedMethod, actionHistory)
+  };
+}
+
+export function getKickoffRallySpeech(totalScore, selectedMethod, actionHistory) {
+  const methodLabel = selectedMethod === "WATERFALL" ? "🌊 ウォーターフォール開発" : "🔄 アジャイル開発";
+  
+  if (totalScore >= 4.5) {
+    return {
+      speaker: "PL タツヤ",
+      speech: `「PMさん、最高の事前調整をありがとうございます！${methodLabel}で進める方針も固まり、チーム全員のモヤモヤが解消されました。現場のリスクも織り込み済みです！全員でモチベーション高く、絶対に成功させましょう！🔥」`
+    };
+  } else if (totalScore >= 3.5) {
+    return {
+      speaker: "PL タツヤ",
+      speech: `「PMさん、しっかり事前調整と${methodLabel}の決定をしてくれて助かります！まだいくつか不安要素はありますが、チームが一丸となってカバーします。この体制でキックオフして頑張っていきましょう！」`
+    };
+  } else {
+    return {
+      speaker: "PL タツヤ",
+      speech: `「PMさん、厳しい状況の中ですが${methodLabel}で行く決断をしてくれてありがとうございます。事前準備にやや不安が残りますが、現場も意地を見せます！みんなで助け合って乗り切りましょう！」`
+    };
+  }
+}
     totalScore,
     rank,
     summaryComment,

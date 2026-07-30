@@ -171,9 +171,15 @@ function renderKickoffView() {
     }
 
   } else if (ks.step === 2) {
-    // Step 2: 事前調整 ＆ ネゴシエーション (所有 AP: 2)
+    // Step 2: 事前調整 ＆ ネゴシエーション (AP 2消費)
     const history = ks.actionHistory;
     const apLeft = ks.kickoffAp;
+
+    const categories = [
+      { key: "CLIENT", name: "🤝 対顧客交渉 (CLIENT)", color: "#60a5fa" },
+      { key: "BOSS", name: "🏢 対上司交渉 (BOSS)", color: "#a78bfa" },
+      { key: "TEAM", name: "🛠️ 対現場調整 (TEAM)", color: "#34d399" }
+    ];
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
@@ -189,7 +195,7 @@ function renderKickoffView() {
         </p>
 
         <!-- 選択された履歴とログ -->
-        <div class="metric-box" style="margin-bottom:16px; min-height:80px;">
+        <div class="metric-box" style="margin-bottom:16px; min-height:70px;">
           <div style="font-weight:600; font-size:13px; color:#60a5fa; margin-bottom:6px;">実行アクション履歴 (最大2つ):</div>
           ${history.length === 0 ? '<p style="font-size:13px; color:var(--text-dim);">まだアクションを選択していません。</p>' : ''}
           ${history.map((actId, idx) => {
@@ -209,28 +215,38 @@ function renderKickoffView() {
           }).join('')}
         </div>
 
-        <!-- コマンドボタン群 -->
-        <div class="command-panel">
-          <button class="btn-cmd" id="act-CLIENT_WS" ${apLeft < 1 || history.includes("CLIENT_WS") ? "disabled" : ""}>
-            <span>💡 1. 顧客と要件定義ワークショップ実施</span>
-            <span style="font-size:12px; color:#60a5fa;">対顧客 / AP 1</span>
-          </button>
-          <button class="btn-cmd" id="act-CLIENT_PHASED" ${apLeft < 1 || history.includes("CLIENT_PHASED") ? "disabled" : ""}>
-            <span>👥 2. 顧客へ段階リリース(スコープ調整)を提案</span>
-            <span style="font-size:12px; color:#60a5fa;">対顧客 / AP 1</span>
-          </button>
-          <button class="btn-cmd" id="act-BOSS_DEADLINE" ${apLeft < 1 || history.includes("BOSS_DEADLINE") ? "disabled" : ""}>
-            <span>🏢 3. 上司へ納期バッファ・スケジュール直訴</span>
-            <span style="font-size:12px; color:#60a5fa;">対上司 / AP 1</span>
-          </button>
-          <button class="btn-cmd" id="act-BOSS_HELP_DEV" ${apLeft < 1 || history.includes("BOSS_HELP_DEV") ? "disabled" : ""}>
-            <span>🙋‍♂️ 4. 助っ人エンジニアの追加アサイン要請</span>
-            <span style="font-size:12px; color:#60a5fa;">対上司 / AP 1</span>
-          </button>
-          <button class="btn-cmd" id="act-TEAM_RISK_CHECK" ${apLeft < 1 || history.includes("TEAM_RISK_CHECK") ? "disabled" : ""}>
-            <span>🛠️ 5. PLと技術リスク・工数見積もり精査</span>
-            <span style="font-size:12px; color:#60a5fa;">対現場 / AP 1</span>
-          </button>
+        <!-- カテゴリ分けされたコマンドボタン群 -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          ${categories.map(cat => {
+            const actions = Object.values(KICKOFF_ACTIONS).filter(a => a.category === cat.key);
+            return `
+              <div class="category-group">
+                <div class="category-title" style="color:${cat.color};">${cat.name}</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+                  ${actions.map(act => {
+                    const isDisabled = apLeft < 1 || history.includes(act.id);
+                    const tagHtml = (act.tags || []).map(t => {
+                      const isDanger = t.includes("-") || t.includes("リスク");
+                      const isSuccess = t.includes("UP") || t.includes("確度") || t.includes("強化") || t.includes("減");
+                      const cls = isDanger ? "tag-badge-danger" : (isSuccess ? "tag-badge-success" : "");
+                      return `<span class="tag-badge ${cls}">${t}</span>`;
+                    }).join(" ");
+
+                    return `
+                      <button class="btn-cmd" id="act-${act.id}" ${isDisabled ? "disabled" : ""} style="flex-direction:column; align-items:flex-start; gap:6px; padding:12px;">
+                        <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                          <span style="font-weight:600; font-size:14px;">${act.name}</span>
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                          ${tagHtml}
+                        </div>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
         </div>
 
         <button id="btn-to-step3" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${apLeft === 0 || history.length >= 2 ? "" : ""}>
@@ -258,12 +274,8 @@ function renderKickoffView() {
     });
 
   } else if (ks.step === 3) {
-    // Step 3: デリバリー戦略宣言 ＆ 下準備★完了診断サマリー
+    // Step 3: デリバリー戦略宣言 (開発手法選択)
     const selectedMethod = ks.selectedMethod || "WATERFALL";
-    const diagnosis = calculateKickoffDiagnosis(proj, ks.actionHistory, selectedMethod);
-    ks.diagnosis = diagnosis;
-
-    const renderStars = (count) => "★".repeat(count) + "☆".repeat(5 - count);
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
@@ -275,7 +287,7 @@ function renderKickoffView() {
           <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          関係者とのヒアリング・交渉結果を踏まえ、PMとして本プロジェクトのデリバリー戦略（推進方針）を宣言・合意選定してください。
+          関係者とのヒアリング・事前交渉結果を踏まえ、PMとして本プロジェクトのデリバリー戦略（推進方針）を宣言・選定してください。
         </p>
 
         <!-- 開発手法カード選定 -->
@@ -297,10 +309,64 @@ function renderKickoffView() {
           </div>
         </div>
 
+        <button id="btn-to-rally" class="btn-cmd btn-primary" style="margin-top:20px; padding:16px; font-size:18px; width:100%; justify-content:center;">
+          🔥 チームキックオフ決起 ＆ 防衛★診断へ進む ▶
+        </button>
+      </div>
+    `;
+
+    document.getElementById("card-wf").addEventListener("click", () => {
+      ks.selectedMethod = "WATERFALL";
+      renderKickoffView();
+    });
+    document.getElementById("card-agile").addEventListener("click", () => {
+      ks.selectedMethod = "AGILE";
+      renderKickoffView();
+    });
+
+    document.getElementById("btn-to-rally").addEventListener("click", () => {
+      ks.step = 4;
+      renderKickoffView();
+    });
+
+  } else if (ks.step === 4) {
+    // Step 4 (最終クライマックス): 🔥 チームキックオフ決起 ＆ 防衛★診断
+    const selectedMethod = ks.selectedMethod || "WATERFALL";
+    const diagnosis = calculateKickoffDiagnosis(proj, ks.actionHistory, selectedMethod);
+    ks.diagnosis = diagnosis;
+
+    const renderStars = (count) => "★".repeat(count) + "☆".repeat(5 - count);
+
+    container.innerHTML = `
+      <div class="card" style="text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+            <span class="step-badge" style="background:rgba(239, 68, 68, 0.2); color:#fca5a5; border-color:rgba(239, 68, 68, 0.4);">
+              🔥 チーム決起 ＆ キックオフ完了
+            </span>
+          </div>
+          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+        </div>
+
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+          事前交渉と推進方針の宣言を終え、チーム全員でプロジェクトのキックオフ決起を行います！
+        </p>
+
+        <!-- チーム決起スピーチバルーン -->
+        <div class="speech-bubble" style="margin-bottom:20px; padding:16px; background:linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%); border:1px solid #60a5fa;">
+          <div style="font-size:15px; font-weight:700; color:#60a5fa; margin-bottom:6px;">
+            🗣️ ${diagnosis.rallySpeech.speaker} からの決起宣言:
+          </div>
+          <div style="font-size:14px; line-height:1.6;">
+            ${diagnosis.rallySpeech.speech}
+          </div>
+        </div>
+
         <!-- 診断サマリーカード -->
-        <div class="diagnosis-card">
+        <div class="diagnosis-card" style="margin-bottom:20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:12px;">
-            <span style="font-weight:700; font-size:16px; color:#60a5fa;">🛡️ キックオフ防衛ライン完了診断</span>
+            <span style="font-weight:700; font-size:16px; color:#60a5fa;">🛡️ キックオフ防衛ライン診断結果</span>
             <span style="font-size:24px; font-weight:900; color:#f59e0b;">ランク ${diagnosis.rank}</span>
           </div>
 
