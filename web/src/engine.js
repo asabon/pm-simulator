@@ -13,7 +13,7 @@ export function getInitialDeveloperPool() {
 }
 
 export function getInitialProjectData(projectNumber) {
-  const customer = new Customer(`cust_${projectNumber}`, "渡辺部長 (決済事業部)", "QUALITY_ORIENTED");
+  const customer = new Customer(`cust_${projectNumber}`, "渡辺部長 (決済事業部)", "VAGUE_REQUIREMENTS");
   const project = new Project(`第${projectNumber}期 基幹決済システム改修`, 4, customer);
   
   const tasks = [
@@ -30,6 +30,190 @@ export function getInitialProjectData(projectNumber) {
   ];
 
   return { project, tasks };
+}
+
+// =========================================================================
+// 🧭 キックオフ順序コンボルックアップテーブル & エンジン (Data-Driven Engine)
+// =========================================================================
+
+export const KICKOFF_ACTIONS = {
+  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
+  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
+  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
+  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", defaultSpeaker: "BOSS", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
+  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", defaultSpeaker: "BOSS", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
+  TEAM_RISK_CHECK: { id: "TEAM_RISK_CHECK", name: "🛠️ PLと技術リスク・工数見積もり精査", category: "TEAM", defaultSpeaker: "PL", defaultComment: "PMさん、先に現場のリスクと実工数を精査してくれて助かります！" },
+  TEAM_KICKOFF_MEETING: { id: "TEAM_KICKOFF_MEETING", name: "🔥 チームキックオフ決起 ＆ ビジョン共有", category: "TEAM", defaultSpeaker: "PL", defaultComment: "このプロジェクトの意義がわかりました！全員でモチベーション高く頑張ります！" }
+};
+
+export const KICKOFF_SYNERGY_RULES = [
+  // コンボ1: 【王道の順番】現場リスク精査 ➔ 段階リリース提案
+  {
+    id: "RULE_GROUNDWORK_TO_CLIENT",
+    name: "根拠ある事前交渉コンボ",
+    condition: (history, currentActionId) => 
+      history.includes("TEAM_RISK_CHECK") && currentActionId === "CLIENT_PHASED",
+    speaker: "CUSTOMER",
+    comment: "なるほど…現場の工数根拠がそこまで明確なら仕方ない！初期リリースは必須機能だけに絞りましょう。",
+    applyEffects: (project, stats) => {
+      stats.synergyName = "🌟 【順序コンボ】根拠ある事前交渉 (顧客納得度UP・ペナルティ相殺)";
+      stats.customerSatisfactionBonus += 5;
+      stats.expectationGapStars += 1;
+    }
+  },
+  // コンボ2: 【順序逆転・唐突】段階リリース提案 ➔ 現場リスク精査
+  {
+    id: "RULE_BLIND_CLIENT_PROPOSAL",
+    name: "無根拠な唐突提案 (不発)",
+    condition: (history, currentActionId) => 
+      !history.includes("TEAM_RISK_CHECK") && currentActionId === "CLIENT_PHASED",
+    speaker: "CUSTOMER",
+    comment: "えっ、根拠もなくいきなり機能を絞るってどういうこと！？プロなら工夫して全部やってよ！",
+    applyEffects: (project, stats) => {
+      stats.customerSatisfactionBonus -= 5;
+    }
+  },
+  // コンボ3: 【共創の順番】要件定義WS ➔ PLリスク精査
+  {
+    id: "RULE_WS_TO_TEAM_CHECK",
+    name: "仕様明確化から現場落とし込みコンボ",
+    condition: (history, currentActionId) => 
+      history.includes("CLIENT_WS") && currentActionId === "TEAM_RISK_CHECK",
+    speaker: "PL",
+    comment: "顧客の欲しい仕様イメージがハッキリしたので、めちゃくちゃ見積もりと設計がやりやすくなりました！",
+    applyEffects: (project, stats) => {
+      stats.synergyName = "🌟 【順序コンボ】明確化からの現場着地 (チーム士気大爆発)";
+      stats.teamSafetyStars += 1;
+      stats.moraleBonus += 20;
+    }
+  },
+  // コンボ4: 【筋を通す順番】上司納期直訴 ➔ 助っ人要請
+  {
+    id: "RULE_BOSS_CONSULT_THEN_HELP",
+    name: "筋を通した助っ人要請コンボ",
+    condition: (history, currentActionId) => 
+      history.includes("BOSS_DEADLINE") && currentActionId === "BOSS_HELP_DEV",
+    speaker: "BOSS",
+    comment: "納期を伸ばしてもまだ厳しいか！分かった、タツヤを全面バックアップで回す。絶対に成功させろよ！",
+    applyEffects: (project, stats) => {
+      stats.synergyName = "🌟 【順序コンボ】社内全面バックアップ獲得";
+      stats.managerSatisfactionBonus += 5;
+    }
+  }
+];
+
+export function evaluateKickoffAction(history, currentActionId, project) {
+  const actionInfo = KICKOFF_ACTIONS[currentActionId];
+  if (!actionInfo) return null;
+
+  const rule = KICKOFF_SYNERGY_RULES.find(r => r.condition(history, currentActionId));
+
+  const result = {
+    actionId: currentActionId,
+    actionName: actionInfo.name,
+    speaker: rule ? rule.speaker : actionInfo.defaultSpeaker,
+    comment: rule ? rule.comment : actionInfo.defaultComment,
+    synergyName: rule ? rule.synergyName : null,
+    customerSatisfactionBonus: 0,
+    managerSatisfactionBonus: 0,
+    moraleBonus: 0,
+    expectationGapStars: 0,
+    teamSafetyStars: 0,
+    planHealthStars: 0
+  };
+
+  if (rule) {
+    rule.applyEffects(project, result);
+  }
+
+  return result;
+}
+
+export function calculateKickoffDiagnosis(project, actionHistory, selectedMethod) {
+  project.methodology = selectedMethod;
+  let planHealthStars = 3;
+  let expectationGapStars = 3;
+  let teamSafetyStars = 3;
+
+  // アクション履歴からの基本影響評価
+  if (actionHistory.includes("CLIENT_WS")) {
+    planHealthStars += 1;
+    project.clarityLevel = Math.min(5, project.clarityLevel + 2);
+  }
+  if (actionHistory.includes("CLIENT_PHASED")) {
+    expectationGapStars += 1;
+  }
+  if (actionHistory.includes("BOSS_DEADLINE")) {
+    project.deadlineWeeks += 1;
+    expectationGapStars += 1;
+  }
+  if (actionHistory.includes("BOSS_HELP_DEV")) {
+    teamSafetyStars += 1;
+  }
+  if (actionHistory.includes("TEAM_RISK_CHECK")) {
+    teamSafetyStars += 1;
+  }
+
+  // 順序コンボによるスターボーナス
+  actionHistory.forEach((actId, idx) => {
+    const subHistory = actionHistory.slice(0, idx);
+    const evalRes = evaluateKickoffAction(subHistory, actId, project);
+    if (evalRes) {
+      planHealthStars += evalRes.planHealthStars;
+      expectationGapStars += evalRes.expectationGapStars;
+      teamSafetyStars += evalRes.teamSafetyStars;
+      
+      project.customer.satisfaction = Math.min(100, Math.max(0, project.customer.satisfaction + evalRes.customerSatisfactionBonus));
+      project.managerSatisfaction = Math.min(100, Math.max(0, project.managerSatisfaction + evalRes.managerSatisfactionBonus));
+    }
+  });
+
+  // 開発手法（ウォーターフォール vs アジャイル）との適合度補正
+  if (selectedMethod === "WATERFALL") {
+    if (project.clarityLevel >= 4) {
+      planHealthStars += 1;
+    } else {
+      planHealthStars -= 1; // 要件不鮮明なウォーターフォールは危険
+    }
+    project.managerSatisfaction = Math.min(100, project.managerSatisfaction + 5);
+  } else if (selectedMethod === "AGILE") {
+    if (project.clarityLevel < 4) {
+      planHealthStars += 1; // 曖昧要件でのアジャイル選定は大正解
+    }
+    expectationGapStars += 1;
+  }
+
+  planHealthStars = Math.min(5, Math.max(1, planHealthStars));
+  expectationGapStars = Math.min(5, Math.max(1, expectationGapStars));
+  teamSafetyStars = Math.min(5, Math.max(1, teamSafetyStars));
+
+  const totalScore = parseFloat(((planHealthStars + expectationGapStars + teamSafetyStars) / 3).toFixed(1));
+  let rank = "B";
+  let summaryComment = "";
+
+  if (totalScore >= 4.5) {
+    rank = "S";
+    summaryComment = "完璧な事前交渉です！死角のない鉄壁の体制でスプリントへ挑みます。";
+  } else if (totalScore >= 3.8) {
+    rank = "A";
+    summaryComment = "見事な準備です！現場と関係者のすり合わせができており安全です。";
+  } else if (totalScore >= 3.0) {
+    rank = "B";
+    summaryComment = "標準的なセットアップです。スプリント中のリスク管理に注意してください。";
+  } else {
+    rank = "C";
+    summaryComment = "防衛ラインが不十分です！無茶振りの影響がスプリントに出る懸念があります。";
+  }
+
+  return {
+    method: selectedMethod,
+    totalScore,
+    rank,
+    summaryComment,
+    planHealthStars,
+    expectationGapStars,
+    teamSafetyStars
+  };
 }
 
 export function runWeeklySprint(project, tasks, overtimeIds = new Set(), pm) {
@@ -63,12 +247,21 @@ export function runWeeklySprint(project, tasks, overtimeIds = new Set(), pm) {
     if (currentTask) {
       const isOvertime = overtimeIds.has(dev.id);
       const speedMult = project.direction === "SPEED" ? 1.25 : 1.0;
+      
+      // 開発手法による消化速度補正
+      let methodMult = 1.0;
+      if (project.methodology === "WATERFALL") {
+        methodMult = 1.3; // ウォーターフォールは計画通り爆速
+      } else if (project.methodology === "AGILE") {
+        methodMult = 0.85; // アジャイルは試作・対話により慎重進行
+      }
+
       const fatigueFactor = Math.max(0.4, 1.0 - (dev.fatigue / 100.0) * 0.4);
       const speedFactor = 0.7 + 0.1 * dev.speedSkill;
 
       // 1人あたりの1週間あたりの実質消化時間
       const baseHours = isOvertime ? 55.0 : 40.0;
-      const hoursPerWeek = baseHours * speedFactor * fatigueFactor * speedMult;
+      const hoursPerWeek = baseHours * speedFactor * fatigueFactor * speedMult * methodMult;
       
       const addedProgress = (hoursPerWeek / currentTask.estimatedHours) * 100.0;
       currentTask.progress = Math.min(100.0, currentTask.progress + addedProgress);

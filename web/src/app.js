@@ -1,12 +1,15 @@
 import { PM, Team } from "./entities.js";
 import {
   calculateFinalScore,
+  calculateKickoffDiagnosis,
+  evaluateKickoffAction,
   evaluateProjectStatus,
   getInitialDeveloperPool,
   getInitialProjectData,
+  KICKOFF_ACTIONS,
   processYearlyClosing,
   runWeeklySprint
-} from "./engine.js";
+} from "./engine.js?v=2";
 
 // アプリケーション状態管理
 const state = {
@@ -15,7 +18,17 @@ const state = {
   currentProject: null,
   tasks: [],
   projectCounter: 1,
-  logs: []
+  logs: [],
+  kickoffState: {
+    step: 1, // 1: ヒアリング, 2: アクションネゴ, 3: 手法選定＆診断
+    heardBoss: false,
+    heardCustomer: false,
+    heardPl: false,
+    actionHistory: [],
+    kickoffAp: 2,
+    selectedMethod: null,
+    diagnosis: null
+  }
 };
 
 // DOM 要素
@@ -36,7 +49,6 @@ function updateHeader() {
   elPmAp.textContent = state.pm.ap;
 }
 
-
 function updatePhaseStepper(phase) {
   const kickoff = document.getElementById("step-kickoff");
   const dashboard = document.getElementById("step-dashboard");
@@ -53,6 +65,16 @@ function startNewProject() {
   state.currentProject = project;
   state.tasks = tasks;
   state.logs = [];
+  state.kickoffState = {
+    step: 1,
+    heardBoss: false,
+    heardCustomer: false,
+    heardPl: false,
+    actionHistory: [],
+    kickoffAp: 2,
+    selectedMethod: null,
+    diagnosis: null
+  };
 
   // チーム編成
   const team = new Team("main_team", "メイン開発チーム");
@@ -76,37 +98,248 @@ function renderKickoffView() {
   const proj = state.currentProject;
   const pl = proj.mainTeam.leader;
   const devs = proj.mainTeam.members;
+  const ks = state.kickoffState;
 
-  container.innerHTML = `
-    <div class="card overlay-screen">
-      <div style="font-size:40px;">🚀</div>
-      <h2 style="font-size:22px; font-weight:700;">第 ${state.projectCounter} 期 プロジェクト・キックオフ</h2>
-      <p style="color:var(--text-muted); font-size:14px;">案件名: <strong>${proj.name}</strong></p>
+  if (ks.step === 1) {
+    // Step 1: 情報収集（無料ヒアリング）
+    const allHeard = ks.heardBoss && ks.heardCustomer && ks.heardPl;
+    container.innerHTML = `
+      <div class="card" style="text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="font-size:20px; font-weight:700;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 1/3: 情報収集]</h2>
+          <span style="font-size:13px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+        </div>
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+          関係者（上司・顧客・PL）をタップしてヒアリングを行い、プロジェクトの無茶振りや危険度（要件の曖昧さ）を調査してください。（※無料ヒアリング）
+        </p>
 
-      <div class="metric-box" style="text-align:left; width:100%; max-width:600px;">
-        <p style="font-weight:600; color:#60a5fa; margin-bottom:6px; font-size:14px;">上司からの期待要請:</p>
-        <p style="font-size:14px;">『${proj.priorityExpectation} 重視（障害・過労の防止）』</p>
-        <hr style="border-color:var(--border-color); margin:12px 0;">
-        <p style="font-weight:600; color:#a78bfa; margin-bottom:6px; font-size:14px;">顧客 (${proj.customer.name}) の第一声:</p>
-        <p style="font-style:italic; font-size:14px;">${proj.customer.speak()}</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- 1. 上司 -->
+          <div class="metric-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>🏢 上司の要請</strong>
+              <button class="btn-cmd" id="btn-hear-boss" style="padding:6px 14px; font-size:13px; min-height:36px;">
+                ${ks.heardBoss ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
+              </button>
+            </div>
+            ${ks.heardBoss ? `
+              <div class="speech-bubble">
+                💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。くれぐれもトラブルを起こさず【納期遅れ・予算オーバーは絶対厳禁】で頼むぞ！」
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- 2. 顧客 -->
+          <div class="metric-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>👤 顧客 (${proj.customer.name}) の本音</strong>
+              <button class="btn-cmd" id="btn-hear-customer" style="padding:6px 14px; font-size:13px; min-height:36px;">
+                ${ks.heardCustomer ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
+              </button>
+            </div>
+            ${ks.heardCustomer ? `
+              <div class="speech-bubble">
+                💬 <strong>顧客:</strong> 「現場が直感的に使えてトラブルが絶対に起きない最高のシステムにしてくれ。具体的な仕様？ それは君たちプロが考えてよ。当然、納期遅れも予算オーバーもバグもNGだからね！」
+                <div style="margin-top:6px; font-size:12px; color:var(--accent-warning); font-weight:600;">
+                  ⚠️ 【無茶振り検知】 要件曖昧 ✕ 品質絶対 ✕ 納期絶対の全盛り要求！
+                </div>
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- 3. PL -->
+          <div class="metric-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>🛠️ 担当PL (${pl ? pl.name : "なし"}) の見通し</strong>
+              <button class="btn-cmd" id="btn-hear-pl" style="padding:6px 14px; font-size:13px; min-height:36px;">
+                ${ks.heardPl ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
+              </button>
+            </div>
+            ${ks.heardPl ? `
+              <div class="speech-bubble">
+                💬 <strong>PL:</strong> 「要件がふわふわな上に品質も納期も完璧なんて絶対無理です！ このまま開発に入ったら確実に終盤で大炎上しますよ……！」
+              </div>
+            ` : ""}
+          </div>
+        </div>
+
+        <button id="btn-to-step2" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${allHeard ? "" : "disabled"}>
+          ${allHeard ? "ヒアリング完了！ ネゴシエーション(Step 2)へ進む ▶" : "すべての関係者へヒアリングしてください"}
+        </button>
       </div>
+    `;
 
-      <div class="metric-box" style="text-align:left; width:100%; max-width:600px;">
-        <p style="font-weight:600; margin-bottom:8px; font-size:14px;">■ アサイン確定体制:</p>
-        <p style="font-size:14px;">・担当 PL: <strong style="color:#c4b5fd;">${pl ? pl.name : "なし"}</strong> (統率力: ${pl ? pl.leadershipSkill : 0}/5)</p>
-        <p style="font-size:14px;">・開発 DEV: ${devs.map(d => d.name).join(", ")} (${devs.length}名)</p>
-        <p style="font-size:14px;">・契約納期: <strong>${proj.deadlineWeeks} 週間</strong></p>
+    document.getElementById("btn-hear-boss").addEventListener("click", () => { ks.heardBoss = true; renderKickoffView(); });
+    document.getElementById("btn-hear-customer").addEventListener("click", () => { ks.heardCustomer = true; renderKickoffView(); });
+    document.getElementById("btn-hear-pl").addEventListener("click", () => { ks.heardPl = true; renderKickoffView(); });
+    if (allHeard) {
+      document.getElementById("btn-to-step2").addEventListener("click", () => { ks.step = 2; renderKickoffView(); });
+    }
+
+  } else if (ks.step === 2) {
+    // Step 2: PMの決断 ＆ ネゴシエーション (所有 AP: 2)
+    const history = ks.actionHistory;
+    const apLeft = ks.kickoffAp;
+
+    container.innerHTML = `
+      <div class="card" style="text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="font-size:20px; font-weight:700;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 2/3: 防衛ネゴシエーション]</h2>
+          <span class="ap-tag">キックオフ AP: ${apLeft} / 2</span>
+        </div>
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って防衛・交渉アクションを選択してください。<strong>※実行順序によって関係者のリアクションとコンボが変化します！</strong>
+        </p>
+
+        <!-- 選択された履歴とログ -->
+        <div class="metric-box" style="margin-bottom:16px; min-height:80px;">
+          <div style="font-weight:600; font-size:13px; color:#60a5fa; margin-bottom:6px;">実行アクション履歴 (最大2つ):</div>
+          ${history.length === 0 ? '<p style="font-size:13px; color:var(--text-dim);">まだアクションを選択していません。</p>' : ''}
+          ${history.map((actId, idx) => {
+            const evalRes = evaluateKickoffAction(history.slice(0, idx), actId, state.currentProject);
+            const actInfo = KICKOFF_ACTIONS[actId];
+            return `
+              <div style="margin-bottom:8px; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;">
+                  <span>${idx + 1}手目: ${actInfo.name}</span>
+                  ${evalRes.synergyName ? `<span class="synergy-badge">${evalRes.synergyName}</span>` : ''}
+                </div>
+                <div class="speech-bubble" style="margin-top:4px; font-size:13px;">
+                  💬 <strong>${evalRes.speaker}:</strong> 「${evalRes.comment}」
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- コマンドボタン群 -->
+        <div class="command-panel">
+          <button class="btn-cmd" id="act-CLIENT_WS" ${apLeft < 1 || history.includes("CLIENT_WS") ? "disabled" : ""}>
+            <span>💡 1. 顧客と要件定義ワークショップ実施</span>
+            <span style="font-size:12px; color:#60a5fa;">対顧客 / AP 1</span>
+          </button>
+          <button class="btn-cmd" id="act-CLIENT_PHASED" ${apLeft < 1 || history.includes("CLIENT_PHASED") ? "disabled" : ""}>
+            <span>👥 2. 顧客へ段階リリース(スコープ調整)を提案</span>
+            <span style="font-size:12px; color:#60a5fa;">対顧客 / AP 1</span>
+          </button>
+          <button class="btn-cmd" id="act-BOSS_DEADLINE" ${apLeft < 1 || history.includes("BOSS_DEADLINE") ? "disabled" : ""}>
+            <span>🏢 3. 上司へ納期バッファ・スケジュール直訴</span>
+            <span style="font-size:12px; color:#60a5fa;">対上司 / AP 1</span>
+          </button>
+          <button class="btn-cmd" id="act-BOSS_HELP_DEV" ${apLeft < 1 || history.includes("BOSS_HELP_DEV") ? "disabled" : ""}>
+            <span>🙋‍♂️ 4. 助っ人エンジニアの追加アサイン要請</span>
+            <span style="font-size:12px; color:#60a5fa;">対上司 / AP 1</span>
+          </button>
+          <button class="btn-cmd" id="act-TEAM_RISK_CHECK" ${apLeft < 1 || history.includes("TEAM_RISK_CHECK") ? "disabled" : ""}>
+            <span>🛠️ 5. PLと技術リスク・工数見積もり精査</span>
+            <span style="font-size:12px; color:#60a5fa;">対現場 / AP 1</span>
+          </button>
+        </div>
+
+        <button id="btn-to-step3" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${apLeft === 0 || history.length >= 2 ? "" : ""}>
+          ${apLeft === 0 ? "AP使い切り！ 開発手法の選定(Step 3)へ ▶" : "開発手法の選定(Step 3)へ進む ▶"}
+        </button>
       </div>
+    `;
 
-      <button id="btn-start-sprint" class="btn-cmd btn-primary" style="padding:14px 24px; font-size:16px; width:100%; max-width:320px; justify-content:center;">
-        開発フェーズ（週次進行）を開始 ▶
-      </button>
-    </div>
-  `;
+    Object.keys(KICKOFF_ACTIONS).forEach(actId => {
+      const btn = document.getElementById(`act-${actId}`);
+      if (btn) {
+        btn.addEventListener("click", () => {
+          if (ks.kickoffAp >= 1 && !ks.actionHistory.includes(actId)) {
+            ks.kickoffAp -= 1;
+            ks.actionHistory.push(actId);
+            renderKickoffView();
+          }
+        });
+      }
+    });
 
-  document.getElementById("btn-start-sprint").addEventListener("click", () => {
-    renderDashboardView();
-  });
+    document.getElementById("btn-to-step3").addEventListener("click", () => {
+      ks.step = 3;
+      renderKickoffView();
+    });
+
+  } else if (ks.step === 3) {
+    // Step 3: 開発手法決定 ＆ 下準備★完了診断サマリー
+    const selectedMethod = ks.selectedMethod || "WATERFALL";
+    const diagnosis = calculateKickoffDiagnosis(proj, ks.actionHistory, selectedMethod);
+    ks.diagnosis = diagnosis;
+
+    const renderStars = (count) => "★".repeat(count) + "☆".repeat(5 - count);
+
+    container.innerHTML = `
+      <div class="card" style="text-align:left;">
+        <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 3/3: 開発手法決定 ＆ 診断]</h2>
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+          危険度とネゴシエーション結果を踏まえ、本プロジェクトで採用する開発手法を選択してください。
+        </p>
+
+        <!-- 開発手法カード選定 -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div class="method-card ${selectedMethod === 'WATERFALL' ? 'selected' : ''}" id="card-wf">
+            <div style="font-size:18px; font-weight:700;">🌊 ウォーターフォール開発</div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              事前計画とテストを徹底。開発消化スピード <strong>+30% (爆速)</strong> ＆ 上司評価高い。<br>
+              <span style="color:var(--accent-danger);">⚠️ 危険: 進行中の突然の仕様変更で全滅大炎上リスク。</span>
+            </div>
+          </div>
+
+          <div class="method-card ${selectedMethod === 'AGILE' ? 'selected' : ''}" id="card-agile">
+            <div style="font-size:18px; font-weight:700;">🔄 アジャイル開発</div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              プロトタイプで試作を繰り返し対話。<strong>仕様変更に極めて強く大炎上を防げる</strong>。<br>
+              <span style="color:var(--accent-warning);">⚠️ 懸念: 会議・調整が増え消化スピード -15% ＆ 上司がやや不安。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 診断サマリーカード -->
+        <div class="diagnosis-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:12px;">
+            <span style="font-weight:700; font-size:16px; color:#60a5fa;">🛡️ キックオフ防衛ライン完了診断</span>
+            <span style="font-size:24px; font-weight:900; color:#f59e0b;">ランク ${diagnosis.rank}</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:14px;">
+              <span>${selectedMethod === 'WATERFALL' ? '📋 要件確定度・計画精度' : '🔄 スプリント適応・柔軟性'}</span>
+              <span class="star-rating">${renderStars(diagnosis.planHealthStars)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:14px;">
+              <span>🤝 期待値ギャップ (対顧客/上司)</span>
+              <span class="star-rating">${renderStars(diagnosis.expectationGapStars)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:14px;">
+              <span>🔥 チーム安全度 (キャパ/士気)</span>
+              <span class="star-rating">${renderStars(diagnosis.teamSafetyStars)}</span>
+            </div>
+          </div>
+
+          <div style="font-size:13px; background:rgba(0,0,0,0.3); padding:10px; border-radius:var(--radius-sm); border-left:3px solid #60a5fa;">
+            💬 <strong>PM総評:</strong> ${diagnosis.summaryComment}
+          </div>
+        </div>
+
+        <button id="btn-start-dashboard" class="btn-cmd btn-primary" style="margin-top:20px; padding:16px; font-size:18px; width:100%; justify-content:center;">
+          開発スプリント（第2フェーズ）を開始 ▶
+        </button>
+      </div>
+    `;
+
+    document.getElementById("card-wf").addEventListener("click", () => {
+      ks.selectedMethod = "WATERFALL";
+      renderKickoffView();
+    });
+    document.getElementById("card-agile").addEventListener("click", () => {
+      ks.selectedMethod = "AGILE";
+      renderKickoffView();
+    });
+
+    document.getElementById("btn-start-dashboard").addEventListener("click", () => {
+      renderDashboardView();
+    });
+  }
 }
 
 // 2. メイン開発ダッシュボードの表示
