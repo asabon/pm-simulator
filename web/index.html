@@ -12,9 +12,16 @@
 </head>
 <body>
   <header>
-    <div class="logo-container">
-      <span class="logo-icon">💼</span>
-      <h1 class="logo-title">PM Simulator</h1>
+    <div class="header-main-bar">
+      <div class="logo-container">
+        <span class="logo-icon">💼</span>
+        <h1 class="logo-title">PM Simulator</h1>
+      </div>
+      <div class="pm-status-badge">
+        <span class="pm-stat-item">キャリア: <strong id="pm-career-years">1</strong>年目</span>
+        <span class="pm-stat-item">完了: <strong id="pm-completed-pjs">0</strong>件</span>
+        <span class="pm-stat-item ap-container"><span class="ap-tag">AP <span id="pm-ap">3</span>/3</span></span>
+      </div>
     </div>
     <div class="phase-stepper">
       <div class="step-item" id="step-kickoff">① キックオフ</div>
@@ -22,11 +29,6 @@
       <div class="step-item" id="step-dashboard">② 開発スプリント</div>
       <span class="step-arrow">➔</span>
       <div class="step-item" id="step-result">③ リザルト</div>
-    </div>
-    <div class="pm-status-badge">
-      <span>PMキャリア: <strong id="pm-career-years">1</strong> 年目</span>
-      <span>通算完了: <strong id="pm-completed-pjs">0</strong> 件</span>
-      <span>行動力: <span class="ap-tag">AP <span id="pm-ap">3</span>/3</span></span>
     </div>
   </header>
 

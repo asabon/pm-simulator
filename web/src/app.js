@@ -79,26 +79,26 @@ function renderKickoffView() {
 
   container.innerHTML = `
     <div class="card overlay-screen">
-      <div style="font-size:48px;">🚀</div>
-      <h2 style="font-size:26px; font-weight:700;">第 ${state.projectCounter} 期 プロジェクト・キックオフ</h2>
-      <p style="color:var(--text-muted);">案件名: <strong>${proj.name}</strong></p>
+      <div style="font-size:40px;">🚀</div>
+      <h2 style="font-size:22px; font-weight:700;">第 ${state.projectCounter} 期 プロジェクト・キックオフ</h2>
+      <p style="color:var(--text-muted); font-size:14px;">案件名: <strong>${proj.name}</strong></p>
 
       <div class="metric-box" style="text-align:left; width:100%; max-width:600px;">
-        <p style="font-weight:600; color:#60a5fa; margin-bottom:6px;">上司からの期待要請:</p>
-        <p>『${proj.priorityExpectation} 重視（障害・過労の防止）』</p>
+        <p style="font-weight:600; color:#60a5fa; margin-bottom:6px; font-size:14px;">上司からの期待要請:</p>
+        <p style="font-size:14px;">『${proj.priorityExpectation} 重視（障害・過労の防止）』</p>
         <hr style="border-color:var(--border-color); margin:12px 0;">
-        <p style="font-weight:600; color:#a78bfa; margin-bottom:6px;">顧客 (${proj.customer.name}) の第一声:</p>
-        <p style="font-style:italic;">${proj.customer.speak()}</p>
+        <p style="font-weight:600; color:#a78bfa; margin-bottom:6px; font-size:14px;">顧客 (${proj.customer.name}) の第一声:</p>
+        <p style="font-style:italic; font-size:14px;">${proj.customer.speak()}</p>
       </div>
 
       <div class="metric-box" style="text-align:left; width:100%; max-width:600px;">
-        <p style="font-weight:600; margin-bottom:8px;">■ アサイン確定体制:</p>
-        <p>・担当 PL: <strong style="color:#c4b5fd;">${pl ? pl.name : "なし"}</strong> (統率力: ${pl ? pl.leadershipSkill : 0}/5)</p>
-        <p>・開発 DEV: ${devs.map(d => d.name).join(", ")} (${devs.length}名)</p>
-        <p>・契約納期: <strong>${proj.deadlineWeeks} 週間</strong></p>
+        <p style="font-weight:600; margin-bottom:8px; font-size:14px;">■ アサイン確定体制:</p>
+        <p style="font-size:14px;">・担当 PL: <strong style="color:#c4b5fd;">${pl ? pl.name : "なし"}</strong> (統率力: ${pl ? pl.leadershipSkill : 0}/5)</p>
+        <p style="font-size:14px;">・開発 DEV: ${devs.map(d => d.name).join(", ")} (${devs.length}名)</p>
+        <p style="font-size:14px;">・契約納期: <strong>${proj.deadlineWeeks} 週間</strong></p>
       </div>
 
-      <button id="btn-start-sprint" class="btn-cmd btn-primary" style="padding:16px 32px; font-size:18px; width:100%; max-width:300px; justify-content:center;">
+      <button id="btn-start-sprint" class="btn-cmd btn-primary" style="padding:14px 24px; font-size:16px; width:100%; max-width:320px; justify-content:center;">
         開発フェーズ（週次進行）を開始 ▶
       </button>
     </div>
