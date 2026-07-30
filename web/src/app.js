@@ -8,7 +8,8 @@ import {
   getInitialProjectData,
   KICKOFF_ACTIONS,
   processYearlyClosing,
-  runWeeklySprint
+  runWeeklySprint,
+  STEP1_ASSESSMENT_CARDS
 } from "./engine.js?v=2";
 
 // アプリケーション状態管理
@@ -23,6 +24,7 @@ const state = {
     step: 1, // 1: ヒアリング, 2: アクションネゴ, 3: 手法選定, 4: チーム決起＆診断
     heardCustomer: false,
     heardPl: false,
+    assessmentCards: [], // Step 1 選択済み初期確認カード
     actionHistory: [],
     kickoffAp: 3,
     selectedMethod: null,
@@ -68,6 +70,7 @@ function startNewProject() {
     step: 1,
     heardCustomer: false,
     heardPl: false,
+    assessmentCards: [],
     actionHistory: [],
     kickoffAp: 3,
     selectedMethod: null,
@@ -97,14 +100,16 @@ function renderKickoffView() {
   const ks = state.kickoffState;
 
   if (ks.step === 1) {
-    // Step 1: 情報収集（無料ヒアリング）
+    // Step 1: 情報収集（無料ヒアリング & 初期アセスメントカード）
     const allHeard = ks.heardCustomer && ks.heardPl;
+    const cardsChecked = ks.assessmentCards || [];
+
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 キックオフフェーズ</h2>
-            <span class="step-badge">Step 1/3: 情報収集</span>
+            <span class="step-badge">Step 1/3: 初期アセスメント ＆ ヒアリング</span>
           </div>
           <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
             <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
@@ -121,23 +126,23 @@ function renderKickoffView() {
         </div>
 
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-          顧客とPLからヒアリングを行い、プロジェクトの裏に隠された無茶振りや危険度を調査してください。（※無料）
+          顧客・PLへの無料ヒアリングを行い相手のタイプを調査してください。ウェルカム期の今なら<strong>初期確認カード（最大2枚）</strong>でリスクを完全看破できます！
         </p>
 
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- 顧客 -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong>👤 顧客の要求</strong>
+              <strong>👤 顧客の要求スタンス</strong>
               <button class="btn-cmd" id="btn-hear-customer" style="padding:6px 14px; font-size:13px; min-height:36px;">
                 ${ks.heardCustomer ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
               </button>
             </div>
             ${ks.heardCustomer ? `
               <div class="speech-bubble">
-                💬 <strong>顧客:</strong> 「現場が直感的に使えてトラブルが絶対に起きない最高のシステムにしてくれ。具体的な仕様？ それは君たちプロが考えてよ。当然、納期遅れも予算オーバーもバグもNGだからね！」
+                💬 <strong>顧客:</strong> 「${proj.customerArchetype ? proj.customerArchetype.hint : "しっかり頼むよ！"}」
                 <div style="margin-top:6px; font-size:12px; color:var(--accent-warning); font-weight:600;">
-                  ⚠️ 【無茶振り検知】 要件曖昧 ✕ 品質絶対 ✕ 納期絶対の全盛り要求！
+                  ⚠️ 【プロファイリング察知】 顧客の口調から隠れタイプ（こだわり型/丸投げ型/納期死守型）を推測しよう！
                 </div>
               </div>
             ` : ""}
@@ -157,10 +162,44 @@ function renderKickoffView() {
               </div>
             ` : ""}
           </div>
+
+          <!-- 初期アセスメントカード群 (ウェルカム期・最大2枚) -->
+          ${allHeard ? `
+            <div class="metric-box" style="border:1px solid rgba(96,165,250,0.4); background:rgba(96,165,250,0.05);">
+              <div style="font-weight:700; font-size:13px; color:#60a5fa; margin-bottom:8px; display:flex; justify-content:space-between;">
+                <span>❓ 初期深掘り確認カード (選択済み: ${cardsChecked.length} / 2枚)</span>
+                <span style="font-size:12px; color:var(--accent-success); font-weight:600;">✨ 完全無料・ウェルカム期特別枠</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${Object.values(STEP1_ASSESSMENT_CARDS).map(card => {
+                  const isChecked = cardsChecked.includes(card.id);
+                  const isMax = cardsChecked.length >= 2 && !isChecked;
+                  return `
+                    <div style="background:var(--card-bg); border:1px solid var(--border-color); padding:10px; border-radius:8px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                          <strong style="font-size:13px;">${card.name}</strong> (${card.target})
+                          <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${card.desc}</div>
+                        </div>
+                        <button class="btn-cmd" id="btn-card-${card.id}" ${isChecked || isMax ? "disabled" : ""} style="padding:4px 12px; font-size:12px; min-height:30px;">
+                          ${isChecked ? "✓ 確認済み" : "❓ 質問する"}
+                        </button>
+                      </div>
+                      ${isChecked ? `
+                        <div class="speech-bubble" style="margin-top:8px; font-size:12px; color:#60a5fa;">
+                          ${card.getSpeech(proj)}
+                        </div>
+                      ` : ""}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ""}
         </div>
 
         <button id="btn-to-step2" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${allHeard ? "" : "disabled"}>
-          ${allHeard ? "ヒアリング完了！ 事前調整 ＆ ネゴシエーション(Step 2)へ進む ▶" : "顧客とPLへヒアリングしてください"}
+          ${allHeard ? "初期アセスメント完了！ 事前調整 ＆ ネゴシエーション(Step 2)へ進む ▶" : "顧客とPLへヒアリングしてください"}
         </button>
       </div>
     `;
@@ -173,6 +212,21 @@ function renderKickoffView() {
     if (btnTo2 && allHeard) {
       btnTo2.addEventListener("click", () => { ks.step = 2; renderKickoffView(); });
     }
+
+    Object.values(STEP1_ASSESSMENT_CARDS).forEach(card => {
+      const btn = document.getElementById(`btn-card-${card.id}`);
+      if (btn) {
+        btn.addEventListener("click", () => {
+          if (ks.assessmentCards.length < 2 && !ks.assessmentCards.includes(card.id)) {
+            ks.assessmentCards.push(card.id);
+            if (card.id === "CARD_BOSS") {
+              proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + 5);
+            }
+            renderKickoffView();
+          }
+        });
+      }
+    });
 
   } else if (ks.step === 2) {
     // Step 2: 事前調整 ＆ ネゴシエーション (AP 3消費)
@@ -198,7 +252,7 @@ function renderKickoffView() {
           </div>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って事前調整・交渉アクションを選択してください。<strong>※全アクションにメリット(緑)と副作用(赤)が存在します。また、実行順序によって関係者のリアクションと順序コンボが変化します！</strong>
+          有限な AP（残り ${apLeft}）を使い交渉を選択してください。<strong>※顧客タイプや上司信頼度、実行順序によって反応が動的に分岐します！ Step 1で確認せずに前提質問を行うと「今さら感ペナルティ」が発生します。</strong>
         </p>
 
         <!-- 選択された履歴とログ -->
@@ -206,7 +260,7 @@ function renderKickoffView() {
           <div style="font-weight:600; font-size:13px; color:#60a5fa; margin-bottom:6px;">実行アクション履歴 (最大3つ):</div>
           ${history.length === 0 ? '<p style="font-size:13px; color:var(--text-dim);">まだアクションを選択していません。</p>' : ''}
           ${history.map((actId, idx) => {
-            const evalRes = evaluateKickoffAction(history.slice(0, idx), actId, state.currentProject);
+            const evalRes = evaluateKickoffAction(history.slice(0, idx), actId, state.currentProject, state.kickoffState);
             const actInfo = KICKOFF_ACTIONS[actId];
             return `
               <div style="margin-bottom:8px; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">

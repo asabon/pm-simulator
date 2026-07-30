@@ -16,6 +16,12 @@ export function getInitialProjectData(projectNumber) {
   const customer = new Customer(`cust_${projectNumber}`, "渡辺部長 (決済事業部)", "VAGUE_REQUIREMENTS");
   const project = new Project(`第${projectNumber}期 基幹決済システム改修`, 4, customer);
   
+  // 顧客の隠れアーキタイプをランダム設定
+  const archetypeKeys = Object.keys(CUSTOMER_ARCHETYPES);
+  const selectedKey = archetypeKeys[(projectNumber - 1) % archetypeKeys.length];
+  project.customerArchetype = CUSTOMER_ARCHETYPES[selectedKey];
+  project.managerTrust = 60; // 上司初期信頼度 (0-100)
+
   const tasks = [
     new Task("t1", "DBスキーマ・テーブル設計", 24.0),
     new Task("t2", "API共通認証・セキュリティ実装", 32.0),
@@ -33,8 +39,61 @@ export function getInitialProjectData(projectNumber) {
 }
 
 // =========================================================================
-// 🧭 キックオフ順序コンボルックアップテーブル & エンジン (Data-Driven Engine)
+// 🧭 キックオフ動的評価 ＆ アセスメントエンジン
 // =========================================================================
+
+export const CUSTOMER_ARCHETYPES = {
+  PARTNER: {
+    id: "PARTNER",
+    name: "🤝 こだわり伴走型",
+    hint: "「現場が使いやすくてカッコいいデザインがいいな！画面を見ながら一緒に詰めていこうよ。」",
+    favors: ["CLIENT_WS", "CLIENT_PROTOTYPE"],
+    dislikes: ["CLIENT_PHASED"]
+  },
+  DELEGATE: {
+    id: "DELEGATE",
+    name: "💼 完全丸投げ型",
+    hint: "「細かい仕様？ それはプロの君たちが考えてよ。こっちは動くものが納品されれば文句ないからさ。」",
+    favors: ["CLIENT_TRADEOFF"],
+    dislikes: ["CLIENT_WS", "CLIENT_PROTOTYPE"]
+  },
+  DEADLINE: {
+    id: "DEADLINE",
+    name: "⏱️ 納期絶対型",
+    hint: "「今回のリリース日は役員会で決定した絶対厳守だ。機能を削るのも納期延期も一切認めないよ。」",
+    favors: ["CLIENT_PROTOTYPE", "CLIENT_TRADEOFF"],
+    dislikes: ["CLIENT_PHASED", "BOSS_DEADLINE"]
+  }
+};
+
+export const STEP1_ASSESSMENT_CARDS = {
+  CARD_QCD: {
+    id: "CARD_QCD",
+    name: "❓ QCD優先軸の事前すり合わせ",
+    target: "👤 顧客",
+    desc: "顧客が最も重視する基準（品質・納期・費用）をウェルカム期に確認し、今さら確認ペナルティを防止。",
+    getSpeech: (project) => {
+      const arch = project.customerArchetype;
+      if (arch.id === "PARTNER") return "💬 顧客:「一番大事なのは現場の使い勝手と品質だよ！納得できるものを一緒に作ろう。」 (※こだわり伴走型を看破！)";
+      if (arch.id === "DELEGATE") return "💬 顧客:「任せるから期日通り動くものを作ってよ。途中の細かい相談は不要だよ。」 (※完全丸投げ型を看破！)";
+      return "💬 顧客:「納期は役員会決定事項だから絶対遅らせないでくれ。そこさえ守れば信頼するよ。」 (※納期絶対型を看破！)";
+    }
+  },
+  CARD_RETRO: {
+    id: "CARD_RETRO",
+    name: "❓ 過去類似案件の失敗傾向",
+    target: "🛠️ PL",
+    desc: "過去のハマりどころを現場から事前に聞き出し、チーム安全度を高める。",
+    getSpeech: () => "💬 PL:「前回のプロジェクトは隠れた既存DBの整合性チェックで大ハマリしたんです…そこを事前に注意してくれれば安心です！」 (※チーム安全度向上！)"
+  },
+  CARD_BOSS: {
+    id: "CARD_BOSS",
+    name: "❓ 上司のリスク許容範囲",
+    target: "🏢 上司",
+    desc: "上司の懸念点と信頼ラインを確認し、社内バックアップを高める。",
+    getSpeech: (project) => `💬 上司:「トラブルで会社に損失を出さなければ基本は現場の判断を尊重するぞ。（上司信頼度: ${project.managerTrust || 60}%）」 (※上司信頼度+5%)`
+  }
+};
 
 export const KICKOFF_ACTIONS = {
   CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", tags: ["要件確定度UP", "要求膨らみリスク", "AP 1"], defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。（※要求が追加されるリスクあり）" },
@@ -103,10 +162,15 @@ export const KICKOFF_SYNERGY_RULES = [
   }
 ];
 
-export function evaluateKickoffAction(history, currentActionId, project) {
+export function evaluateKickoffAction(history, currentActionId, project, kickoffState = {}) {
   const actionInfo = KICKOFF_ACTIONS[currentActionId];
   if (!actionInfo) return null;
 
+  const cardsChecked = kickoffState.assessmentCards || [];
+  const archetype = project.customerArchetype || CUSTOMER_ARCHETYPES.PARTNER;
+  const managerTrust = project.managerTrust || 60;
+
+  // 1. 順序コンボ判定
   const rule = KICKOFF_SYNERGY_RULES.find(r => r.condition(history, currentActionId));
 
   const result = {
@@ -125,6 +189,74 @@ export function evaluateKickoffAction(history, currentActionId, project) {
 
   if (rule) {
     rule.applyEffects(project, result);
+    return result;
+  }
+
+  // 2. 🔴 後出し大ペナルティ判定 (Step 1 で確認せずに Step 2 で確認した場合)
+  if (currentActionId === "CLIENT_TRADEOFF" && !cardsChecked.includes("CARD_QCD")) {
+    result.speaker = "顧客";
+    result.comment = "えっ、最初のキックオフの時に聞いてくれよ…今さら改まってそんな初歩的なこと確認されても不安になるよ。";
+    result.synergyName = "🔴 【今さら感ペナルティ】前提の確認遅れ (顧客不満)";
+    result.customerSatisfactionBonus -= 10;
+    return result;
+  }
+
+  if (currentActionId === "TEAM_RETROSPECTIVE" && !cardsChecked.includes("CARD_RETRO")) {
+    result.speaker = "PL";
+    result.comment = "今さら過去の失敗談ですか…？ 最初のうちにリスクとして教えてくれれば対策できたのに、説教に聞こえてテンション落ちます。";
+    result.synergyName = "🔴 【今さら感ペナルティ】過去訓の教示遅れ (士気低下)";
+    result.moraleBonus -= 15;
+    return result;
+  }
+
+  // 3. 🧠 顧客隠れタイプ依存の動的セリフ・納得度分岐
+  if (actionInfo.category === "CLIENT") {
+    if (archetype.favors.includes(currentActionId)) {
+      if (currentActionId === "CLIENT_WS") {
+        result.comment = "いいね！画面イメージを見ながら機能のすり合わせができるなら大歓迎だよ。一緒に最高の仕様にしよう！";
+        result.synergyName = "🟢 【相性抜群】こだわり派顧客の納得 (満足度UP)";
+        result.customerSatisfactionBonus += 10;
+      } else if (currentActionId === "CLIENT_PROTOTYPE") {
+        result.comment = "事前に関係者で実物を見られるのは助かる！これでイメージの相違は無くなるね。";
+        result.synergyName = "🟢 【相性抜群】画面モック先行提示の納得";
+        result.customerSatisfactionBonus += 5;
+      } else if (currentActionId === "CLIENT_TRADEOFF" && cardsChecked.includes("CARD_QCD")) {
+        result.comment = "最初にも聞いたけど、今回は品質最優先で頼むよ！優先順位が明確で助かる。";
+        result.synergyName = "🟢 【事前すり合わせ成功】信頼感維持";
+        result.customerSatisfactionBonus += 5;
+      }
+    } else if (archetype.dislikes.includes(currentActionId)) {
+      if (currentActionId === "CLIENT_WS") {
+        result.comment = "えっ、わざわざ打ち合わせに時間取られるの…？ それくらいプロの君たちで良い感じに考えて作ってよ。";
+        result.synergyName = "🔴 【相性不一致】丸投げ型顧客の不満";
+        result.customerSatisfactionBonus -= 8;
+      } else if (currentActionId === "CLIENT_PHASED") {
+        result.comment = "は？ 初期リリースで全部揃わないの？ 契約と違うじゃないか、プロなら約束通り全部作ってよ！";
+        result.synergyName = "🔴 【相性最悪】納期・スコープ死守型顧客の激怒";
+        result.customerSatisfactionBonus -= 15;
+      }
+    }
+  }
+
+  // 4. 🏢 上司信頼度依存の動的セリフ・評価分岐
+  if (actionInfo.category === "BOSS") {
+    if (managerTrust >= 70) {
+      if (currentActionId === "BOSS_DEADLINE") {
+        result.comment = "君がそこまで言うなら相当な難易度なんだな。よし、役員会を通して1週間のバッファを確保してやる！";
+        result.synergyName = "🟢 【社内高信頼】上司の全面バックアップ獲得";
+        result.managerSatisfactionBonus += 5;
+      } else if (currentActionId === "BOSS_HELP_DEV") {
+        result.comment = "自力で厳しいなら遠慮なく言え！エースのタツヤを即日アサインする。成功させろよ！";
+        result.synergyName = "🟢 【社内高信頼】即時助っ人アサイン";
+        result.managerSatisfactionBonus += 5;
+      }
+    } else if (managerTrust <= 40) {
+      if (currentActionId === "BOSS_DEADLINE") {
+        result.comment = "また最初から言い訳か？ 根拠もなく納期を延ばせるわけないだろ。自力で何とかしろ！";
+        result.synergyName = "🔴 【低信頼ペナルティ】上司の激怒・直訴拒絶";
+        result.managerSatisfactionBonus -= 15;
+      }
+    }
   }
 
   return result;
