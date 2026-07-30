@@ -37,14 +37,14 @@ export function getInitialProjectData(projectNumber) {
 // =========================================================================
 
 export const KICKOFF_ACTIONS = {
-  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", tags: ["要件確定度UP", "AP 1"], defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
-  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", tags: ["初期スコープ削減", "事前精査推奨", "AP 1"], defaultSpeaker: "顧客", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
-  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", tags: ["期待値ギャップ減", "顧客信頼調整", "AP 1"], defaultSpeaker: "顧客", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
-  CLIENT_PROTOTYPE: { id: "CLIENT_PROTOTYPE", name: "📱 画面モック・プロトタイプ先行提示", category: "CLIENT", tags: ["要件確定度UP", "認識ズレ防止", "AP 1"], defaultSpeaker: "顧客", defaultComment: "事前に画面イメージが見られると安心だな！これなら大きな勘違いは防げそうだ。" },
-  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", tags: ["納期猶予確保", "上司信頼度-1", "AP 1"], defaultSpeaker: "上司", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
-  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", tags: ["開発力強化", "直訴後コンボあり", "AP 1"], defaultSpeaker: "上司", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
+  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", tags: ["要件確定度UP", "要求膨らみリスク", "AP 1"], defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。（※要求が追加されるリスクあり）" },
+  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", tags: ["初期スコープ削減", "顧客満足度-5%", "事前精査推奨", "AP 1"], defaultSpeaker: "顧客", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。（※顧客満足度が少し低下）" },
+  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", tags: ["期待値ギャップ減", "顧客満足度-5%", "AP 1"], defaultSpeaker: "顧客", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。（※顧客満足度が少し低下）" },
+  CLIENT_PROTOTYPE: { id: "CLIENT_PROTOTYPE", name: "📱 画面モック・プロトタイプ先行提示", category: "CLIENT", tags: ["認識ズレ防止", "初期速度-10%", "要件確定度UP", "AP 1"], defaultSpeaker: "顧客", defaultComment: "事前に画面が見られると安心だな！ただ、プロトタイプ作成でスタートが少し遅れるぞ。" },
+  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", tags: ["納期猶予確保", "上司信頼度-10%", "AP 1"], defaultSpeaker: "上司", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（※上司評価が低下）" },
+  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", tags: ["開発力強化", "初期現場疲労UP", "直訴後コンボあり", "AP 1"], defaultSpeaker: "上司", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤを回すが引き継ぎで初期の現場負担が増えるぞ。" },
   TEAM_RISK_CHECK: { id: "TEAM_RISK_CHECK", name: "🛠️ PLと技術リスク・工数見積もり精査", category: "TEAM", tags: ["チーム安全度UP", "段階リリース根拠", "AP 1"], defaultSpeaker: "PL", defaultComment: "PMさん、先に現場のリスクと実工数を精査してくれて助かります！" },
-  TEAM_RETROSPECTIVE: { id: "TEAM_RETROSPECTIVE", name: "📚 過去案件の失敗教訓(レトロ)共有", category: "TEAM", tags: ["事故率低減", "チーム安全度UP", "AP 1"], defaultSpeaker: "PL", defaultComment: "過去の炎上パターンを先に共有してもらえて助かります。同じ落とし穴にはハマりません！" }
+  TEAM_RETROSPECTIVE: { id: "TEAM_RETROSPECTIVE", name: "📚 過去案件の失敗教訓(レトロ)共有", category: "TEAM", tags: ["事故率低減", "説教感・士気微減", "AP 1"], defaultSpeaker: "PL", defaultComment: "過去の炎上パターンの共有ですか…同じ失敗はしませんが、説教感があってプレッシャーも感じますね。" }
 };
 
 export const KICKOFF_SYNERGY_RULES = [
