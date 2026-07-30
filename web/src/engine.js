@@ -37,11 +37,11 @@ export function getInitialProjectData(projectNumber) {
 // =========================================================================
 
 export const KICKOFF_ACTIONS = {
-  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
-  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
-  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", defaultSpeaker: "CUSTOMER", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
-  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", defaultSpeaker: "BOSS", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
-  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", defaultSpeaker: "BOSS", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
+  CLIENT_WS: { id: "CLIENT_WS", name: "💡 顧客と要件定義ワークショップ実施", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "プロトタイプで見せてもらえると助かるよ！どんな機能が必要か一緒につめよう。" },
+  CLIENT_PHASED: { id: "CLIENT_PHASED", name: "👥 顧客へ段階リリース(スコープ調整)を提案", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "えっ、初期リリースで全部揃わないのか…？まあ、理由があるなら聞こう。" },
+  CLIENT_TRADEOFF: { id: "CLIENT_TRADEOFF", name: "🤝 顧客とQCD優先順位の合意形成", category: "CLIENT", defaultSpeaker: "顧客", defaultComment: "全部大事に決まってるだろ！でも…今回は品質を優先してくれるなら仕方ない。" },
+  BOSS_DEADLINE: { id: "BOSS_DEADLINE", name: "🏢 上司へ納期バッファ・スケジュール直訴", category: "BOSS", defaultSpeaker: "上司", defaultComment: "もう納期交渉か？理由をしっかり説明しろよ。（上司信頼度が少し低下）" },
+  BOSS_HELP_DEV: { id: "BOSS_HELP_DEV", name: "🙋‍♂️ 助っ人エンジニアの追加アサイン要請", category: "BOSS", defaultSpeaker: "上司", defaultComment: "自力で回せないのか？仕方ない、エースのタツヤをヘルプで回してやる。" },
   TEAM_RISK_CHECK: { id: "TEAM_RISK_CHECK", name: "🛠️ PLと技術リスク・工数見積もり精査", category: "TEAM", defaultSpeaker: "PL", defaultComment: "PMさん、先に現場のリスクと実工数を精査してくれて助かります！" },
   TEAM_KICKOFF_MEETING: { id: "TEAM_KICKOFF_MEETING", name: "🔥 チームキックオフ決起 ＆ ビジョン共有", category: "TEAM", defaultSpeaker: "PL", defaultComment: "このプロジェクトの意義がわかりました！全員でモチベーション高く頑張ります！" }
 };
@@ -53,7 +53,7 @@ export const KICKOFF_SYNERGY_RULES = [
     name: "根拠ある事前交渉コンボ",
     condition: (history, currentActionId) => 
       history.includes("TEAM_RISK_CHECK") && currentActionId === "CLIENT_PHASED",
-    speaker: "CUSTOMER",
+    speaker: "顧客",
     comment: "なるほど…現場の工数根拠がそこまで明確なら仕方ない！初期リリースは必須機能だけに絞りましょう。",
     applyEffects: (project, stats) => {
       stats.synergyName = "🌟 【順序コンボ】根拠ある事前交渉 (顧客納得度UP・ペナルティ相殺)";
@@ -67,7 +67,7 @@ export const KICKOFF_SYNERGY_RULES = [
     name: "無根拠な唐突提案 (不発)",
     condition: (history, currentActionId) => 
       !history.includes("TEAM_RISK_CHECK") && currentActionId === "CLIENT_PHASED",
-    speaker: "CUSTOMER",
+    speaker: "顧客",
     comment: "えっ、根拠もなくいきなり機能を絞るってどういうこと！？プロなら工夫して全部やってよ！",
     applyEffects: (project, stats) => {
       stats.customerSatisfactionBonus -= 5;
@@ -93,7 +93,7 @@ export const KICKOFF_SYNERGY_RULES = [
     name: "筋を通した助っ人要請コンボ",
     condition: (history, currentActionId) => 
       history.includes("BOSS_DEADLINE") && currentActionId === "BOSS_HELP_DEV",
-    speaker: "BOSS",
+    speaker: "上司",
     comment: "納期を伸ばしてもまだ厳しいか！分かった、タツヤを全面バックアップで回す。絶対に成功させろよ！",
     applyEffects: (project, stats) => {
       stats.synergyName = "🌟 【順序コンボ】社内全面バックアップ獲得";
