@@ -280,16 +280,16 @@ function renderKickoffView() {
           <div class="method-card ${selectedMethod === 'WATERFALL' ? 'selected' : ''}" id="card-wf">
             <div style="font-size:18px; font-weight:700;">🌊 ウォーターフォール開発</div>
             <div style="font-size:13px; color:var(--text-muted);">
-              事前計画とテストを徹底。開発消化スピード <strong>+30% (爆速)</strong> ＆ 上司評価高い。<br>
-              <span style="color:var(--accent-danger);">⚠️ 危険: 進行中の突然の仕様変更で全滅大炎上リスク。</span>
+              事前計画と一括テストを徹底。開発消化スピード <strong>+30% (爆速)</strong> ＆ 社内評価が高い。<br>
+              <span style="color:#60a5fa;">💡 特徴: 要件が固まった案件で真価を発揮。(※途中の仕様変更手戻り注意)</span>
             </div>
           </div>
 
           <div class="method-card ${selectedMethod === 'AGILE' ? 'selected' : ''}" id="card-agile">
             <div style="font-size:18px; font-weight:700;">🔄 アジャイル開発</div>
             <div style="font-size:13px; color:var(--text-muted);">
-              プロトタイプで試作を繰り返し対話。<strong>仕様変更に極めて強く大炎上を防げる</strong>。<br>
-              <span style="color:var(--accent-warning);">⚠️ 懸念: 会議・調整が増え消化スピード -15% ＆ 上司がやや不安。</span>
+              プロトタイプ試作で対話し、<strong>途中の仕様変更・手戻りに極めて強い</strong>。<br>
+              <span style="color:#60a5fa;">💡 特徴: 顧客要件が不鮮明な案件で真価を発揮。(※消化スピード -15%)</span>
             </div>
           </div>
         </div>
