@@ -21,7 +21,6 @@ const state = {
   logs: [],
   kickoffState: {
     step: 1, // 1: ヒアリング, 2: アクションネゴ, 3: 手法選定＆診断
-    heardBoss: false,
     heardCustomer: false,
     heardPl: false,
     actionHistory: [],
@@ -67,7 +66,6 @@ function startNewProject() {
   state.logs = [];
   state.kickoffState = {
     step: 1,
-    heardBoss: false,
     heardCustomer: false,
     heardPl: false,
     actionHistory: [],
@@ -102,7 +100,7 @@ function renderKickoffView() {
 
   if (ks.step === 1) {
     // Step 1: 情報収集（無料ヒアリング）
-    const allHeard = ks.heardBoss && ks.heardCustomer && ks.heardPl;
+    const allHeard = ks.heardCustomer && ks.heardPl;
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
@@ -112,27 +110,21 @@ function renderKickoffView() {
           </div>
           <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
         </div>
+
+        <!-- 1. 前提インプット: 上司のアサイン指示 -->
+        <div class="metric-box" style="margin-bottom:16px; border-left:3px solid #60a5fa;">
+          <div style="font-size:13px; font-weight:700; color:#60a5fa; margin-bottom:4px;">🏢 上司からのミッション指示 (前提条件):</div>
+          <div style="font-size:13px;">
+            💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。トラブルを起こさず【<strong>${proj.priorityExpectation} 重視（障害・過労の防止）</strong>】で頼むぞ！」
+          </div>
+        </div>
+
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-          関係者（上司・顧客・PL）からヒアリングを行い、プロジェクトの無茶振りや危険度を調査してください。（※無料）
+          顧客とPLからヒアリングを行い、プロジェクトの裏に隠された無茶振りや危険度を調査してください。（※無料）
         </p>
 
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- 1. 上司 -->
-          <div class="metric-box">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong>🏢 上司の要請</strong>
-              <button class="btn-cmd" id="btn-hear-boss" style="padding:6px 14px; font-size:13px; min-height:36px;">
-                ${ks.heardBoss ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
-              </button>
-            </div>
-            ${ks.heardBoss ? `
-              <div class="speech-bubble">
-                💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。くれぐれもトラブルを起こさず【納期遅れ・予算オーバーは絶対厳禁】で頼むぞ！」
-              </div>
-            ` : ""}
-          </div>
-
-          <!-- 2. 顧客 -->
+          <!-- 顧客 -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong>👤 顧客の要求</strong>
@@ -150,7 +142,7 @@ function renderKickoffView() {
             ` : ""}
           </div>
 
-          <!-- 3. PL -->
+          <!-- PL -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong>🛠️ 担当PLの見通し</strong>
@@ -167,12 +159,11 @@ function renderKickoffView() {
         </div>
 
         <button id="btn-to-step2" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${allHeard ? "" : "disabled"}>
-          ${allHeard ? "ヒアリング完了！ ネゴシエーション(Step 2)へ進む ▶" : "すべての関係者へヒアリングしてください"}
+          ${allHeard ? "ヒアリング完了！ ネゴシエーション(Step 2)へ進む ▶" : "顧客とPLへヒアリングしてください"}
         </button>
       </div>
     `;
 
-    document.getElementById("btn-hear-boss").addEventListener("click", () => { ks.heardBoss = true; renderKickoffView(); });
     document.getElementById("btn-hear-customer").addEventListener("click", () => { ks.heardCustomer = true; renderKickoffView(); });
     document.getElementById("btn-hear-pl").addEventListener("click", () => { ks.heardPl = true; renderKickoffView(); });
     if (allHeard) {
