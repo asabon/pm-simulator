@@ -105,9 +105,12 @@ function renderKickoffView() {
     const allHeard = ks.heardBoss && ks.heardCustomer && ks.heardPl;
     container.innerHTML = `
       <div class="card" style="text-align:left;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h2 style="font-size:20px; font-weight:700;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 1/3: 情報収集]</h2>
-          <span style="font-size:13px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+            <span class="step-badge">Step 1/3: 情報収集</span>
+          </div>
+          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
         </div>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
           関係者（上司・顧客・PL）からヒアリングを行い、プロジェクトの無茶振りや危険度を調査してください。（※無料）
@@ -183,8 +186,11 @@ function renderKickoffView() {
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h2 style="font-size:20px; font-weight:700;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 2/3: 防衛ネゴシエーション]</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+            <span class="step-badge">Step 2/3: 防衛ネゴ</span>
+          </div>
           <span class="ap-tag">キックオフ AP: ${apLeft} / 2</span>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
@@ -270,7 +276,13 @@ function renderKickoffView() {
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
-        <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 3/3: デリバリー戦略の宣言 ＆ 診断]</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+            <span class="step-badge">Step 3/3: 戦略宣言</span>
+          </div>
+          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+        </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
           関係者とのヒアリング・交渉結果を踏まえ、PMとして本プロジェクトのデリバリー戦略（推進方針）を宣言・合意選定してください。
         </p>
