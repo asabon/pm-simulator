@@ -390,20 +390,11 @@ function renderKickoffView() {
           </div>
         </div>
 
-        <button id="btn-start-dashboard" class="btn-cmd btn-primary" style="margin-top:20px; padding:16px; font-size:18px; width:100%; justify-content:center;">
-          開発スプリント（第2フェーズ）を開始 ▶
+        <button id="btn-start-dashboard" class="btn-cmd btn-primary" style="padding:16px; font-size:18px; width:100%; justify-content:center;">
+          🔥 全員一致団結！ 開発スプリント（第2フェーズ）を開始 ▶
         </button>
       </div>
     `;
-
-    document.getElementById("card-wf").addEventListener("click", () => {
-      ks.selectedMethod = "WATERFALL";
-      renderKickoffView();
-    });
-    document.getElementById("card-agile").addEventListener("click", () => {
-      ks.selectedMethod = "AGILE";
-      renderKickoffView();
-    });
 
     document.getElementById("btn-start-dashboard").addEventListener("click", () => {
       renderDashboardView();

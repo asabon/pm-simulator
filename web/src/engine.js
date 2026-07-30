@@ -249,14 +249,6 @@ export function getKickoffRallySpeech(totalScore, selectedMethod, actionHistory)
     };
   }
 }
-    totalScore,
-    rank,
-    summaryComment,
-    planHealthStars,
-    expectationGapStars,
-    teamSafetyStars
-  };
-}
 
 export function runWeeklySprint(project, tasks, overtimeIds = new Set(), pm) {
   const logs = [];
