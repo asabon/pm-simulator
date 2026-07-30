@@ -20,11 +20,11 @@ const state = {
   projectCounter: 1,
   logs: [],
   kickoffState: {
-    step: 1, // 1: ヒアリング, 2: アクションネゴ, 3: 手法選定＆診断
+    step: 1, // 1: ヒアリング, 2: アクションネゴ, 3: 手法選定, 4: チーム決起＆診断
     heardCustomer: false,
     heardPl: false,
     actionHistory: [],
-    kickoffAp: 2,
+    kickoffAp: 3,
     selectedMethod: null,
     diagnosis: null
   }
@@ -69,7 +69,7 @@ function startNewProject() {
     heardCustomer: false,
     heardPl: false,
     actionHistory: [],
-    kickoffAp: 2,
+    kickoffAp: 3,
     selectedMethod: null,
     diagnosis: null
   };
@@ -94,8 +94,6 @@ function renderKickoffView() {
   updateHeader();
   updatePhaseStepper("kickoff");
   const proj = state.currentProject;
-  const pl = proj.mainTeam.leader;
-  const devs = proj.mainTeam.members;
   const ks = state.kickoffState;
 
   if (ks.step === 1) {
@@ -167,14 +165,17 @@ function renderKickoffView() {
       </div>
     `;
 
-    document.getElementById("btn-hear-customer").addEventListener("click", () => { ks.heardCustomer = true; renderKickoffView(); });
-    document.getElementById("btn-hear-pl").addEventListener("click", () => { ks.heardPl = true; renderKickoffView(); });
-    if (allHeard) {
-      document.getElementById("btn-to-step2").addEventListener("click", () => { ks.step = 2; renderKickoffView(); });
+    const btnCust = document.getElementById("btn-hear-customer");
+    if (btnCust) btnCust.addEventListener("click", () => { ks.heardCustomer = true; renderKickoffView(); });
+    const btnPl = document.getElementById("btn-hear-pl");
+    if (btnPl) btnPl.addEventListener("click", () => { ks.heardPl = true; renderKickoffView(); });
+    const btnTo2 = document.getElementById("btn-to-step2");
+    if (btnTo2 && allHeard) {
+      btnTo2.addEventListener("click", () => { ks.step = 2; renderKickoffView(); });
     }
 
   } else if (ks.step === 2) {
-    // Step 2: 事前調整 ＆ ネゴシエーション (AP 2消費)
+    // Step 2: 事前調整 ＆ ネゴシエーション (AP 3消費)
     const history = ks.actionHistory;
     const apLeft = ks.kickoffAp;
 
@@ -193,16 +194,16 @@ function renderKickoffView() {
           </div>
           <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
             <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
-            <span class="ap-tag">AP: ${apLeft} / 2</span>
+            <span class="ap-tag">AP: ${apLeft} / 3</span>
           </div>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って事前調整・交渉アクションを選択してください。<strong>※実行順序によって関係者のリアクションとコンボが変化します！</strong>
+          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って事前調整・交渉アクションを選択してください。<strong>※すべてのアクションにメリット(緑)とトレードオフ/副作用(赤)が存在します！</strong>
         </p>
 
         <!-- 選択された履歴とログ -->
         <div class="metric-box" style="margin-bottom:16px; min-height:70px;">
-          <div style="font-weight:600; font-size:13px; color:#60a5fa; margin-bottom:6px;">実行アクション履歴 (最大2つ):</div>
+          <div style="font-weight:600; font-size:13px; color:#60a5fa; margin-bottom:6px;">実行アクション履歴 (最大3つ):</div>
           ${history.length === 0 ? '<p style="font-size:13px; color:var(--text-dim);">まだアクションを選択していません。</p>' : ''}
           ${history.map((actId, idx) => {
             const evalRes = evaluateKickoffAction(history.slice(0, idx), actId, state.currentProject);
@@ -232,8 +233,8 @@ function renderKickoffView() {
                   ${actions.map(act => {
                     const isDisabled = apLeft < 1 || history.includes(act.id);
                     const tagHtml = (act.tags || []).map(t => {
-                      const isDanger = t.includes("-") || t.includes("リスク");
-                      const isSuccess = t.includes("UP") || t.includes("確度") || t.includes("強化") || t.includes("減");
+                      const isDanger = t.includes("-") || t.includes("リスク") || t.includes("疲労") || t.includes("微減");
+                      const isSuccess = t.includes("UP") || t.includes("確度") || t.includes("強化") || t.includes("減") || t.includes("防止") || t.includes("確保") || t.includes("低減");
                       const cls = isDanger ? "tag-badge-danger" : (isSuccess ? "tag-badge-success" : "");
                       return `<span class="tag-badge ${cls}">${t}</span>`;
                     }).join(" ");
@@ -255,7 +256,7 @@ function renderKickoffView() {
           }).join('')}
         </div>
 
-        <button id="btn-to-step3" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${apLeft === 0 || history.length >= 2 ? "" : ""}>
+        <button id="btn-to-step3" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${apLeft === 0 || history.length >= 3 ? "" : ""}>
           ${apLeft === 0 ? "AP使い切り！ デリバリー戦略(推進方針)の宣言(Step 3)へ ▶" : "デリバリー戦略(推進方針)の宣言(Step 3)へ進む ▶"}
         </button>
       </div>
