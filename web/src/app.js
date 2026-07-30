@@ -159,7 +159,7 @@ function renderKickoffView() {
         </div>
 
         <button id="btn-to-step2" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${allHeard ? "" : "disabled"}>
-          ${allHeard ? "ヒアリング完了！ ネゴシエーション(Step 2)へ進む ▶" : "顧客とPLへヒアリングしてください"}
+          ${allHeard ? "ヒアリング完了！ 事前調整 ＆ ネゴシエーション(Step 2)へ進む ▶" : "顧客とPLへヒアリングしてください"}
         </button>
       </div>
     `;
@@ -171,7 +171,7 @@ function renderKickoffView() {
     }
 
   } else if (ks.step === 2) {
-    // Step 2: PMの決断 ＆ ネゴシエーション (所有 AP: 2)
+    // Step 2: 事前調整 ＆ ネゴシエーション (所有 AP: 2)
     const history = ks.actionHistory;
     const apLeft = ks.kickoffAp;
 
@@ -180,12 +180,12 @@ function renderKickoffView() {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
-            <span class="step-badge">Step 2/3: 防衛ネゴ</span>
+            <span class="step-badge">Step 2/3: 事前調整 ＆ ネゴ</span>
           </div>
           <span class="ap-tag">キックオフ AP: ${apLeft} / 2</span>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って防衛・交渉アクションを選択してください。<strong>※実行順序によって関係者のリアクションとコンボが変化します！</strong>
+          顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って事前調整・交渉アクションを選択してください。<strong>※実行順序によって関係者のリアクションとコンボが変化します！</strong>
         </p>
 
         <!-- 選択された履歴とログ -->
