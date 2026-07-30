@@ -103,6 +103,7 @@ function renderKickoffView() {
     // Step 1: 情報収集（無料ヒアリング & 初期アセスメントカード）
     const allHeard = ks.heardCustomer && ks.heardPl;
     const cardsChecked = ks.assessmentCards || [];
+    const arch = proj.customerArchetype;
 
     container.innerHTML = `
       <div class="card" style="text-align:left;">
@@ -122,6 +123,19 @@ function renderKickoffView() {
           <div style="font-size:13px; font-weight:700; color:#60a5fa; margin-bottom:4px;">🏢 上司からのミッション指示 (前提条件):</div>
           <div style="font-size:13px;">
             💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。トラブルを起こさず【<strong>${proj.priorityExpectation} 重視（障害・過労の防止）</strong>】で頼むぞ！」
+          </div>
+        </div>
+
+        <!-- 🛠️ デバッグ表示: 隠しパラメータのリアルタイム可視化 -->
+        <div class="metric-box" style="background:rgba(239, 68, 68, 0.08); border:1px dashed rgba(239, 68, 68, 0.4); margin-bottom:16px; padding:10px 14px;">
+          <div style="font-size:12px; font-weight:700; color:#ef4444; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>🛠️ 【デバッグ表示】 隠しパラメータリアルタイム可視化</span>
+            <span style="font-size:11px; opacity:0.8;">※検証用</span>
+          </div>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--text-muted);">
+            <span>👤 隠れ顧客タイプ: <strong style="color:var(--text-main);">${arch ? arch.name : "未判定"}</strong></span>
+            <span>🏢 上司信頼度: <strong style="color:var(--text-main);">${proj.managerTrust || 60}%</strong></span>
+            <span>❓ 初期確認カード: <strong style="color:var(--text-main);">${cardsChecked.length} / 2 枚選択済</strong></span>
           </div>
         </div>
 
@@ -232,6 +246,7 @@ function renderKickoffView() {
     // Step 2: 事前調整 ＆ ネゴシエーション (AP 3消費)
     const history = ks.actionHistory;
     const apLeft = ks.kickoffAp;
+    const arch = proj.customerArchetype;
 
     const categories = [
       { key: "CLIENT", name: "🤝 対顧客交渉 (CLIENT)", color: "#60a5fa" },
@@ -254,6 +269,19 @@ function renderKickoffView() {
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
           有限な AP（残り ${apLeft}）を使い交渉を選択してください。<strong>※顧客タイプや上司信頼度、実行順序によって反応が動的に分岐します！ Step 1で確認せずに前提質問を行うと「今さら感ペナルティ」が発生します。</strong>
         </p>
+
+        <!-- 🛠️ デバッグ表示: 隠しパラメータのリアルタイム可視化 -->
+        <div class="metric-box" style="background:rgba(239, 68, 68, 0.08); border:1px dashed rgba(239, 68, 68, 0.4); margin-bottom:16px; padding:10px 14px;">
+          <div style="font-size:12px; font-weight:700; color:#ef4444; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>🛠️ 【デバッグ表示】 隠しパラメータリアルタイム可視化</span>
+            <span style="font-size:11px; opacity:0.8;">※検証用</span>
+          </div>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--text-muted);">
+            <span>👤 隠れ顧客タイプ: <strong style="color:var(--text-main);">${arch ? arch.name : "未判定"}</strong></span>
+            <span>🏢 上司信頼度: <strong style="color:var(--text-main);">${proj.managerTrust || 60}%</strong></span>
+            <span>❓ 確認カード選択数: <strong style="color:var(--text-main);">${(ks.assessmentCards || []).length} / 2 枚選択済</strong></span>
+          </div>
+        </div>
 
         <!-- 選択された履歴とログ -->
         <div class="metric-box" style="margin-bottom:16px; min-height:70px;">
