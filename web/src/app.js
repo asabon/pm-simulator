@@ -104,11 +104,14 @@ function renderKickoffView() {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 キックオフフェーズ</h2>
             <span class="step-badge">Step 1/3: 情報収集</span>
           </div>
-          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
+            <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
+            <span>案件: <strong>${proj.name}</strong></span>
+          </div>
         </div>
 
         <!-- 1. 前提インプット: 上司のアサイン指示 -->
@@ -184,11 +187,14 @@ function renderKickoffView() {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 キックオフフェーズ</h2>
             <span class="step-badge">Step 2/3: 事前調整 ＆ ネゴ</span>
           </div>
-          <span class="ap-tag">キックオフ AP: ${apLeft} / 2</span>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
+            <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
+            <span class="ap-tag">AP: ${apLeft} / 2</span>
+          </div>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
           顧客の全盛り無茶振りと現場の悲鳴に対し、有限な AP（残り ${apLeft}）を使って事前調整・交渉アクションを選択してください。<strong>※実行順序によって関係者のリアクションとコンボが変化します！</strong>
@@ -280,11 +286,14 @@ function renderKickoffView() {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 キックオフフェーズ</h2>
             <span class="step-badge">Step 3/3: 戦略宣言</span>
           </div>
-          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
+            <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
+            <span>案件: <strong>${proj.name}</strong></span>
+          </div>
         </div>
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
           関係者とのヒアリング・事前交渉結果を踏まえ、PMとして本プロジェクトのデリバリー戦略（推進方針）を宣言・選定してください。
@@ -340,13 +349,16 @@ function renderKickoffView() {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 第 ${state.projectCounter} 期 キックオフ</h2>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🚀 キックオフフェーズ</h2>
             <span class="step-badge" style="background:rgba(239, 68, 68, 0.2); color:#fca5a5; border-color:rgba(239, 68, 68, 0.4);">
               🔥 チーム決起 ＆ キックオフ完了
             </span>
           </div>
-          <span style="font-size:12px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
+            <span style="background:rgba(245,158,11,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-weight:600;">📅 第 ${state.projectCounter} 期</span>
+            <span>案件: <strong>${proj.name}</strong></span>
+          </div>
         </div>
 
         <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
