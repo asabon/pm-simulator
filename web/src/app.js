@@ -109,8 +109,8 @@ function renderKickoffView() {
           <h2 style="font-size:20px; font-weight:700;">🚀 第 ${state.projectCounter} 期 キックオフ [Step 1/3: 情報収集]</h2>
           <span style="font-size:13px; color:var(--text-muted);">案件: <strong>${proj.name}</strong></span>
         </div>
-        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-          関係者（上司・顧客・PL）をタップしてヒアリングを行い、プロジェクトの無茶振りや危険度（要件の曖昧さ）を調査してください。（※無料ヒアリング）
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+          関係者（上司・顧客・PL）からヒアリングを行い、プロジェクトの無茶振りや危険度を調査してください。（※無料）
         </p>
 
         <div style="display:flex; flex-direction:column; gap:16px;">
@@ -132,7 +132,7 @@ function renderKickoffView() {
           <!-- 2. 顧客 -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong>👤 顧客 (${proj.customer.name}) の本音</strong>
+              <strong>👤 顧客の要求</strong>
               <button class="btn-cmd" id="btn-hear-customer" style="padding:6px 14px; font-size:13px; min-height:36px;">
                 ${ks.heardCustomer ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
               </button>
@@ -150,7 +150,7 @@ function renderKickoffView() {
           <!-- 3. PL -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong>🛠️ 担当PL (${pl ? pl.name : "なし"}) の見通し</strong>
+              <strong>🛠️ 担当PLの見通し</strong>
               <button class="btn-cmd" id="btn-hear-pl" style="padding:6px 14px; font-size:13px; min-height:36px;">
                 ${ks.heardPl ? "✓ ヒアリング済み" : "👂 ヒアリングする"}
               </button>
