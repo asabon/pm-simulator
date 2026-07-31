@@ -104,6 +104,32 @@ function renderKickoffView() {
     const allHeard = ks.heardCustomer && ks.heardPl;
     const cardsChecked = ks.assessmentCards || [];
 
+    const renderInlineCard = (cardId) => {
+      const card = STEP1_ASSESSMENT_CARDS[cardId];
+      if (!card) return "";
+      const isChecked = cardsChecked.includes(card.id);
+      const isMax = cardsChecked.length >= 2 && !isChecked;
+
+      return `
+        <div style="background:var(--card-bg); border:1px solid rgba(96,165,250,0.3); padding:10px; border-radius:8px; margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong style="font-size:13px; color:#60a5fa;">${card.name}</strong>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${card.desc}</div>
+            </div>
+            <button class="btn-cmd" id="btn-card-${card.id}" ${isChecked || isMax ? "disabled" : ""} style="padding:4px 12px; font-size:12px; min-height:30px;">
+              ${isChecked ? "✓ 確認済み" : "❓ 質問・深掘りする"}
+            </button>
+          </div>
+          ${isChecked ? `
+            <div class="speech-bubble" style="margin-top:8px; font-size:12px; color:#60a5fa;">
+              ${card.getSpeech(proj)}
+            </div>
+          ` : ""}
+        </div>
+      `;
+    };
+
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
@@ -117,20 +143,26 @@ function renderKickoffView() {
           </div>
         </div>
 
-        <!-- 1. 前提インプット: 上司のアサイン指示 -->
-        <div class="metric-box" style="margin-bottom:16px; border-left:3px solid #60a5fa;">
-          <div style="font-size:13px; font-weight:700; color:#60a5fa; margin-bottom:4px;">🏢 上司からのミッション指示 (前提条件):</div>
-          <div style="font-size:13px;">
-            💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。トラブルを起こさず【<strong>${proj.priorityExpectation} 重視（障害・過労の防止）</strong>】で頼むぞ！」
-          </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.2); padding:10px 14px; border-radius:8px; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:13px; color:var(--text-muted);">
+            顧客・PLへヒアリングを行い相手のタイプを調査してください。それぞれの対話の場で<strong>初期確認カード（最大2枚・完全無料）</strong>を使って深掘りできます。
+          </span>
+          <span style="font-size:12px; font-weight:700; color:#60a5fa; white-space:nowrap; background:rgba(96,165,250,0.15); padding:4px 10px; border-radius:12px;">
+            ❓ 深掘りカード選択: ${cardsChecked.length} / 2枚
+          </span>
         </div>
 
-        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-          顧客・PLへの無料ヒアリングを行い相手のタイプを調査してください。ウェルカム期の今なら<strong>初期確認カード（最大2枚）</strong>でリスクを完全看破できます！
-        </p>
-
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- 顧客 -->
+          <!-- 1. 前提インプット: 上司のアサイン指示 ＆ 上司深掘りカード -->
+          <div class="metric-box" style="border-left:3px solid #60a5fa;">
+            <div style="font-size:13px; font-weight:700; color:#60a5fa; margin-bottom:4px;">🏢 上司からのミッション指示 (前提条件):</div>
+            <div style="font-size:13px;">
+              💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。トラブルを起こさず【<strong>${proj.priorityExpectation} 重視（障害・過労の防止）</strong>】で頼むぞ！」
+            </div>
+            ${renderInlineCard("CARD_BOSS")}
+          </div>
+
+          <!-- 2. 顧客ヒアリング ＆ 顧客深掘りカード -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong>👤 顧客の要求スタンス</strong>
@@ -145,10 +177,15 @@ function renderKickoffView() {
                   ⚠️ 【プロファイリング察知】 顧客の口調から隠れタイプ（こだわり型/丸投げ型/納期死守型）を推測しよう！
                 </div>
               </div>
-            ` : ""}
+              ${renderInlineCard("CARD_QCD")}
+            ` : `
+              <div style="margin-top:8px; font-size:12px; color:var(--text-muted);">
+                💡 顧客にヒアリングを行うと、顧客に対する深掘り質問カード（QCD優先軸の確認等）を選択できるようになります。
+              </div>
+            `}
           </div>
 
-          <!-- PL -->
+          <!-- 3. PLヒアリング ＆ PL深掘りカード -->
           <div class="metric-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong>🛠️ 担当PLの見通し</strong>
@@ -160,42 +197,13 @@ function renderKickoffView() {
               <div class="speech-bubble">
                 💬 <strong>PL:</strong> 「要件がふわふわな上に品質も納期も完璧なんて絶対無理です！ このまま開発に入ったら確実に終盤で大炎上しますよ……！」
               </div>
-            ` : ""}
+              ${renderInlineCard("CARD_RETRO")}
+            ` : `
+              <div style="margin-top:8px; font-size:12px; color:var(--text-muted);">
+                💡 担当PLにヒアリングを行うと、現場に対する深掘り質問カード（過去失敗傾向の事前確認等）を選択できるようになります。
+              </div>
+            `}
           </div>
-
-          <!-- 初期アセスメントカード群 (ウェルカム期・最大2枚) -->
-          ${allHeard ? `
-            <div class="metric-box" style="border:1px solid rgba(96,165,250,0.4); background:rgba(96,165,250,0.05);">
-              <div style="font-weight:700; font-size:13px; color:#60a5fa; margin-bottom:8px; display:flex; justify-content:space-between;">
-                <span>❓ 初期深掘り確認カード (選択済み: ${cardsChecked.length} / 2枚)</span>
-                <span style="font-size:12px; color:var(--accent-success); font-weight:600;">✨ 完全無料・ウェルカム期特別枠</span>
-              </div>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                ${Object.values(STEP1_ASSESSMENT_CARDS).map(card => {
-                  const isChecked = cardsChecked.includes(card.id);
-                  const isMax = cardsChecked.length >= 2 && !isChecked;
-                  return `
-                    <div style="background:var(--card-bg); border:1px solid var(--border-color); padding:10px; border-radius:8px;">
-                      <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                          <strong style="font-size:13px;">${card.name}</strong> (${card.target})
-                          <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${card.desc}</div>
-                        </div>
-                        <button class="btn-cmd" id="btn-card-${card.id}" ${isChecked || isMax ? "disabled" : ""} style="padding:4px 12px; font-size:12px; min-height:30px;">
-                          ${isChecked ? "✓ 確認済み" : "❓ 質問する"}
-                        </button>
-                      </div>
-                      ${isChecked ? `
-                        <div class="speech-bubble" style="margin-top:8px; font-size:12px; color:#60a5fa;">
-                          ${card.getSpeech(proj)}
-                        </div>
-                      ` : ""}
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-          ` : ""}
         </div>
 
         <button id="btn-to-step2" class="btn-cmd btn-primary" style="margin-top:20px; padding:14px; font-size:16px; width:100%; justify-content:center;" ${allHeard ? "" : "disabled"}>
