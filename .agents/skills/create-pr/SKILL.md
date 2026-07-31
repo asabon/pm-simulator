@@ -55,3 +55,11 @@ description: ユーザーから「PR出して」「PR作成」「PR提出」「�
    $env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "..." --body-file .git/pr_body.md
    ```
 3. 生成された PR のリンクをユーザーに報告する。
+
+### STEP 5: PRマージ報告後の完全自動クリーンアップ
+ユーザーから「マージしました」「マージ完了」等の連絡を受けた際、ただちに以下の完全クリーンアップを連続実行すること:
+1. `git checkout main` で main ブランチに切り替え。
+2. `git pull origin main` で最新の main を同期。
+3. `git fetch --prune` を実行し、マージ・削除されたリモート追跡ブランチ（`remotes/origin/...`）を自動消去。
+4. `git branch -d <branch_name>` でローカルのフィーチャーブランチを完全削除。
+5. ユーザーにクリーンアップ完了（`git branch -a` で全ブランチが綺麗になった状態）を報告する。
