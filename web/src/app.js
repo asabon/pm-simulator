@@ -166,13 +166,12 @@ function renderKickoffView() {
           </div>
         </div>
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- 1. 前提インプット: 上司のアサイン指示 ＆ 上司深掘りカード -->
+          <!-- 1. 前提インプット: 上司のアサイン指示 -->
           <div class="metric-box" style="border-left:3px solid #60a5fa;">
             <div style="font-size:13px; font-weight:700; color:#60a5fa; margin-bottom:4px;">🏢 上司からのミッション指示 (前提条件):</div>
             <div style="font-size:13px;">
               💬 <strong>上司:</strong> 「今回のプロジェクトは社内の注力案件だ。トラブルを起こさず【<strong>${proj.priorityExpectation} 重視（障害・過労の防止）</strong>】で頼むぞ！」
             </div>
-            ${renderInlineCard("CARD_BOSS")}
           </div>
 
           <!-- 2. 顧客ヒアリング ＆ 顧客深掘りカード -->
