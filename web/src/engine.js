@@ -12,32 +12,6 @@ export function getInitialDeveloperPool() {
   ];
 }
 
-export function getInitialProjectData(projectNumber) {
-  const customer = new Customer(`cust_${projectNumber}`, "渡辺部長 (決済事業部)", "VAGUE_REQUIREMENTS");
-  const project = new Project(`第${projectNumber}期 基幹決済システム改修`, 4, customer);
-  
-  // 顧客の隠れアーキタイプをランダム設定
-  const archetypeKeys = Object.keys(CUSTOMER_ARCHETYPES);
-  const selectedKey = archetypeKeys[(projectNumber - 1) % archetypeKeys.length];
-  project.customerArchetype = CUSTOMER_ARCHETYPES[selectedKey];
-  project.managerTrust = 60; // 上司初期信頼度 (0-100)
-
-  const tasks = [
-    new Task("t1", "DBスキーマ・テーブル設計", 24.0),
-    new Task("t2", "API共通認証・セキュリティ実装", 32.0),
-    new Task("t3", "データ移行スクリプト作成", 24.0),
-    new Task("t4", "決済コア処理ロジック開発", 48.0),
-    new Task("t5", "ユーザー管理画面実装", 32.0),
-    new Task("t6", "レポート集計画面構築", 28.0),
-    new Task("t7", "管理画面ダッシュボード構築", 24.0),
-    new Task("t8", "単体テストコード作成", 24.0),
-    new Task("t9", "統合シナリオテスト実施", 32.0),
-    new Task("t10", "本番サーバーへのデプロイ", 16.0)
-  ];
-
-  return { project, tasks };
-}
-
 // =========================================================================
 // 🧭 キックオフ動的評価 ＆ アセスメントエンジン
 // =========================================================================
@@ -65,6 +39,32 @@ export const CUSTOMER_ARCHETYPES = {
     dislikes: ["CLIENT_PHASED", "BOSS_DEADLINE"]
   }
 };
+
+export function getInitialProjectData(projectNumber) {
+  const customer = new Customer(`cust_${projectNumber}`, "渡辺部長 (決済事業部)", "VAGUE_REQUIREMENTS");
+  const project = new Project(`第${projectNumber}期 基幹決済システム改修`, 4, customer);
+  
+  // 顧客の隠れアーキタイプをランダム設定
+  const archetypeKeys = Object.keys(CUSTOMER_ARCHETYPES);
+  const selectedKey = archetypeKeys[(projectNumber - 1) % archetypeKeys.length];
+  project.customerArchetype = CUSTOMER_ARCHETYPES[selectedKey];
+  project.managerTrust = 60; // 上司初期信頼度 (0-100)
+
+  const tasks = [
+    new Task("t1", "DBスキーマ・テーブル設計", 24.0),
+    new Task("t2", "API共通認証・セキュリティ実装", 32.0),
+    new Task("t3", "データ移行スクリプト作成", 24.0),
+    new Task("t4", "決済コア処理ロジック開発", 48.0),
+    new Task("t5", "ユーザー管理画面実装", 32.0),
+    new Task("t6", "レポート集計画面構築", 28.0),
+    new Task("t7", "管理画面ダッシュボード構築", 24.0),
+    new Task("t8", "単体テストコード作成", 24.0),
+    new Task("t9", "統合シナリオテスト実施", 32.0),
+    new Task("t10", "本番サーバーへのデプロイ", 16.0)
+  ];
+
+  return { project, tasks };
+}
 
 export const STEP1_ASSESSMENT_CARDS = {
   CARD_QCD: {

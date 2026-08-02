@@ -6,7 +6,7 @@ import {
   getInitialProjectData,
   processYearlyClosing,
   runWeeklySprint
-} from "./engine.js?v=4";
+} from "./engine.js";
 
 // アプリケーション状態管理
 const state = {
@@ -330,7 +330,7 @@ function renderKickoffView() {
             <h2 style="font-size:18px; font-weight:700; margin:0;">🗣️ 面談画面: ${targetName}</h2>
             <span class="step-badge">アジェンダ ${ks.currentMeetingIndex + 1} / ${ks.interviewSequence.length}</span>
           </div>
-          <div style="font-size:13px; font-weight:700; color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:12xl; border-radius:12px;">
+          <div style="font-size:13px; font-weight:700; color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:12px;">
             ⭐ 今週の残り AP: ${ks.kickoffAp} / 3
           </div>
         </div>
@@ -664,4 +664,8 @@ function renderResultView() {
 }
 
 // アプリケーション起動
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
