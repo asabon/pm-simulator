@@ -8,6 +8,27 @@ import {
   runWeeklySprint
 } from "./engine.js";
 
+// エラーハンドラー（万が一エラーが発生した場合に画面に赤字で原因を表示）
+window.addEventListener("error", (event) => {
+  showErrorOnScreen(event.error || event.message);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  showErrorOnScreen(event.reason);
+});
+
+function showErrorOnScreen(err) {
+  const c = document.getElementById("app-container");
+  if (c) {
+    c.innerHTML = `
+      <div style="background:rgba(239,68,68,0.15); border:2px solid #ef4444; color:#ef4444; padding:20px; border-radius:12px; margin:20px; text-align:left; font-family:monospace;">
+        <h3 style="margin-top:0;">🚨 JavaScript 実行エラーが検知されました</h3>
+        <pre style="white-space:pre-wrap; word-break:break-all;">${err ? (err.stack || err.toString()) : "不明なエラー"}</pre>
+      </div>
+    `;
+  }
+}
+
 // アプリケーション状態管理
 const state = {
   pm: new PM(3),
@@ -17,10 +38,10 @@ const state = {
   projectCounter: 1,
   logs: [],
   kickoffState: {
-    step: 1.1, // 1.1: アサイン, 1.2: 会議セッティング, 2: 個別事前会議, 2.9: 継続判断, 3: キックオフ決起
-    interviewSequence: [], // [ { target: "PL", title: "..." }, ... ]
+    step: 1.1,
+    interviewSequence: [],
     currentMeetingIndex: 0,
-    obtainedKnowledge: [], // ["CLIENT_REQUIREMENT", "SOLUTION_STAGED_RELEASE", ...]
+    obtainedKnowledge: [],
     interviewApInvested: { PL: 0, CLIENT: 0, BOSS: 0 },
     kickoffAp: 3,
     kickoffWeeksSpent: 0,
@@ -28,19 +49,15 @@ const state = {
   }
 };
 
-// DOM 要素
-const container = document.getElementById("app-container");
-const elCareerYears = document.getElementById("pm-career-years");
-const elCompletedPjs = document.getElementById("pm-completed-pjs");
-const elPmAp = document.getElementById("pm-ap");
-
-// 初期化
-function init() {
-  state.developerPool = getInitialDeveloperPool();
-  startNewProject();
+function getContainer() {
+  return document.getElementById("app-container");
 }
 
 function updateHeader() {
+  const elCareerYears = document.getElementById("pm-career-years");
+  const elCompletedPjs = document.getElementById("pm-completed-pjs");
+  const elPmAp = document.getElementById("pm-ap");
+
   if (elCareerYears) elCareerYears.textContent = state.pm.careerYears;
   if (elCompletedPjs) elCompletedPjs.textContent = state.pm.completedProjects;
   if (elPmAp) elPmAp.textContent = state.pm.ap;
@@ -54,6 +71,16 @@ function updatePhaseStepper(phase) {
   if (kickoff) kickoff.classList.toggle("active", phase === "kickoff");
   if (dashboard) dashboard.classList.toggle("active", phase === "dashboard");
   if (result) result.classList.toggle("active", phase === "result");
+}
+
+// 初期化
+function init() {
+  try {
+    state.developerPool = getInitialDeveloperPool();
+    startNewProject();
+  } catch (err) {
+    showErrorOnScreen(err);
+  }
 }
 
 // 1. キックオフフェーズの開始
@@ -91,13 +118,14 @@ function startNewProject() {
 function renderKickoffView() {
   updateHeader();
   updatePhaseStepper("kickoff");
+  const container = getContainer();
+  if (!container) return;
+
   const proj = state.currentProject;
   const ks = state.kickoffState;
   const pl = proj.team ? proj.team.leader : null;
 
-  // -----------------------------------------------------------------------
   // Step 1-1: 上司からの業務アサイン
-  // -----------------------------------------------------------------------
   if (ks.step === 1.1) {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
@@ -164,16 +192,17 @@ function renderKickoffView() {
       });
     }
 
-    document.getElementById("btn-to-step1-2").addEventListener("click", () => {
-      ks.step = 1.2;
-      renderKickoffView();
-    });
+    const btnNext = document.getElementById("btn-to-step1-2");
+    if (btnNext) {
+      btnNext.addEventListener("click", () => {
+        ks.step = 1.2;
+        renderKickoffView();
+      });
+    }
     return;
   }
 
-  // -----------------------------------------------------------------------
-  // Step 1-2: 事前会議の自由セッティング (マルチキューUI)
-  // -----------------------------------------------------------------------
+  // Step 1-2: 事前会議の自由セッティング
   if (ks.step === 1.2) {
     const seq = ks.interviewSequence || [];
 
@@ -191,7 +220,6 @@ function renderKickoffView() {
           ※ 1週間分（最大3つの会議）を実行するごとに<strong>契約納期が1週間減少 (`納期 -1週`)</strong>します。
         </div>
 
-        <!-- 会議追加ボタン群 -->
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
           <button id="add-client" class="btn-cmd" style="flex:1; padding:10px; font-size:13px; justify-content:center; border-color:#60a5fa; color:#60a5fa; background:rgba(96,165,250,0.1);" ${seq.length >= 3 ? 'disabled' : ''}>
             ➕ 👥 顧客とのすり合わせ会議
@@ -204,7 +232,6 @@ function renderKickoffView() {
           </button>
         </div>
 
-        <!-- 組み立てられたアジェンダキュー一覧 -->
         <div class="metric-box" style="margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <span style="font-size:13px; font-weight:700; color:var(--text-main);">📋 今週の予定アジェンダ:</span>
@@ -238,57 +265,30 @@ function renderKickoffView() {
       </div>
     `;
 
-    document.getElementById("add-client").addEventListener("click", () => {
-      if (seq.length < 3) {
-        seq.push({ target: "CLIENT", title: "対 顧客との要求すり合わせ会議" });
-        renderKickoffView();
-      }
-    });
-    document.getElementById("add-pl").addEventListener("click", () => {
-      if (seq.length < 3) {
-        seq.push({ target: "PL", title: "対 PLとの現場技術・負荷打ち合わせ会議" });
-        renderKickoffView();
-      }
-    });
-    document.getElementById("add-boss").addEventListener("click", () => {
-      if (seq.length < 3) {
-        seq.push({ target: "BOSS", title: "対 上司との防衛ライン・リソース相談会議" });
-        renderKickoffView();
-      }
-    });
+    const addClient = document.getElementById("add-client");
+    if (addClient) addClient.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "CLIENT", title: "対 顧客との要求すり合わせ会議" }); renderKickoffView(); } });
+    const addPl = document.getElementById("add-pl");
+    if (addPl) addPl.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "PL", title: "対 PLとの現場技術・負荷打ち合わせ会議" }); renderKickoffView(); } });
+    const addBoss = document.getElementById("add-boss");
+    if (addBoss) addBoss.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "BOSS", title: "対 上司との防衛ライン・リソース相談会議" }); renderKickoffView(); } });
 
     const btnClear = document.getElementById("btn-clear-queue");
-    if (btnClear) {
-      btnClear.addEventListener("click", () => {
-        ks.interviewSequence = [];
-        renderKickoffView();
-      });
-    }
+    if (btnClear) btnClear.addEventListener("click", () => { ks.interviewSequence = []; renderKickoffView(); });
 
-    document.getElementById("btn-start-meetings").addEventListener("click", () => {
-      if (seq.length > 0) {
-        ks.currentMeetingIndex = 0;
-        ks.kickoffAp = 3;
-        ks.step = 2;
-        renderKickoffView();
-      }
-    });
+    const btnStart = document.getElementById("btn-start-meetings");
+    if (btnStart) btnStart.addEventListener("click", () => { if (seq.length > 0) { ks.currentMeetingIndex = 0; ks.kickoffAp = 3; ks.step = 2; renderKickoffView(); } });
 
-    document.getElementById("btn-skip-to-kickoff").addEventListener("click", () => {
-      ks.step = 3;
-      renderKickoffView();
-    });
+    const btnSkip = document.getElementById("btn-skip-to-kickoff");
+    if (btnSkip) btnSkip.addEventListener("click", () => { ks.step = 3; renderKickoffView(); });
     return;
   }
 
-  // -----------------------------------------------------------------------
   // Step 2: 個別事前会議の開催
-  // -----------------------------------------------------------------------
   if (ks.step === 2) {
     const currentMeeting = ks.interviewSequence[ks.currentMeetingIndex];
 
     if (!currentMeeting) {
-      ks.step = 2.9; // 今週の会議終了 ＆ 継続判断へ
+      ks.step = 2.9;
       renderKickoffView();
       return;
     }
@@ -385,10 +385,12 @@ function renderKickoffView() {
       const logBox = document.getElementById("dialog-log");
 
       if (currentInvested >= 3) {
-        logBox.innerHTML = `
-          <div style="color:#ef4444; font-weight:700;">🚨 【時間の浪費】</div>
-          <div>議論は完全に平行線です……。時間（AP）だけが無駄に消費され、パラメータは一切伸びませんでした (+0%)！</div>
-        `;
+        if (logBox) {
+          logBox.innerHTML = `
+            <div style="color:#ef4444; font-weight:700;">🚨 【時間の浪費】</div>
+            <div>議論は完全に平行線です……。時間（AP）だけが無駄に消費され、パラメータは一切伸びませんでした (+0%)！</div>
+          `;
+        }
         renderKickoffView();
         return;
       }
@@ -399,65 +401,41 @@ function renderKickoffView() {
         const gain = 20 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
         if (!ks.obtainedKnowledge.includes("PL_TECH_ANXIETY")) ks.obtainedKnowledge.push("PL_TECH_ANXIETY");
-        logBox.innerHTML = `
-          <div style="color:#10b981; font-weight:700;">🟢 【対PLヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>PLから「実はこの技術スタックは経験が浅く不安がある」という本音リスクを感知しました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【対PLヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div><div>PLから「実はこの技術スタックは経験が浅く不安がある」という本音リスクを感知しました！</div>`;
       } else if (actionId === "PL_2") {
         const gain = 15 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
-        logBox.innerHTML = `
-          <div style="color:#10b981; font-weight:700;">🟢 【負荷軽減の合意】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>無理な残業を抑える方針でPLと意気投合しました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【負荷軽減の合意】 (効果: +${gain.toFixed(0)}%)</div><div>無理な残業を抑える方針でPLと意気投合しました！</div>`;
       } else if (actionId === "PL_SPECIAL") {
         const gain = 25 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
         if (!ks.obtainedKnowledge.includes("SOLUTION_STAGED_RELEASE")) ks.obtainedKnowledge.push("SOLUTION_STAGED_RELEASE");
-        logBox.innerHTML = `
-          <div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 現場代替案の策定】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>顧客要望を持ち込んで相談し、現場から「段階リリースなら実現可能」という対案を引き出しました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 現場代替案の策定】 (効果: +${gain.toFixed(0)}%)</div><div>顧客要望を持ち込んで相談し、現場から「段階リリースなら実現可能」という対案を引き出しました！</div>`;
       } else if (actionId === "C_1") {
         const gain = 20 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
         if (!ks.obtainedKnowledge.includes("CLIENT_REQUIREMENT")) ks.obtainedKnowledge.push("CLIENT_REQUIREMENT");
-        logBox.innerHTML = `
-          <div style="color:#10b981; font-weight:700;">🟢 【顧客ヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>顧客から「まずは主要機能の納期厳守が第一」という真のニーズを聞き出しました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客ヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div><div>顧客から「まずは主要機能の納期厳守が第一」という真のニーズを聞き出しました！</div>`;
       } else if (actionId === "C_2") {
         const gain = 15 * mult;
         proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
-        logBox.innerHTML = `
-          <div style="color:#10b981; font-weight:700;">🟢 【スコープ事前打診】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>要件の優先順位付けについて理解を得て、要求具体度がアップしました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【スコープ事前打診】 (効果: +${gain.toFixed(0)}%)</div><div>要件の優先順位付けについて理解を得て、要求具体度がアップしました！</div>`;
       } else if (actionId === "C_SPECIAL_STAGED") {
         const gain = 30 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
         proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
         if (!ks.obtainedKnowledge.includes("CLIENT_AGREED_STAGED")) ks.obtainedKnowledge.push("CLIENT_AGREED_STAGED");
-        logBox.innerHTML = `
-          <div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 段階リリース最終合意】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>「段階リリース案」を提示し、顧客から「そこまで真剣に考えてくれたなら合意しよう」と絶賛されました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 段階リリース最終合意】 (効果: +${gain.toFixed(0)}%)</div><div>「段階リリース案」を提示し、顧客から「そこまで真剣に考えてくれたなら合意しよう」と絶賛されました！</div>`;
       } else if (actionId === "C_SPECIAL_BOSS") {
         const gain = 25 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
-        logBox.innerHTML = `
-          <div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 社内公認ライン提示】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>上司からの品質担保ラインを毅然と提示し、無理な無茶振り要求をシャットアウトしました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 社内公認ライン提示】 (効果: +${gain.toFixed(0)}%)</div><div>上司からの品質担保ラインを毅然と提示し、無理な無茶振り要求をシャットアウトしました！</div>`;
       } else if (actionId === "B_1" || actionId === "B_2") {
         const gain = 20 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         if (!ks.obtainedKnowledge.includes("BOSS_BACKUP")) ks.obtainedKnowledge.push("BOSS_BACKUP");
-        logBox.innerHTML = `
-          <div style="color:#10b981; font-weight:700;">🟢 【上司防衛線ライン確保】 (効果: +${gain.toFixed(0)}%)</div>
-          <div>上司との合意を取りつけ、社内評価・防衛バックアップラインが強化されました！</div>
-        `;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【上司防衛線ライン確保】 (効果: +${gain.toFixed(0)}%)</div><div>上司との合意を取りつけ、社内評価・防衛バックアップラインが強化されました！</div>`;
       }
 
       setTimeout(() => {
@@ -472,19 +450,20 @@ function renderKickoffView() {
       });
     });
 
-    document.getElementById("btn-next-meeting").addEventListener("click", () => {
-      ks.currentMeetingIndex += 1;
-      if (ks.currentMeetingIndex >= ks.interviewSequence.length) {
-        ks.step = 2.9;
-      }
-      renderKickoffView();
-    });
+    const btnNextMeeting = document.getElementById("btn-next-meeting");
+    if (btnNextMeeting) {
+      btnNextMeeting.addEventListener("click", () => {
+        ks.currentMeetingIndex += 1;
+        if (ks.currentMeetingIndex >= ks.interviewSequence.length) {
+          ks.step = 2.9;
+        }
+        renderKickoffView();
+      });
+    }
     return;
   }
 
-  // -----------------------------------------------------------------------
-  // Step 2.9: 今週の事前会議終了 ＆ 継続・進行選択
-  // -----------------------------------------------------------------------
+  // Step 2.9: 今週の事前会議終了
   if (ks.step === 2.9) {
     container.innerHTML = `
       <div class="card" style="text-align:left;">
@@ -512,26 +491,30 @@ function renderKickoffView() {
       </div>
     `;
 
-    document.getElementById("btn-continue-next-week").addEventListener("click", () => {
-      ks.kickoffWeeksSpent += 1;
-      proj.deadlineWeeks = Math.max(1, proj.deadlineWeeks - 1);
-      ks.interviewSequence = [];
-      ks.currentMeetingIndex = 0;
-      ks.kickoffAp = 3;
-      ks.step = 1.2;
-      renderKickoffView();
-    });
+    const btnCont = document.getElementById("btn-continue-next-week");
+    if (btnCont) {
+      btnCont.addEventListener("click", () => {
+        ks.kickoffWeeksSpent += 1;
+        proj.deadlineWeeks = Math.max(1, proj.deadlineWeeks - 1);
+        ks.interviewSequence = [];
+        ks.currentMeetingIndex = 0;
+        ks.kickoffAp = 3;
+        ks.step = 1.2;
+        renderKickoffView();
+      });
+    }
 
-    document.getElementById("btn-finish-kickoff").addEventListener("click", () => {
-      ks.step = 3;
-      renderKickoffView();
-    });
+    const btnFinish = document.getElementById("btn-finish-kickoff");
+    if (btnFinish) {
+      btnFinish.addEventListener("click", () => {
+        ks.step = 3;
+        renderKickoffView();
+      });
+    }
     return;
   }
 
-  // -----------------------------------------------------------------------
-  // Step 3: キックオフ決起 ＆ 防衛★診断
-  // -----------------------------------------------------------------------
+  // Step 3: キックオフ決起
   if (ks.step === 3) {
     const scopeStars = Math.min(5, proj.clarityLevel + (ks.obtainedKnowledge.includes("CLIENT_AGREED_STAGED") ? 1 : 0));
     const expectationGap = Math.min(100, proj.customer.satisfaction);
@@ -579,18 +562,12 @@ function renderKickoffView() {
       </div>
     `;
 
-    document.getElementById("btn-wf").addEventListener("click", () => {
-      ks.selectedMethod = "WATERFALL";
-      renderKickoffView();
-    });
-    document.getElementById("btn-agile").addEventListener("click", () => {
-      ks.selectedMethod = "AGILE";
-      renderKickoffView();
-    });
-    document.getElementById("btn-start-phase2").addEventListener("click", () => {
-      proj.methodology = ks.selectedMethod;
-      renderDashboardView();
-    });
+    const btnWf = document.getElementById("btn-wf");
+    if (btnWf) btnWf.addEventListener("click", () => { ks.selectedMethod = "WATERFALL"; renderKickoffView(); });
+    const btnAgile = document.getElementById("btn-agile");
+    if (btnAgile) btnAgile.addEventListener("click", () => { ks.selectedMethod = "AGILE"; renderKickoffView(); });
+    const btnP2 = document.getElementById("btn-start-phase2");
+    if (btnP2) btnP2.addEventListener("click", () => { proj.methodology = ks.selectedMethod; renderDashboardView(); });
     return;
   }
 }
@@ -599,6 +576,8 @@ function renderKickoffView() {
 function renderDashboardView() {
   updateHeader();
   updatePhaseStepper("dashboard");
+  const container = getContainer();
+  if (!container) return;
   const proj = state.currentProject;
 
   container.innerHTML = `
@@ -626,21 +605,26 @@ function renderDashboardView() {
     </div>
   `;
 
-  document.getElementById("btn-next-week").addEventListener("click", () => {
-    proj.week += 1;
-    proj.deadlineWeeks = Math.max(0, proj.deadlineWeeks - 1);
-    if (proj.deadlineWeeks <= 0) {
-      renderResultView();
-    } else {
-      renderDashboardView();
-    }
-  });
+  const btnNext = document.getElementById("btn-next-week");
+  if (btnNext) {
+    btnNext.addEventListener("click", () => {
+      proj.week += 1;
+      proj.deadlineWeeks = Math.max(0, proj.deadlineWeeks - 1);
+      if (proj.deadlineWeeks <= 0) {
+        renderResultView();
+      } else {
+        renderDashboardView();
+      }
+    });
+  }
 }
 
 // Phase 3: 結果発表ビュー (既存)
 function renderResultView() {
   updateHeader();
   updatePhaseStepper("result");
+  const container = getContainer();
+  if (!container) return;
   const proj = state.currentProject;
 
   container.innerHTML = `
@@ -657,10 +641,13 @@ function renderResultView() {
     </div>
   `;
 
-  document.getElementById("btn-restart").addEventListener("click", () => {
-    state.projectCounter += 1;
-    startNewProject();
-  });
+  const btnRestart = document.getElementById("btn-restart");
+  if (btnRestart) {
+    btnRestart.addEventListener("click", () => {
+      state.projectCounter += 1;
+      startNewProject();
+    });
+  }
 }
 
 // アプリケーション起動
