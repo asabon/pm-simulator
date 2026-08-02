@@ -1,4 +1,4 @@
-import { PM, Team } from "./entities.js";
+import { PM, Team } from "./entities.js?v=999";
 import {
   calculateFinalScore,
   evaluateProjectStatus,
@@ -6,7 +6,7 @@ import {
   getInitialProjectData,
   processYearlyClosing,
   runWeeklySprint
-} from "./engine.js";
+} from "./engine.js?v=999";
 
 // エラーハンドラー（万が一エラーが発生した場合に画面に赤字で原因を表示）
 window.addEventListener("error", (event) => {
@@ -123,7 +123,7 @@ function renderKickoffView() {
 
   const proj = state.currentProject;
   const ks = state.kickoffState;
-  const pl = proj.team ? proj.team.leader : null;
+  const pl = (proj && proj.mainTeam) ? proj.mainTeam.leader : null;
 
   // Step 1-1: 上司からの業務アサイン
   if (ks.step === 1.1) {
