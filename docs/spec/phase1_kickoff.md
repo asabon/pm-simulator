@@ -11,20 +11,20 @@
 
 ```mermaid
 flowchart TD
-    START([🎮 ゲーム開始]) --> S1_1["画面 Step 1-1: 上司アサイン<br>───────────────<br>・案件概要 / 予算 / 納期の確認<br>・初期パラメータ受領 (例: 納期 12週間)"]
+    START([🎮 ゲーム開始]) --> S1_1["Step 1-1: 上司アサイン<br>(案件概要・初期条件確認)"]
     
-    S1_1 --> S1_2{"画面 Step 1-2: 今週の会議を自由編成<br>───────────────<br>［顧客］［PL］［上司］のボタンを<br>好きな順番で押してアジェンダを作成！"}
+    S1_1 --> S1_2{"Step 1-2: 会議の自由編成<br>(アジェンダキュー構築)"}
 
-    S1_2 -->|"【アジェンダ編成例】<br>1: 顧客 ➔ 2: PL ➔ 3: 顧客"| STEP2["画面 Step 2: 個別面談画面<br>・設定した順番で一対一対話<br>・切り札発動 ＆ 本音獲得"]
+    S1_2 -->|"【編成例】1:顧客 ➔ 2:PL ➔ 3:顧客"| STEP2["Step 2: 個別面談画面<br>(対話・切り札発動)"]
 
-    STEP2 --> DECISION{"今週の事前会議が終了！<br>どうする？"}
+    STEP2 --> DECISION{"今週の事前会議終了"}
 
-    DECISION -->|"【さらに来週も事前調整する】<br>(納期 -1週 / AP回復)"| NEXT_WEEK["⚠️ 契約納期が 1 週間減少！<br>所持 AP が回復し、再び Step 1-2 へ"]
+    DECISION -->|"【調整を継続】 (納期 -1週)"| NEXT_WEEK["契約納期が 1 週間減少<br>(AP回復 ➔ Step 1-2へ)"]
     NEXT_WEEK --> S1_2
 
-    DECISION -->|"【事前調整を終了してキックオフへ】"| S3["画面 Step 3: キックオフ決起 ＆ 診断<br>───────────────<br>・🌊 WF vs 🔄 アジャイル 戦略選択<br>・防衛★診断結果表示"]
+    DECISION -->|"【調整完了】"| S3["Step 3: キックオフ決起<br>(デリバリー戦略選択 / 防衛★診断)"]
 
-    S3 --> NEXT([🚀 Phase 2: 開発スプリントへ<br>※残った納期週数で開発本番スタート！])
+    S3 --> NEXT([🚀 Phase 2: 開発スプリントへ])
 ```
 
 ---
@@ -54,19 +54,19 @@ sequenceDiagram
     participant State as 💾 GameState
     participant PL as 🗣️ 現場 PL
 
-    PM->>Client: 第1会議: AP消費して要望ヒアリング
-    Client-->>PM: 「予算内で何としても納期通り納品してほしい」
-    Note over State: 獲得フラグ: CLIENT_REQUIREMENT
+    PM->>Client: 第1会議: 要求ヒアリング
+    Client-->>PM: 「主要機能の納期厳守が第一」
+    Note over State: フラグ: CLIENT_REQUIREMENT
 
-    PM->>PL: 第2会議: 顧客要望を持ち込んで技術的詰め
+    PM->>PL: 第2会議: 顧客要望を持ち込み相談
     State-->>PL: 顧客要求を参照
-    PL-->>PM: 「この技術スタックだと全要件は無理。段階リリースなら可」
-    Note over State: ★切り札解禁: SOLUTION_STAGED_RELEASE
+    PL-->>PM: 「段階リリースなら実現可能」
+    Note over State: ★切り札: SOLUTION_STAGED_RELEASE
 
-    PM->>Client: 第3会議: 現場の回答を携えて再交渉
-    PM->>Client: 切り札『段階リリース案』を提示！
-    Client-->>PM: 「そこまで検討してくれたなら段階リリースで合意しよう」
-    Note over State: 顧客満足度/要件確定度が大幅アップ！
+    PM->>Client: 第3会議: 現場代替案を携え再交渉
+    PM->>Client: 切り札『段階リリース案』提示！
+    Client-->>PM: 「それなら合意しよう！」
+    Note over State: 顧客満足度/要件確定度UP！
 ```
 
 ---
@@ -87,19 +87,19 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph 面談画面UIレイアウト
-        HEADER["[ヘッダー] ステークホルダー名 / 所持 AP: ⭐⭐⭐ (3/3) / 契約納期: 残り 11 週間"]
-        STATUS["[パラメータ状態] 👥 顧客満足度: 50% | 🔥 チーム健全性: 65% | 🏢 上司信頼度: 60%"]
+    subgraph 面談画面UI
+        HEADER["[ヘッダー] ステークホルダー名 / 残りAP: ⭐⭐⭐ / 残り納期: 11週"]
+        STATUS["[ステータス] 👥 顧客満足度 | 🔥 チーム健全性 | 🏢 上司信頼度"]
         
-        subgraph MAIN["メイン対話エリア"]
+        subgraph MAIN["メインエリア"]
             CHAR["[キャラクター立ち絵 / 表情]"]
-            DIALOG["[対話ウィンドウ / セリフログ]<br>『予算内で作ってくれるなら要件調整も考えるよ』"]
+            DIALOG["[対話ウィンドウ / セリフ]"]
         end
 
         subgraph ACTIONS["アクション選択エリア"]
-            ACT1["通常選択肢 A: 要件優先度の打診 (AP 1)"]
-            ACT2["通常選択肢 B: 納期延長の打診 (AP 2)"]
-            ACT_SPECIAL["★ 切り札選択肢: 段階リリースの提案 (AP 1) <br>※ 前の会議で取得した情報により解禁！"]
+            ACT1["通常選択肢 A (AP 1)"]
+            ACT2["通常選択肢 B (AP 1)"]
+            ACT_SPECIAL["★ 切り札選択肢 (AP 1)"]
         end
     end
 ```
