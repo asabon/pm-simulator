@@ -207,42 +207,37 @@ function renderKickoffView() {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <h2 style="font-size:18px; font-weight:700; margin:0;">📅 今週の事前会議を自由にセッティング</h2>
+            <h2 style="font-size:18px; font-weight:700; margin:0;">📅 事前調整フェーズ</h2>
             <span class="step-badge">第 ${ks.kickoffWeeksSpent + 1} ターン目 (残り納期: ${proj.deadlineWeeks} 週間)</span>
           </div>
         </div>
 
-        <div style="background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.2); padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px; color:var(--text-muted);">
-          ボタンを順番にクリックして、今週行う事前会議のアジェンダを組み立ててください。<br>
-          ※ 1週間分（最大3つの会議）を実行するごとに<strong>契約納期が1週間減少 ('納期 -1週')</strong>します。
+        <h3 style="font-size:16px; margin:0 0 12px 0;">📅 Step 1-2: 今週の個別面談スケジュールを設定 (最大3枠)</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+          ［顧客］［PL］［上司］のボタンを押し、今週回る個別面談の順番を予約します。<br>
+          前の会議で手に入れた本音・要望を、次の会議の相手に直接インプットとして持ち込んで交渉できます！
+        </p>
+
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+          <button id="add-client" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 👥 顧客との面談を追加</button>
+          <button id="add-pl" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🛠️ PLとの面談を追加</button>
+          <button id="add-boss" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🏢 上司との面談を追加</button>
         </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-          <button id="add-client" class="btn-cmd" style="flex:1; padding:10px; font-size:13px; justify-content:center; border-color:#60a5fa; color:#60a5fa; background:rgba(96,165,250,0.1);" ${seq.length >= 3 ? 'disabled' : ''}>
-            ➕ 👥 顧客とのすり合わせ会議
-          </button>
-          <button id="add-pl" class="btn-cmd" style="flex:1; padding:10px; font-size:13px; justify-content:center; border-color:#10b981; color:#10b981; background:rgba(16,185,129,0.1);" ${seq.length >= 3 ? 'disabled' : ''}>
-            ➕ 🛠️ PLとの打ち合わせ会議
-          </button>
-          <button id="add-boss" class="btn-cmd" style="flex:1; padding:10px; font-size:13px; justify-content:center; border-color:#a855f7; color:#a855f7; background:rgba(168,85,247,0.1);" ${seq.length >= 3 ? 'disabled' : ''}>
-            ➕ 🏢 上司との相談会議
-          </button>
-        </div>
-
-        <div class="metric-box" style="margin-bottom:16px;">
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); padding:12px; border-radius:8px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:13px; font-weight:700; color:var(--text-main);">📋 今週の予定アジェンダ:</span>
-            ${seq.length > 0 ? `<button id="btn-clear-queue" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer;">🗑️ リセット</button>` : ''}
+            <span style="font-size:13px; font-weight:700;">📋 予約済みの面談スケジュール (最大3枠)</span>
+            <button id="btn-clear-queue" class="btn-cmd" style="font-size:11px; padding:4px 8px;">クリア</button>
           </div>
-
           ${seq.length === 0 ? `
-            <div style="font-size:12px; color:var(--text-muted); text-align:center; padding:14px; border:1px dashed var(--border-color); border-radius:6px;">
-              上のボタンを押して、今週実施する会議を順番に追加してください (最大3つ)
+            <div style="font-size:12px; color:var(--text-muted); padding:10px 0; text-align:center;">
+              上のボタンを押して、今週巡る個別会議のスケジュールを組んでください。
             </div>
           ` : `
             <div style="display:flex; flex-direction:column; gap:6px;">
               ${seq.map((item, idx) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:8px 12px; border-radius:6px; border:1px solid var(--border-color); font-size:13px;">
-                  <span><strong>${idx + 1}.</strong> ${item.title}</span>
+                  <span><strong>第${idx + 1}面談:</strong> ${item.title}</span>
                   <span class="step-badge" style="font-size:11px;">${item.target}</span>
                 </div>
               `).join('')}
@@ -252,7 +247,7 @@ function renderKickoffView() {
 
         <div style="display:flex; gap:10px;">
           <button id="btn-start-meetings" class="btn-cmd btn-primary" style="flex:2; padding:14px; font-size:15px; justify-content:center;" ${seq.length === 0 ? 'disabled' : ''}>
-            🚀 設定したアジェンダで事前会議を開始！ ▶
+            🚀 予約したスケジュールで個別面談を開始！ ▶
           </button>
           <button id="btn-skip-to-kickoff" class="btn-cmd" style="flex:1; padding:14px; font-size:13px; justify-content:center; border-color:#f59e0b; color:#f59e0b;">
             🎉 事前調整を終了しキックオフへ
@@ -296,26 +291,29 @@ function renderKickoffView() {
     const getOptions = () => {
       const opts = [];
       if (target === "PL") {
-        opts.push({ id: "PL_1", text: "現場の本音・技術懸念のヒアリング (AP 1)" });
-        opts.push({ id: "PL_2", text: "開発負荷の軽減方針について議論 (AP 1)" });
+        opts.push({ id: "PL_1", text: "現場の本音・技術懸念のヒアリング" });
+        opts.push({ id: "PL_2", text: "開発負荷の軽減・残業抑制方針の共有" });
+        opts.push({ id: "PL_PUSH", text: "⚠️ 「何とか気合で頑張ってくれ」と現場を押し切る (※トレードオフ)" });
         if (ks.obtainedKnowledge.includes("CLIENT_REQUIREMENT")) {
-          opts.push({ id: "PL_SPECIAL", text: "★【切り札】持ち帰った顧客要望を提示し、現場代替案を相談 (AP 1)", special: true });
+          opts.push({ id: "PL_SPECIAL", text: "★【顧客インプット共有】持ち帰った顧客要望を伝え、現場代替案を相談", special: true });
         }
       } else if (target === "CLIENT") {
-        opts.push({ id: "C_1", text: "顧客の真の要求・優先度 (QCD) のヒアリング (AP 1)" });
-        opts.push({ id: "C_2", text: "納期・スコープ調整の事前打診 (AP 1)" });
+        opts.push({ id: "C_1", text: "顧客の真の要求・優先度 (QCD) のヒアリング" });
+        opts.push({ id: "C_2", text: "納期・スコープ調整の事前打診" });
+        opts.push({ id: "C_YES", text: "⚠️ 「全ての要望に笑顔で対応します」と安易に引き受ける (※トレードオフ)" });
+        opts.push({ id: "C_REFUSE", text: "⚠️ 「スコープを削らないと絶対無理です」と突っぱねる (※トレードオフ)" });
         if (ks.obtainedKnowledge.includes("SOLUTION_STAGED_RELEASE")) {
-          opts.push({ id: "C_SPECIAL_STAGED", text: "★【切り札】現場で策定した『段階リリース案』を提案・交渉 (AP 1)", special: true });
+          opts.push({ id: "C_SPECIAL_STAGED", text: "★【現場対案インプット】現場で策定した『段階リリース案』を提案・交渉", special: true });
         }
         if (ks.obtainedKnowledge.includes("BOSS_BACKUP")) {
-          opts.push({ id: "C_SPECIAL_BOSS", text: "★【切り札】『会社（上司）公認の品質担保ライン』を提示して説得 (AP 1)", special: true });
+          opts.push({ id: "C_SPECIAL_BOSS", text: "★【上司方針インプット】『会社（上司）公認の品質担保ライン』を提示して説得", special: true });
         }
       } else if (target === "BOSS") {
-        opts.push({ id: "B_REQ_INFO", text: "顧客の要求についての詳細・背景事情を確認する (AP 1)" });
-        opts.push({ id: "B_CLIENT_TYPE", text: "顧客のタイプ・パーソナリティ傾向と注意点を確認する (AP 1)" });
-        opts.push({ id: "B_BACKUP", text: "炎上時の会社バックアップラインの合意 (AP 1)" });
+        opts.push({ id: "B_REQ_INFO", text: "顧客の要求についての詳細・背景事情を確認する" });
+        opts.push({ id: "B_CLIENT_TYPE", text: "顧客のタイプ・パーソナリティ傾向と注意点を確認する" });
+        opts.push({ id: "B_BACKUP", text: "炎上時の会社バックアップラインの合意" });
         if (ks.obtainedKnowledge.includes("PL_TECH_ANXIETY") || ks.obtainedKnowledge.includes("CLIENT_REQUIREMENT")) {
-          opts.push({ id: "B_SPECIAL_RESOURCE", text: "★【切り札】現場のリスク・課題を提示し、追加予算・予備リソースを申請 (AP 1)", special: true });
+          opts.push({ id: "B_SPECIAL_RESOURCE", text: "★【現場インプット共有】現場のリスク・課題を提示し、追加予算・予備リソースを申請", special: true });
         }
       }
       return opts;
@@ -323,20 +321,42 @@ function renderKickoffView() {
 
     const options = getOptions();
 
+    // 持ち込み可能なインプット情報のテキスト化
+    const getKnowledgeBadges = () => {
+      if (!ks.obtainedKnowledge || ks.obtainedKnowledge.length === 0) return `<span style="color:var(--text-muted);">なし (まずは個別ヒアリングから始めましょう)</span>`;
+      const map = {
+        CLIENT_REQUIREMENT: "🗣️ 顧客: 納期厳守が第一",
+        CLIENT_BACKGROUND_INFO: "🏢 上司: 親会社DX要件・見栄え重視",
+        CLIENT_TYPE_KNOWN: "🏢 上司: 顧客は仕様変更多めタイプ",
+        PL_TECH_ANXIETY: "🔥 PL: 未経験スタックへの不安",
+        SOLUTION_STAGED_RELEASE: "💡 現場対案: 段階リリース方針",
+        BOSS_BACKUP: "🛡️ 上司合意: 会社公認品質ライン",
+        BOSS_RESOURCE_GRANTED: "💰 上司承認: 予備リソース枠確保"
+      };
+      return ks.obtainedKnowledge.map(k => `<span style="background:rgba(96,165,250,0.15); border:1px solid #60a5fa; color:#60a5fa; padding:2px 8px; border-radius:10px; font-size:11px;">${map[k] || k}</span>`).join(' ');
+    };
+
     container.innerHTML = `
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <h2 style="font-size:18px; font-weight:700; margin:0;">🗣️ 面談画面: ${targetName}</h2>
-            <span class="step-badge">アジェンダ ${ks.currentMeetingIndex + 1} / ${ks.interviewSequence.length}</span>
+            <span class="step-badge">第 ${ks.currentMeetingIndex + 1} 面談 / 全 ${ks.interviewSequence.length} 会議</span>
           </div>
-          <div style="font-size:13px; font-weight:700; color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:12px;">
-            ⭐ 今週の残り AP: ${ks.kickoffAp} / 3
+          <div style="font-size:13px; font-weight:700; color:#10b981; background:rgba(16,185,129,0.15); padding:4px 10px; border-radius:12px;">
+            💬 個別面談中 (行動ポイント制限なし)
           </div>
         </div>
 
-        <div style="font-size:13px; font-weight:600; color:#60a5fa; margin-bottom:8px;">
-          📌 議題: ${currentMeeting.title}
+        <div style="font-size:13px; font-weight:600; color:#60a5fa; margin-bottom:10px;">
+          📅 ミーティング ${ks.currentMeetingIndex + 1}: ${currentMeeting.title}
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:8px 12px; border-radius:6px; margin-bottom:12px; font-size:12px;">
+          <div style="font-weight:700; color:#f59e0b; margin-bottom:4px;">💡 過去の会議で獲得した持ち込みインプット情報 (次の相手に伝達可能):</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${getKnowledgeBadges()}
+          </div>
         </div>
 
         <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; font-size:12px;">
@@ -352,13 +372,13 @@ function renderKickoffView() {
         </div>
 
         ${invested >= 2 ? `
-          <div style="background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:10px 14px; border-radius:8px; color:#ef4444; font-size:12px; font-weight:600; margin-bottom:14px;">
-            ⚠️ 【時間の無駄使い注意】 この相手とは既に2回議論しています。これ以上のAP投入は【効果ゼロ (+0%)】となります！
+          <div style="background:rgba(245,158,11,0.15); border:1px solid #f59e0b; padding:10px 14px; border-radius:8px; color:#f59e0b; font-size:12px; font-weight:600; margin-bottom:14px;">
+            💡 この相手とは十分に議論を行いました。必要に応じて「次の会議へ移動する」を押してください。
           </div>
         ` : ""}
 
         <div id="dialog-log" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); padding:12px; border-radius:8px; min-height:70px; margin-bottom:16px; font-size:13px;">
-          💬 会議での対話アクションを選択してください。
+          ${ks.lastDialogLog || '💬 会議での対話・意思決定アクションを選択してください。'}
         </div>
 
         <div style="display:flex; flex-direction:column; gap:8px;">
@@ -369,95 +389,92 @@ function renderKickoffView() {
           `).join('')}
 
           <button id="btn-next-meeting" class="btn-cmd" style="padding:10px 14px; font-size:13px; margin-top:8px; justify-content:center; background:rgba(255,255,255,0.05);">
-            ▶ 次のアジェンダへ進む (AP消費なし)
+            ▶ この面談を終了し、次の会議へ移動する
           </button>
         </div>
       </div>
     `;
 
     const executeAction = (actionId) => {
-      if (ks.kickoffAp <= 0) return;
-
-      ks.kickoffAp -= 1;
       const currentInvested = (ks.interviewApInvested[target] || 0) + 1;
       ks.interviewApInvested[target] = currentInvested;
 
-      const logBox = document.getElementById("dialog-log");
+      let resultHtml = "";
 
-      if (currentInvested >= 3) {
-        if (logBox) {
-          logBox.innerHTML = `
-            <div style="color:#ef4444; font-weight:700;">🚨 【時間の浪費】</div>
-            <div>議論は完全に平行線です……。時間（AP）だけが無駄に消費され、パラメータは一切伸びませんでした (+0%)！</div>
-          `;
-        }
-        renderKickoffView();
-        return;
-      }
-
-      const mult = currentInvested === 1 ? 1.0 : 0.5;
+      const mult = currentInvested === 1 ? 1.0 : (currentInvested === 2 ? 0.5 : 0.2);
 
       if (actionId === "PL_1") {
         const gain = 20 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
         if (!ks.obtainedKnowledge.includes("PL_TECH_ANXIETY")) ks.obtainedKnowledge.push("PL_TECH_ANXIETY");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【対PLヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div><div>PLから「実はこの技術スタックは経験が浅く不安がある」という本音リスクを感知しました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【対PLヒアリング成功】 (効果: チーム健全性 +${gain.toFixed(0)}%)</div><div>PLから「実はこの技術スタックは経験が浅く不安がある」という本音リスクを感知しました！</div>`;
       } else if (actionId === "PL_2") {
         const gain = 15 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【負荷軽減の合意】 (効果: +${gain.toFixed(0)}%)</div><div>無理な残業を抑える方針でPLと意気投合しました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【負荷軽減の合意】 (効果: チーム健全性 +${gain.toFixed(0)}%)</div><div>無理な残業を抑える方針でPLと意気投合しました！</div>`;
+      } else if (actionId === "PL_PUSH") {
+        if (pl) pl.morale = Math.max(0, pl.morale - 25);
+        proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + 10);
+        resultHtml = `<div style="color:#ef4444; font-weight:700;">⚠️ 【トレードオフ発生: 現場へ押し切り】 (チーム健全性 -25%, 顧客満足度 +10%)</div><div>PLに無理を言って押し切りました……。「そんな無茶な……」とPLの士気が著しく低下しました！</div>`;
       } else if (actionId === "PL_SPECIAL") {
         const gain = 25 * mult;
         if (pl) pl.morale = Math.min(100, pl.morale + gain);
         if (!ks.obtainedKnowledge.includes("SOLUTION_STAGED_RELEASE")) ks.obtainedKnowledge.push("SOLUTION_STAGED_RELEASE");
-        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 現場代替案の策定】 (効果: +${gain.toFixed(0)}%)</div><div>顧客要望を持ち込んで相談し、現場から「段階リリースなら実現可能」という対案を引き出しました！</div>`;
+        resultHtml = `<div style="color:#f59e0b; font-weight:700;">🌟 【インプット共有: 現場代替案の策定】 (効果: チーム健全性 +${gain.toFixed(0)}%)</div><div>顧客要望を持ち込んで相談し、現場から「段階リリースなら実現可能」という対案を引き出しました！</div>`;
       } else if (actionId === "C_1") {
         const gain = 20 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
         if (!ks.obtainedKnowledge.includes("CLIENT_REQUIREMENT")) ks.obtainedKnowledge.push("CLIENT_REQUIREMENT");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客ヒアリング成功】 (効果: +${gain.toFixed(0)}%)</div><div>顧客から「まずは主要機能の納期厳守が第一」という真のニーズを聞き出しました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【顧客ヒアリング成功】 (効果: 顧客満足度 +${gain.toFixed(0)}%)</div><div>顧客から「まずは主要機能の納期厳守が第一」という真のニーズを聞き出しました！</div>`;
       } else if (actionId === "C_2") {
         const gain = 15 * mult;
         proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【スコープ事前打診】 (効果: +${gain.toFixed(0)}%)</div><div>要件の優先順位付けについて理解を得て、要求具体度がアップしました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【スコープ事前打診】 (効果: 顧客満足度 +${gain.toFixed(0)}%, 要求具体度 +1)</div><div>要件の優先順位付けについて理解を得て、要求具体度がアップしました！</div>`;
+      } else if (actionId === "C_YES") {
+        proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + 30);
+        if (pl) pl.morale = Math.max(0, pl.morale - 30);
+        resultHtml = `<div style="color:#ef4444; font-weight:700;">⚠️ 【トレードオフ発生: 安易な引き受け】 (顧客満足度 +30%, チーム健全性 -30%)</div><div>顧客は大喜びですが、無理な要求のしわ寄せで現場PLの士気が暴落し炎上リスクが急増しました！</div>`;
+      } else if (actionId === "C_REFUSE") {
+        proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
+        proj.customer.satisfaction = Math.max(0, proj.customer.satisfaction - 20);
+        resultHtml = `<div style="color:#ef4444; font-weight:700;">⚠️ 【トレードオフ発生: 正論での拒絶】 (要求具体度 +1, 顧客満足度 -20%)</div><div>無理なスコープを突っぱねて要件は固まり始めましたが、顧客から「冷たい対応だ」と強い不満を買いました！</div>`;
       } else if (actionId === "C_SPECIAL_STAGED") {
         const gain = 30 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
         proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
         if (!ks.obtainedKnowledge.includes("CLIENT_AGREED_STAGED")) ks.obtainedKnowledge.push("CLIENT_AGREED_STAGED");
-        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 段階リリース最終合意】 (効果: +${gain.toFixed(0)}%)</div><div>「段階リリース案」を提示し、顧客から「そこまで真剣に考えてくれたなら合意しよう」と絶賛されました！</div>`;
+        resultHtml = `<div style="color:#f59e0b; font-weight:700;">🌟 【インプット提示: 段階リリース最終合意】 (効果: 顧客満足度 +${gain.toFixed(0)}%, 要求具体度 +1)</div><div>「段階リリース案」を提示し、顧客から「そこまで真剣に考えてくれたなら合意しよう」と絶賛されました！</div>`;
       } else if (actionId === "C_SPECIAL_BOSS") {
         const gain = 25 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
-        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 社内公認ライン提示】 (効果: +${gain.toFixed(0)}%)</div><div>上司からの品質担保ラインを毅然と提示し、無理な無茶振り要求をシャットアウトしました！</div>`;
+        resultHtml = `<div style="color:#f59e0b; font-weight:700;">🌟 【インプット提示: 社内公認ライン提示】 (効果: 顧客満足度 +${gain.toFixed(0)}%)</div><div>上司からの品質担保ラインを毅然と提示し、無理な無茶振り要求をシャットアウトしました！</div>`;
       } else if (actionId === "B_REQ_INFO") {
         const gain = 20 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
         if (!ks.obtainedKnowledge.includes("CLIENT_BACKGROUND_INFO")) ks.obtainedKnowledge.push("CLIENT_BACKGROUND_INFO");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客要求の詳細確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%, 要求具体度 +1)</div><div>上司から「親会社のDX方針で今期中稼働が絶対命題。納期と主要UIの見栄えを重要視している」と裏事情を聞き出しました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【顧客要求の詳細確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%, 要求具体度 +1)</div><div>上司から「親会社のDX方針で今期中稼働が絶対命題。納期と主要UIの見栄えを重要視している」と裏事情を聞き出しました！</div>`;
       } else if (actionId === "B_CLIENT_TYPE") {
         const gain = 15 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         if (!ks.obtainedKnowledge.includes("CLIENT_TYPE_KNOWN")) ks.obtainedKnowledge.push("CLIENT_TYPE_KNOWN");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客タイプの確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「あの顧客はアイデアマンで仕様変更を後から言い出すタイプだ。防衛ラインを敷くんだぞ」と助言を受けました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【顧客タイプの確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「あの顧客はアイデアマンで仕様変更を後から言い出すタイプだ。防衛ラインを敷くんだぞ」と助言を受けました！</div>`;
       } else if (actionId === "B_BACKUP") {
         const gain = 15 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         if (!ks.obtainedKnowledge.includes("BOSS_BACKUP")) ks.obtainedKnowledge.push("BOSS_BACKUP");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【会社バックアップライン確保】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「万が一炎上した際は、会社の品質担保基準を理由に防衛線に立つ」と強力な合意を得ました！</div>`;
+        resultHtml = `<div style="color:#10b981; font-weight:700;">🟢 【会社バックアップライン確保】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「万が一炎上した際は、会社の品質担保基準を理由に防衛線に立つ」と強力な合意を得ました！</div>`;
       } else if (actionId === "B_SPECIAL_RESOURCE") {
         const gain = 30 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         if (pl) pl.morale = Math.min(100, pl.morale + 20 * mult);
         if (!ks.obtainedKnowledge.includes("BOSS_RESOURCE_GRANTED")) ks.obtainedKnowledge.push("BOSS_RESOURCE_GRANTED");
-        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 追加予算・リソース申請】 (効果: 上司信頼度 +${gain.toFixed(0)}%, チーム健全性 +20%)</div><div>掴んだ現場リスク・要求ギャップを提示し、上司から「明確な根拠だ！予備バッファ予算とシニアフォロー枠を承認する」と支援を獲得！</div>`;
+        resultHtml = `<div style="color:#f59e0b; font-weight:700;">🌟 【インプット共有: 追加予算・リソース申請】 (効果: 上司信頼度 +${gain.toFixed(0)}%, チーム健全性 +20%)</div><div>掴んだ現場リスク・要求ギャップを提示し、上司から「明確な根拠だ！予備バッファ予算とシニアフォロー枠を承認する」と支援を獲得！</div>`;
       }
 
-      setTimeout(() => {
-        renderKickoffView();
-      }, 1000);
+      ks.lastDialogLog = resultHtml;
+      renderKickoffView();
     };
 
     document.querySelectorAll(".btn-action-item").forEach(btn => {
@@ -470,6 +487,7 @@ function renderKickoffView() {
     const btnNextMeeting = document.getElementById("btn-next-meeting");
     if (btnNextMeeting) {
       btnNextMeeting.addEventListener("click", () => {
+        ks.lastDialogLog = null;
         ks.currentMeetingIndex += 1;
         if (ks.currentMeetingIndex >= ks.interviewSequence.length) {
           ks.step = 2.9;
