@@ -28,3 +28,8 @@ Thumbs.db
 *.translation
 export_presets.cfg
 
+# Node.js & Vitest artifacts
+node_modules/
+.vite/
+.eslintcache
+
