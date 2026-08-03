@@ -105,7 +105,7 @@ class KickoffPhase:
 
     def _step_2_run_meetings(self):
         print("\n" + "=" * 60)
-        print("🗣️ 【Step 2: 事前会議の開催】 (今週の所持 AP: " + str(self.ap) + ")")
+        print("🗣️ 【Step 2: 事前会議の開催】")
         print("=" * 60)
 
         for step_idx, (target, meeting_title) in enumerate(self.interview_sequence, 1):
@@ -125,14 +125,20 @@ class KickoffPhase:
         invested = self.interview_ap_invested[target]
 
         while True:
-            print(f"\n--- 面談画面 (相手: {self._get_target_name(target)} | 残り AP: {self.ap}/{self.max_ap}) ---")
+            print(f"\n--- 第 {meeting_num} 面談 (相手: {self._get_target_name(target)}) ---")
             print(
                 f"現在の指標: 👥顧客満足度 {self.project.customer.satisfaction:.0f}% | 🔥チーム健全性 {self.pl.morale if self.pl else 50:.0f}% | 🏢上司信頼度 {self.project.manager_satisfaction:.0f}%"
             )
 
+            # 持ち込み可能なインプット情報の表示
+            if self.obtained_knowledge:
+                print(f"💡 過去の会議で獲得した持ち込みインプット: {', '.join(sorted(self.obtained_knowledge))}")
+            else:
+                print("💡 過去の会議で獲得した持ち込みインプット: なし")
+
             if invested >= 2:
                 print(
-                    "⚠️ 【警告】この相手とは既に十分議論しました。これ以上のAP投入は【効果ゼロ (時間浪費)】となります！"
+                    "💡 【案内】この相手とは十分に議論を行いました。必要に応じて N を押して次へ進んでください。"
                 )
 
             options = self._get_action_options(target)
@@ -140,64 +146,49 @@ class KickoffPhase:
             for key, opt_text in options.items():
                 print(f" {key}: {opt_text}")
 
-            print(" N: 次のアジェンダへ進む (AP消費なし)")
+            print(" N: この面談を終了し、次の会議へ移動する")
 
             cmd = input("アクション選択: ").strip().upper()
 
             if cmd == "N" or cmd == "":
-                print(f"➔ {self._get_target_name(target)} との会議を終了し、次へ進みます。")
+                print(f"➔ {self._get_target_name(target)} との面談を終了し、次へ進みます。")
                 break
 
             if cmd in options:
-                if self.ap <= 0:
-                    print("⚠️ 今週のAPを使い切りました。次へ進みます。")
-                    break
-
-                self.ap -= 1
                 self.interview_ap_invested[target] += 1
                 invested = self.interview_ap_invested[target]
-
                 self._execute_action(target, cmd, invested)
-
-                if self.ap <= 0:
-                    print("\n⚠️ 今週の AP をすべて使い切りました！")
-                    break
 
     def _get_action_options(self, target: str) -> dict:
         opts = {}
         if target == "PL":
-            opts["1"] = "現場の本音・技術懸念のヒアリング (AP 1)"
-            opts["2"] = "開発負荷の軽減方針について議論 (AP 1)"
+            opts["1"] = "現場の本音・技術懸念のヒアリング"
+            opts["2"] = "開発負荷の軽減・残業抑制方針の共有"
+            opts["3"] = "⚠️ 「何とか気合で頑張ってくれ」と現場を押し切る (※トレードオフ)"
             if "CLIENT_REQUIREMENT" in self.obtained_knowledge:
-                opts["★"] = "★【切り札】持ち帰った顧客要望を提示し、現場代替案を相談 (AP 1)"
+                opts["★"] = "★【顧客インプット共有】持ち帰った顧客要望を伝え、現場代替案を相談"
 
         elif target == "CLIENT":
-            opts["1"] = "顧客の真の要求・優先度 (QCD) のヒアリング (AP 1)"
-            opts["2"] = "納期・スコープ調整の事前打診 (AP 1)"
+            opts["1"] = "顧客の真の要求・優先度 (QCD) のヒアリング"
+            opts["2"] = "納期・スコープ調整の事前打診"
+            opts["3"] = "⚠️ 「全ての要望に笑顔で対応します」と安易に引き受ける (※トレードオフ)"
+            opts["4"] = "⚠️ 「スコープを削らないと絶対無理です」と突っぱねる (※トレードオフ)"
             if "SOLUTION_STAGED_RELEASE" in self.obtained_knowledge:
-                opts["★"] = "★【切り札】現場で策定した『段階リリース案』を提案・交渉 (AP 1)"
+                opts["★"] = "★【現場対案インプット】現場で策定した『段階リリース案』を提案・交渉"
             if "BOSS_BACKUP" in self.obtained_knowledge:
-                opts["★2"] = "★【切り札】『会社（上司）公認の品質担保ライン』を提示して説得 (AP 1)"
+                opts["★2"] = "★【上司方針インプット】『会社（上司）公認の品質担保ライン』を提示して説得"
 
         elif target == "BOSS":
-            opts["1"] = "顧客の要求についての詳細・背景事情を確認する (AP 1)"
-            opts["2"] = "顧客のタイプ・パーソナリティ傾向と注意点を確認する (AP 1)"
-            opts["3"] = "炎上・トラブル発生時の会社バックアップラインの合意 (AP 1)"
+            opts["1"] = "顧客の要求についての詳細・背景事情を確認する"
+            opts["2"] = "顧客のタイプ・パーソナリティ傾向と注意点を確認する"
+            opts["3"] = "炎上・トラブル発生時の会社バックアップラインの合意"
             if "PL_TECH_ANXIETY" in self.obtained_knowledge or "CLIENT_REQUIREMENT" in self.obtained_knowledge:
-                opts["★"] = "★【切り札】現場のリスク・課題を提示し、追加予算・予備リソースを申請 (AP 1)"
+                opts["★"] = "★【現場インプット共有】現場のリスク・課題を提示し、追加予算・予備リソースを申請"
 
         return opts
 
     def _execute_action(self, target: str, cmd: str, invested_count: int):
-        multiplier = 1.0 if invested_count == 1 else (0.5 if invested_count == 2 else 0.0)
-
-        if multiplier == 0.0:
-            print("\n🚨 【時間・APの浪費】")
-            print(
-                f"  {self._get_target_name(target)} との議論は完全に平行線です……。"
-                "\n  時間（AP）だけが無駄に浪費され、パラメータは一切上昇しませんでした (+0%)！"
-            )
-            return
+        multiplier = 1.0 if invested_count == 1 else (0.5 if invested_count == 2 else 0.2)
 
         if target == "PL":
             if cmd == "1":
@@ -206,7 +197,7 @@ class KickoffPhase:
                     self.pl.morale = min(100.0, self.pl.morale + gain)
                 self.obtained_knowledge.add("PL_TECH_ANXIETY")
                 print(
-                    f"\n🟢 【対PLヒアリング成功】 (効果: +{gain:.0f}%)\n"
+                    f"\n🟢 【対PLヒアリング成功】 (効果: チーム健全性 +{gain:.0f}%)\n"
                     f"  PL {self.pl.name if self.pl else ''} から『実はこの技術スタックは経験が浅く不安がある』という本音リスクを察知しました！\n"
                     "  [獲得フラグ: PL_TECH_ANXIETY]"
                 )
@@ -215,8 +206,16 @@ class KickoffPhase:
                 if self.pl:
                     self.pl.morale = min(100.0, self.pl.morale + gain)
                 print(
-                    f"\n🟢 【負荷軽減の合意】 (効果: +{gain:.0f}%)\n"
+                    f"\n🟢 【負荷軽減の合意】 (効果: チーム健全性 +{gain:.0f}%)\n"
                     f"  現場の無理な残業を抑える方針でPLと意気投合し、チームの信頼度が向上しました！"
+                )
+            elif cmd == "3":
+                if self.pl:
+                    self.pl.morale = max(0.0, self.pl.morale - 25.0)
+                self.project.customer.satisfaction = min(100.0, self.project.customer.satisfaction + 10.0)
+                print(
+                    f"\n⚠️ 【トレードオフ発生: 現場へ押し切り】 (チーム健全性 -25%, 顧客満足度 +10%)\n"
+                    f"  PL {self.pl.name if self.pl else ''} に無理を言って押し切りました……。『そんな無茶な……』と現場の士気が激減しました！"
                 )
             elif cmd == "★":
                 gain = 25.0 * multiplier
