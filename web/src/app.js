@@ -311,8 +311,12 @@ function renderKickoffView() {
           opts.push({ id: "C_SPECIAL_BOSS", text: "★【切り札】『会社（上司）公認の品質担保ライン』を提示して説得 (AP 1)", special: true });
         }
       } else if (target === "BOSS") {
-        opts.push({ id: "B_1", text: "追加予算・予備リソースの事前申請 (AP 1)" });
-        opts.push({ id: "B_2", text: "炎上時の会社バックアップラインの合意 (AP 1)" });
+        opts.push({ id: "B_REQ_INFO", text: "顧客の要求についての詳細・背景事情を確認する (AP 1)" });
+        opts.push({ id: "B_CLIENT_TYPE", text: "顧客のタイプ・パーソナリティ傾向と注意点を確認する (AP 1)" });
+        opts.push({ id: "B_BACKUP", text: "炎上時の会社バックアップラインの合意 (AP 1)" });
+        if (ks.obtainedKnowledge.includes("PL_TECH_ANXIETY") || ks.obtainedKnowledge.includes("CLIENT_REQUIREMENT")) {
+          opts.push({ id: "B_SPECIAL_RESOURCE", text: "★【切り札】現場のリスク・課題を提示し、追加予算・予備リソースを申請 (AP 1)", special: true });
+        }
       }
       return opts;
     };
@@ -427,11 +431,28 @@ function renderKickoffView() {
         const gain = 25 * mult;
         proj.customer.satisfaction = Math.min(100, proj.customer.satisfaction + gain);
         if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 社内公認ライン提示】 (効果: +${gain.toFixed(0)}%)</div><div>上司からの品質担保ラインを毅然と提示し、無理な無茶振り要求をシャットアウトしました！</div>`;
-      } else if (actionId === "B_1" || actionId === "B_2") {
+      } else if (actionId === "B_REQ_INFO") {
         const gain = 20 * mult;
         proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
+        proj.clarityLevel = Math.min(5, proj.clarityLevel + 1);
+        if (!ks.obtainedKnowledge.includes("CLIENT_BACKGROUND_INFO")) ks.obtainedKnowledge.push("CLIENT_BACKGROUND_INFO");
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客要求の詳細確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%, 要求具体度 +1)</div><div>上司から「親会社のDX方針で今期中稼働が絶対命題。納期と主要UIの見栄えを重要視している」と裏事情を聞き出しました！</div>`;
+      } else if (actionId === "B_CLIENT_TYPE") {
+        const gain = 15 * mult;
+        proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
+        if (!ks.obtainedKnowledge.includes("CLIENT_TYPE_KNOWN")) ks.obtainedKnowledge.push("CLIENT_TYPE_KNOWN");
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【顧客タイプの確認】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「あの顧客はアイデアマンで仕様変更を後から言い出すタイプだ。防衛ラインを敷くんだぞ」と助言を受けました！</div>`;
+      } else if (actionId === "B_BACKUP") {
+        const gain = 15 * mult;
+        proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
         if (!ks.obtainedKnowledge.includes("BOSS_BACKUP")) ks.obtainedKnowledge.push("BOSS_BACKUP");
-        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【上司防衛線ライン確保】 (効果: +${gain.toFixed(0)}%)</div><div>上司との合意を取りつけ、社内評価・防衛バックアップラインが強化されました！</div>`;
+        if (logBox) logBox.innerHTML = `<div style="color:#10b981; font-weight:700;">🟢 【会社バックアップライン確保】 (効果: 上司信頼度 +${gain.toFixed(0)}%)</div><div>上司から「万が一炎上した際は、会社の品質担保基準を理由に防衛線に立つ」と強力な合意を得ました！</div>`;
+      } else if (actionId === "B_SPECIAL_RESOURCE") {
+        const gain = 30 * mult;
+        proj.managerTrust = Math.min(100, (proj.managerTrust || 60) + gain);
+        if (pl) pl.morale = Math.min(100, pl.morale + 20 * mult);
+        if (!ks.obtainedKnowledge.includes("BOSS_RESOURCE_GRANTED")) ks.obtainedKnowledge.push("BOSS_RESOURCE_GRANTED");
+        if (logBox) logBox.innerHTML = `<div style="color:#f59e0b; font-weight:700;">🌟 【切り札発動: 追加予算・リソース申請】 (効果: 上司信頼度 +${gain.toFixed(0)}%, チーム健全性 +20%)</div><div>掴んだ現場リスク・要求ギャップを提示し、上司から「明確な根拠だ！予備バッファ予算とシニアフォロー枠を承認する」と支援を獲得！</div>`;
       }
 
       setTimeout(() => {
