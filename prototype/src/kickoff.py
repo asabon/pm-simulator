@@ -317,7 +317,9 @@ class KickoffPhase:
             else:
                 print("⚠️ 1または2を入力してください。")
 
-        scope_certainty = min(5, self.project.clarity_level + (1 if "CLIENT_AGREED_STAGED" in self.obtained_knowledge else 0))
+        scope_certainty = min(
+            5, self.project.clarity_level + (1 if "CLIENT_AGREED_STAGED" in self.obtained_knowledge else 0)
+        )
         expectation_gap = min(100.0, self.project.customer.satisfaction)
         team_safety = min(100.0, self.pl.morale if self.pl else 50.0)
 
@@ -330,7 +332,9 @@ class KickoffPhase:
 
         print("\n🗣️ 【関係者からの決起セリフ】")
         if self.pl:
-            print(f"  ・PL {self.pl.name}: 『{self.pm.name}さん、事前調整ありがとうございます！この体制ならチーム一丸で頑張れます！』")
+            print(
+                f"  ・PL {self.pl.name}: 『{self.pm.name}さん、事前調整ありがとうございます！この体制ならチーム一丸で頑張れます！』"
+            )
         print(f"  ・顧客 {self.project.customer.name}: 『キックオフでの方針合意、心強いよ。頼んだよ！』")
 
         input("\n[Enterキーで開発スプリント (Phase 2) へ突入！]")
