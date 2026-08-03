@@ -180,8 +180,11 @@ class KickoffPhase:
                 opts["★2"] = "★【切り札】『会社（上司）公認の品質担保ライン』を提示して説得 (AP 1)"
 
         elif target == "BOSS":
-            opts["1"] = "追加予算・予備リソースの事前申請 (AP 1)"
-            opts["2"] = "炎上時の会社バックアップラインの合意 (AP 1)"
+            opts["1"] = "顧客の要求についての詳細・背景事情を確認する (AP 1)"
+            opts["2"] = "顧客のタイプ・パーソナリティ傾向と注意点を確認する (AP 1)"
+            opts["3"] = "炎上・トラブル発生時の会社バックアップラインの合意 (AP 1)"
+            if "PL_TECH_ANXIETY" in self.obtained_knowledge or "CLIENT_REQUIREMENT" in self.obtained_knowledge:
+                opts["★"] = "★【切り札】現場のリスク・課題を提示し、追加予算・予備リソースを申請 (AP 1)"
 
         return opts
 
@@ -263,14 +266,45 @@ class KickoffPhase:
                 )
 
         elif target == "BOSS":
-            if cmd == "1" or cmd == "2":
+            if cmd == "1":
                 gain = 20.0 * multiplier
+                self.project.manager_satisfaction = min(100.0, self.project.manager_satisfaction + gain)
+                self.project.clarity_level = min(5, self.project.clarity_level + 1)
+                self.obtained_knowledge.add("CLIENT_BACKGROUND_INFO")
+                print(
+                    f"\n🟢 【顧客要求の詳細確認】 (効果: 上司信頼度 +{gain:.0f}%, 要求具体度 +1)\n"
+                    f"  上司から『実は親会社のDX方針で今期中の稼働が絶対命題なんだ。細かい機能より納期厳守と主要画面の見栄えを重要視しているよ』という裏事情を聞き出しました！\n"
+                    "  [獲得フラグ: CLIENT_BACKGROUND_INFO]"
+                )
+            elif cmd == "2":
+                gain = 15.0 * multiplier
+                self.project.manager_satisfaction = min(100.0, self.project.manager_satisfaction + gain)
+                self.obtained_knowledge.add("CLIENT_TYPE_KNOWN")
+                client_type_str = getattr(self.project.customer, 'personality_type', '仕様変更多め・アイデアマン')
+                print(
+                    f"\n🟢 【顧客タイプの確認】 (効果: 上司信頼度 +{gain:.0f}%)\n"
+                    f"  上司から『あの顧客キーマンは 【{client_type_str}】 タイプだ。安易にすべての要望を受け入れず、必ず現場と防衛ラインを敷くんだぞ』とアドバイスを受けました！\n"
+                    "  [獲得フラグ: CLIENT_TYPE_KNOWN]"
+                )
+            elif cmd == "3":
+                gain = 15.0 * multiplier
                 self.project.manager_satisfaction = min(100.0, self.project.manager_satisfaction + gain)
                 self.obtained_knowledge.add("BOSS_BACKUP")
                 print(
-                    f"\n🟢 【上司防衛線ライン確保】 (効果: +{gain:.0f}%)\n"
-                    f"  上司との合意を取りつけ、社内評価・防衛バックアップラインが強化されました！\n"
+                    f"\n🟢 【会社バックアップライン確保】 (効果: 上司信頼度 +{gain:.0f}%)\n"
+                    f"  上司から『万が一顧客と炎上した際は、私が会社としての品質担保基準を理由に防衛線に立つ』と力強い合意を得ました！\n"
                     "  [獲得フラグ: BOSS_BACKUP]"
+                )
+            elif cmd == "★":
+                gain = 30.0 * multiplier
+                self.project.manager_satisfaction = min(100.0, self.project.manager_satisfaction + gain)
+                if self.pl:
+                    self.pl.morale = min(100.0, self.pl.morale + 20.0 * multiplier)
+                self.obtained_knowledge.add("BOSS_RESOURCE_GRANTED")
+                print(
+                    f"\n🌟 【切り札発動: 追加予算・予備リソース申請】 (効果: 上司信頼度 +{gain:.0f}%, チーム健全性 +20%)\n"
+                    f"  ヒアリングで掴んだ現場のリスク・顧客要求ギャップを提示！上司から『なるほど、明確な根拠だ。予備バッファ予算とシニアフォロー枠を承認しよう！』と絶大なる支援を獲得しました！\n"
+                    "  [獲得フラグ: BOSS_RESOURCE_GRANTED]"
                 )
 
     def _step_2_9_ask_continue(self) -> bool:

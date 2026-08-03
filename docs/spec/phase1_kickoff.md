@@ -50,24 +50,35 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor PM as 👤 プレイヤー (PM)
+    participant Boss as 🏢 上司
     participant Client as 🗣️ 顧客
-    participant State as 💾 GameState
     participant PL as 🗣️ 現場 PL
+    participant State as 💾 GameState
 
-    PM->>Client: 第1会議: 要求ヒアリング
-    Client-->>PM: 「主要機能の納期厳守が第一」
-    Note over State: フラグ: CLIENT_REQUIREMENT
+    PM->>Boss: 第1会議: 顧客要求詳細・タイプ確認
+    Boss-->>PM: 「顧客は納期重視だが仕様変更が多い性格だ」
+    Note over State: フラグ: CLIENT_BACKGROUND_INFO, CLIENT_TYPE_KNOWN
 
-    PM->>PL: 第2会議: 顧客要望を持ち込み相談
-    State-->>PL: 顧客要求を参照
-    PL-->>PM: 「段階リリースなら実現可能」
-    Note over State: ★切り札: SOLUTION_STAGED_RELEASE
+    PM->>PL: 第2会議: 現場の本音・技術懸念ヒアリング
+    PL-->>PM: 「未経験の技術スタックで負荷が高い」
+    Note over State: ★切り札フラグ: PL_TECH_ANXIETY
 
-    PM->>Client: 第3会議: 現場代替案を携え再交渉
-    PM->>Client: 切り札『段階リリース案』提示！
-    Client-->>PM: 「それなら合意しよう！」
-    Note over State: 顧客満足度/要件確定度UP！
+    PM->>Boss: 第3会議: 現場リスクを提示し追加予算申請
+    PM->>Boss: 切り札『現場技術リスクと追加リソース』提示！
+    Boss-->>PM: 「明確な根拠だ！予備バッファとシニア枠を承認する」
+    Note over State: 上司信頼度UP ＆ チーム健全性回復！
 ```
+
+---
+
+## 4.1 🏢 上司面談 (BOSS 1on1) アクション詳細仕様
+
+| アクション種別 | アクション名 | 解放条件 | 得られる効果・フラグ | ゲーム内対話メッセージ例 |
+| :--- | :--- | :--- | :--- | :--- |
+| **通常①** | **顧客の要求についての詳細・背景事情を確認する (AP 1)** | なし | ・上司信頼度 +20%<br>・要求具体度 +1<br>・`CLIENT_BACKGROUND_INFO` | 🏢「実はこの案件、親会社からのDX要件で今期中稼働が至上命令なんだ。細かい機能より『納期厳守と主要UIの見栄え』を一番気にしているよ」 |
+| **通常②** | **顧客のタイプ・パーソナリティ傾向と注意点を確認する (AP 1)** | なし | ・上司信頼度 +15%<br>・`CLIENT_TYPE_KNOWN` | 🏢「あの顧客のキーマンは『アイデアマンで仕様変更を後から言い出す』タイプだ。安易に全ての要望を呑まず、現場と防衛ラインを敷くんだぞ」 |
+| **通常③** | **炎上・トラブル発生時の会社バックアップラインの合意 (AP 1)** | なし | ・上司信頼度 +15%<br>・`BOSS_BACKUP` | 🏢「万が一顧客と炎上した時は、私が会社としての品質担保基準を理由に防衛線に立つ。安心して調整を進めなさい」 |
+| **★切り札** | **★【切り札】現場のリスク・課題を提示し、追加予算・予備リソースを申請 (AP 1)** | `PL_TECH_ANXIETY` または `CLIENT_REQUIREMENT` を保持 | ・上司信頼度 +30%<br>・チーム健全性 +20%<br>・`BOSS_RESOURCE_GRANTED` | 🏢「なるほど、現場の技術スタック不安と顧客要求のギャップか……根拠が明確だ！予備バッファ予算とシニアフォロー枠を承認しよう！」 |
 
 ---
 
