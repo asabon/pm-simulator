@@ -1,6 +1,6 @@
 // Web Prototype Game Engine & Logic Functions
 
-import { Customer, Developer, Project, Task, Team } from "./entities.js";
+import { Customer, Developer, Project, Task } from "./entities.js";
 
 export function getInitialDeveloperPool() {
   return [
@@ -361,7 +361,7 @@ export function calculateKickoffDiagnosis(project, actionHistory, selectedMethod
   };
 }
 
-export function getKickoffRallySpeech(totalScore, selectedMethod, actionHistory) {
+export function getKickoffRallySpeech(totalScore, selectedMethod, _actionHistory) {
   const methodLabel = selectedMethod === "WATERFALL" ? "🌊 ウォーターフォール開発" : "🔄 アジャイル開発";
   
   if (totalScore >= 4.5) {
@@ -485,7 +485,7 @@ export function evaluateProjectStatus(project, tasks) {
   return "IN_PROGRESS";
 }
 
-export function calculateFinalScore(project, pm) {
+export function calculateFinalScore(project, _pm) {
   const customerScore = project.customer.satisfaction;
   const managerScore = project.managerSatisfaction;
   

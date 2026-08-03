@@ -28,11 +28,8 @@
   * **Python (プロトタイプ)**:
     * エントリポイントで標準出力をUTF-8に再設定（`sys.stdout.reconfigure(encoding='utf-8')` など）すること。
     * オブジェクト指向の明確な責務分け（データモデルとゲームエンジン）を意識すること。
-    * コード変更時は `uv run ruff check --fix prototype/` および `uv run ruff format prototype/` を実行し、コードの静的解析・自動整形を行うこと。
-  * **Godot 4 / GDScript (将来の移植時)**:
-    * 静的型ヒント（型アノテーション）を徹底すること（例: `var score: int = 0`, `func update() -> void`）。
-    * Controlノードのアンカーとコンテナ（HBox/VBox/Grid）を正しく設定し、レスポンシブなレイアウトにすること。
-    * 辞書（Dictionary）変換可能なセーブデータシリアライズ設計を行うこと。
+  * **JavaScript (Webプロトタイプ)**:
+    * コード変更時は `npm test` (Vitest) および `npm run lint` (ESLint) を実行し、ユニットテストの通過およびエラー・警告がないことを確認すること。
   * ※ PR発行前の詳細な品質検証項目・チェック手順については `.agents/skills/code-review/SKILL.md` を参照すること。
 
 ### 4. Git・ドキュメント駆動PR ＆ ブランチ管理ルール

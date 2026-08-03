@@ -1,11 +1,7 @@
 import { PM, Team } from "./entities.js?v=999";
 import {
-  calculateFinalScore,
-  evaluateProjectStatus,
   getInitialDeveloperPool,
-  getInitialProjectData,
-  processYearlyClosing,
-  runWeeklySprint
+  getInitialProjectData
 } from "./engine.js?v=999";
 
 // エラーハンドラー（万が一エラーが発生した場合に画面に赤字で原因を表示）
@@ -217,7 +213,7 @@ function renderKickoffView() {
 
         <div style="background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.2); padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px; color:var(--text-muted);">
           ボタンを順番にクリックして、今週行う事前会議のアジェンダを組み立ててください。<br>
-          ※ 1週間分（最大3つの会議）を実行するごとに<strong>契約納期が1週間減少 (`納期 -1週`)</strong>します。
+          ※ 1週間分（最大3つの会議）を実行するごとに<strong>契約納期が1週間減少 ('納期 -1週')</strong>します。
         </div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">

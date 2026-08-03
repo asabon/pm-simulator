@@ -1,0 +1,16 @@
+{
+  "name": "pm-simulator",
+  "version": "1.0.0",
+  "description": "PM Simulator - Project Manager Career Simulator",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint web/src/**/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.19.0",
+    "jsdom": "^26.0.0",
+    "vitest": "^3.0.4"
+  }
+}
