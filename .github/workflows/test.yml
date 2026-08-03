@@ -27,6 +27,21 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run JavaScript ESLint Check
+        run: npm run lint
+
+      - name: Run JavaScript Vitest Unit Tests
+        run: npm test
+
       - name: Run Ruff Lint Check
         run: uv run ruff check prototype/
 

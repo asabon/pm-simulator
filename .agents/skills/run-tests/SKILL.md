@@ -16,9 +16,11 @@ description: PR発行前にプロトタイプやテストコード（pytest等�
   ```bash
   uv run pytest
   ```
-  ※ テストコードが存在しない場合は、CLIプロトタイプの正常起動確認を行う:
+
+* **JavaScript (npm環境)**:
   ```bash
-  uv run play-sim --help
+  npm test
+  npm run lint
   ```
 
 ### 2. ログと結果の検証
