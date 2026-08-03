@@ -8,6 +8,7 @@ from prototype.src.engine import (
     run_weekly_sprint,
 )
 from prototype.src.entities import PM, Team
+from prototype.src.kickoff import KickoffPhase
 
 
 def print_header(title: str):
@@ -97,10 +98,6 @@ def main():
         project, tasks = get_initial_project_data(project_counter)
 
         # --- PHASE 1: プロジェクトキックオフフェーズ ---
-        print_header("PHASE 1: プロジェクトキックオフ")
-        print(f"【案件名】: {project.name} (上司期待: 『{project.priority_expectation}』)")
-        print(f"【顧客 ({project.customer.name}) の第一声】:\n  {project.customer.speak()}")
-
         team = Team(team_id="main_dev_team", name="メイン開発チーム")
         selected_pl = next(
             (p for p in team_pool if getattr(p, "is_pl_qualified", False) and not getattr(p, "is_retired", False)),
@@ -114,21 +111,11 @@ def main():
             team.assign_member(dev_cand)
 
         project.register_team(team)
-
         pl = team.leader
-        devs = team.members
-        pl_str = f"{pl.name} (PL)" if pl else "なし"
-        devs_str = ", ".join([d.name for d in devs])
 
-        print("\n■ 初期案件条件 ＆ チーム体制")
-        print(f"  ・契約納期   : {project.deadline_weeks} 週間")
-        print(
-            f"  ・初期レベル : 要求具体度 {'🌟' * project.clarity_level} | 予算妥当性 {'🌟' * project.budget_level} | 納期妥当性 {'🌟' * project.schedule_level}"
-        )
-        print(f"  ・チーム体制 : PL: {pl_str} | DEV: {devs_str} ({len(devs)}名)")
-
-        project.methodology = "WATERFALL"
-        input("\n[Enterキーで開発（週次進行）へ]")
+        # 新しいキックオフフェーズの実行
+        kickoff_engine = KickoffPhase(project, team, pm)
+        kickoff_engine.run()
 
         # --- PHASE 2: プロジェクト進行フェーズ ---
         print_header("PHASE 2: プロジェクト進行フェーズ")
