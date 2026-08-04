@@ -69,9 +69,9 @@ class KickoffPhase:
         self.interview_sequence = []
 
         mapping = {
-            "1": ("CLIENT", "対 顧客との要求すり合わせ会議"),
-            "2": ("PL", "対 PLとの現場技術・負荷打ち合わせ会議"),
-            "3": ("BOSS", "対 上司との防衛ライン・リソース相談会議"),
+            "1": ("CLIENT", "対 顧客との会議"),
+            "2": ("PL", "対 PLとの会議"),
+            "3": ("BOSS", "対 上司との会議"),
         }
 
         while len(self.interview_sequence) < 3:
@@ -83,9 +83,9 @@ class KickoffPhase:
                     print(f"  {idx}. {item[1]}")
 
             print("\n追加する会議を選択:")
-            print(" 1: ➕ 👥 顧客とのすり合わせ会議")
-            print(" 2: ➕ 🛠️ PLとの打ち合わせ会議")
-            print(" 3: ➕ 🏢 上司との相談会議")
+            print(" 1: ➕ 👥 顧客との会議")
+            print(" 2: ➕ 🛠️ PLとの会議")
+            print(" 3: ➕ 🏢 上司との会議")
             print(" S: 今週の会議をこれで開始して面談へ進む")
 
             cmd = input("選択 (1-3 または S): ").strip().upper()
