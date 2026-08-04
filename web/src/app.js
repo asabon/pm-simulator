@@ -212,21 +212,21 @@ function renderKickoffView() {
           </div>
         </div>
 
-        <h3 style="font-size:16px; margin:0 0 12px 0;">📅 Step 1-2: 今週の個別面談スケジュールを設定 (最大3枠)</h3>
+        <h3 style="font-size:16px; margin:0 0 12px 0;">📅 Step 1-2: 今週の個別会議スケジュールを設定 (最大3枠)</h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-          ［顧客］［PL］［上司］のボタンを押し、今週回る個別面談の順番を予約します。<br>
+          ［顧客］［PL］［上司］のボタンを押し、今週開催する個別会議の順番を予約します。<br>
           前の会議で手に入れた本音・要望を、次の会議の相手に直接インプットとして持ち込んで交渉できます！
         </p>
 
         <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <button id="add-client" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 👥 顧客との面談を追加</button>
-          <button id="add-pl" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🛠️ PLとの面談を追加</button>
-          <button id="add-boss" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🏢 上司との面談を追加</button>
+          <button id="add-client" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 👥 顧客との会議を追加</button>
+          <button id="add-pl" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🛠️ PLとの会議を追加</button>
+          <button id="add-boss" class="btn-cmd" style="flex:1; padding:10px; font-size:13px;">➕ 🏢 上司との会議を追加</button>
         </div>
 
         <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); padding:12px; border-radius:8px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:13px; font-weight:700;">📋 予約済みの面談スケジュール (最大3枠)</span>
+            <span style="font-size:13px; font-weight:700;">📋 予約済みの会議スケジュール (最大3枠)</span>
             <button id="btn-clear-queue" class="btn-cmd" style="font-size:11px; padding:4px 8px;">クリア</button>
           </div>
           ${seq.length === 0 ? `
@@ -237,7 +237,7 @@ function renderKickoffView() {
             <div style="display:flex; flex-direction:column; gap:6px;">
               ${seq.map((item, idx) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:8px 12px; border-radius:6px; border:1px solid var(--border-color); font-size:13px;">
-                  <span><strong>第${idx + 1}面談:</strong> ${item.title}</span>
+                  <span><strong>第${idx + 1}会議:</strong> ${item.title}</span>
                   <span class="step-badge" style="font-size:11px;">${item.target}</span>
                 </div>
               `).join('')}
@@ -247,7 +247,7 @@ function renderKickoffView() {
 
         <div style="display:flex; gap:10px;">
           <button id="btn-start-meetings" class="btn-cmd btn-primary" style="flex:2; padding:14px; font-size:15px; justify-content:center;" ${seq.length === 0 ? 'disabled' : ''}>
-            🚀 予約したスケジュールで個別面談を開始！ ▶
+            🚀 予約したスケジュールで個別会議を開始！ ▶
           </button>
           <button id="btn-skip-to-kickoff" class="btn-cmd" style="flex:1; padding:14px; font-size:13px; justify-content:center; border-color:#f59e0b; color:#f59e0b;">
             🎉 事前調整を終了しキックオフへ
@@ -257,11 +257,11 @@ function renderKickoffView() {
     `;
 
     const addClient = document.getElementById("add-client");
-    if (addClient) addClient.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "CLIENT", title: "対 顧客との要求すり合わせ会議" }); renderKickoffView(); } });
+    if (addClient) addClient.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "CLIENT", title: "対 顧客との会議" }); renderKickoffView(); } });
     const addPl = document.getElementById("add-pl");
-    if (addPl) addPl.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "PL", title: "対 PLとの現場技術・負荷打ち合わせ会議" }); renderKickoffView(); } });
+    if (addPl) addPl.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "PL", title: "対 PLとの会議" }); renderKickoffView(); } });
     const addBoss = document.getElementById("add-boss");
-    if (addBoss) addBoss.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "BOSS", title: "対 上司との防衛ライン・リソース相談会議" }); renderKickoffView(); } });
+    if (addBoss) addBoss.addEventListener("click", () => { if (seq.length < 3) { seq.push({ target: "BOSS", title: "対 上司との会議" }); renderKickoffView(); } });
 
     const btnClear = document.getElementById("btn-clear-queue");
     if (btnClear) btnClear.addEventListener("click", () => { ks.interviewSequence = []; renderKickoffView(); });
@@ -340,11 +340,11 @@ function renderKickoffView() {
       <div class="card" style="text-align:left;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <h2 style="font-size:18px; font-weight:700; margin:0;">🗣️ 面談画面: ${targetName}</h2>
-            <span class="step-badge">第 ${ks.currentMeetingIndex + 1} 面談 / 全 ${ks.interviewSequence.length} 会議</span>
+            <h2 style="font-size:18px; font-weight:700; margin:0;">🗣️ 会議画面: ${targetName}</h2>
+            <span class="step-badge">第 ${ks.currentMeetingIndex + 1} 会議 / 全 ${ks.interviewSequence.length} 会議</span>
           </div>
-          <div style="font-size:13px; font-weight:700; color:#10b981; background:rgba(16,185,129,0.15); padding:4px 10px; border-radius:12px;">
-            💬 個別面談中 (行動ポイント制限なし)
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+            💬 個別会議中 (行動ポイント制限なし)
           </div>
         </div>
 
@@ -389,7 +389,7 @@ function renderKickoffView() {
           `).join('')}
 
           <button id="btn-next-meeting" class="btn-cmd" style="padding:10px 14px; font-size:13px; margin-top:8px; justify-content:center; background:rgba(255,255,255,0.05);">
-            ▶ この面談を終了し、次の会議へ移動する
+            ▶ この会議を終了し、次の会議へ移動する
           </button>
         </div>
       </div>

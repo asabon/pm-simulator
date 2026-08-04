@@ -45,9 +45,9 @@ describe("Web App Integration & Syntax Tests", () => {
     const btnStart = document.getElementById("btn-start-meetings");
     if (btnStart) btnStart.click();
 
-    // 面談画面（Step 2）へ遷移していることを確認
+    // 会議画面（Step 2）へ遷移していることを確認
     const container = document.getElementById("app-container");
-    expect(container.innerHTML).toContain("面談画面");
+    expect(container.innerHTML).toContain("会議画面");
 
     // 全アクションボタンのクリック検証（全分岐で ReferenceError や例外が投げられないかチェック）
     const actionBtns = Array.from(document.querySelectorAll(".btn-action-item"));

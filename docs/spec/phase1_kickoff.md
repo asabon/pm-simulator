@@ -158,9 +158,9 @@ GameState = {
   // 2. キックオフ進行状態
   kickoffState: {
     interviewSequence: [        // 自由編成された会議アジェンダキュー
-      { target: "CLIENT", title: "対 顧客との要求すり合わせ会議" },
-      { target: "PL", title: "対 PLとの技術・負荷打ち合わせ会議" },
-      { target: "CLIENT", title: "対 顧客との現場対案持参・再交渉会議" }
+      { target: "CLIENT", title: "対 顧客との会議" },
+      { target: "PL", title: "対 PLとの会議" },
+      { target: "BOSS", title: "対 上司との会議" }
     ],
     currentStepIndex: 0,        // 進行ステップインデックス
     obtainedKnowledge: ["CLIENT_REQUIREMENT", "SOLUTION_STAGED_RELEASE"], // 切り札フラグ
