@@ -227,6 +227,15 @@ export const ADV_ACTIONS = {
   // 開発チームデスクでのアクション (現場アクションは即時中心)
   TEAM: [
     {
+      id: "team_kickoff",
+      name: "🚀 チームキックオフ・役割分担の整理 (体制構築)",
+      targetGroup: "TEAM",
+      costAp: 1,
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時】チームの顔合わせと各人の役割分担を整理し健全性を向上させる"
+    },
+    {
       id: "tech_risk_check",
       name: "🛠️ 技術リスク・見積精査",
       targetGroup: "TEAM",
