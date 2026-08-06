@@ -88,7 +88,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-enter-room").click();
 
     expect(document.getElementById("location-title").textContent).toContain("上司執務室");
-    expect(document.getElementById("dialog-text").textContent).toContain("今期の大事な案件");
+    expect(document.getElementById("dialog-text").textContent).toContain("待っていたよ");
 
     const acceptBtn = document.getElementById("btn-accept-assignment");
     expect(acceptBtn).not.toBeNull();
