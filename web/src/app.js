@@ -132,7 +132,7 @@ export function renderSceneView() {
 
     case UIMode.PROLOGUE_INTRO:
       if (iconEl) iconEl.textContent = "🏢";
-      if (titleEl) titleEl.textContent = "上司執務室前 (呼び出し)";
+      if (titleEl) titleEl.textContent = "上司執務室前";
       sceneBgEl.classList.add("bg-manager");
       if (avatarEl) avatarEl.textContent = "🚪";
       if (nameEl) nameEl.textContent = "執務室のドア";
@@ -140,10 +140,10 @@ export function renderSceneView() {
 
     case UIMode.PROLOGUE:
       if (iconEl) iconEl.textContent = "🏢";
-      if (titleEl) titleEl.textContent = "上司執務室 (アサイン面談)";
+      if (titleEl) titleEl.textContent = "上司執務室";
       sceneBgEl.classList.add("bg-manager");
       if (avatarEl) avatarEl.textContent = "👔";
-      if (nameEl) nameEl.textContent = "高橋事業部長";
+      if (nameEl) nameEl.textContent = "事業部長";
       break;
 
     case UIMode.DASHBOARD:
@@ -159,7 +159,7 @@ export function renderSceneView() {
       if (titleEl) titleEl.textContent = "顧客のオフィス / 会議室";
       sceneBgEl.classList.add("bg-customer");
       if (avatarEl) avatarEl.textContent = "👤";
-      if (nameEl) nameEl.textContent = `渡辺部長 (${projectState.customer.type || "クライアント"})`;
+      if (nameEl) nameEl.textContent = `顧客 (部長)`;
       break;
 
     case UIMode.SCENE_MANAGER:
@@ -167,7 +167,7 @@ export function renderSceneView() {
       if (titleEl) titleEl.textContent = "上司の執務室";
       sceneBgEl.classList.add("bg-manager");
       if (avatarEl) avatarEl.textContent = "👔";
-      if (nameEl) nameEl.textContent = "高橋事業部長";
+      if (nameEl) nameEl.textContent = "事業部長";
       break;
 
     case UIMode.SCENE_TEAM:
@@ -198,10 +198,10 @@ export function renderMessageBox() {
       break;
     case UIMode.PROLOGUE_INTRO:
       speaker = "ナレーション";
-      text = "「あなたは高橋事業部長から執務室へ呼び出された。今期のプロジェクトについての重要な話があるようだ…」";
+      text = "「あなたは事業部長から執務室へ呼び出された。今期のプロジェクトについての重要な話があるようだ…」";
       break;
     case UIMode.PROLOGUE:
-      speaker = "上司 (高橋事業部長)";
+      speaker = "上司 (事業部長)";
       text = "「おお、PMくん！ 待っていたよ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして君をアサインする！ 納期は4週間(全20営業日)、予算は80%だ。体制は君の部署のメンバーで進めてくれ。詳しい案件資料はメールで送っておいたので、自席のPCで確認して活動方針を決めてくれ。頼んだぞ！」";
       break;
     case UIMode.DASHBOARD:
@@ -216,11 +216,11 @@ export function renderMessageBox() {
       }
       break;
     case UIMode.SCENE_CUSTOMER:
-      speaker = "顧客 (渡辺部長)";
+      speaker = "顧客 (部長)";
       text = "「やあPMさん！ 今日の用件は？ 重要な会議ならアポを取ってカレンダーにセットしてくれよ。」";
       break;
     case UIMode.SCENE_MANAGER:
-      speaker = "上司 (高橋事業部長)";
+      speaker = "上司 (事業部長)";
       text = "「おお、PMくんか。直訴や重大相談なら日程を調整して面談を入れよう。」";
       break;
     case UIMode.SCENE_TEAM:
@@ -410,7 +410,7 @@ export function handleCheckPcMail() {
 
   activeMailContent = {
     speaker: "自席PC (メール受信トレイ)",
-    text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆体制\n「顧客(渡辺部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。チーム体制はPLタツヤ率いる開発4名体制。納期はDay 20(4週間)、初期予算枠は80%。まずは顧客との要件定義WS予約か、現場の技術リスク精査が急務です。」"
+    text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆体制\n「顧客(部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。チーム体制はPLタツヤ率いる開発4名体制。納期はDay 20(4週間)、初期予算枠は80%。まずは顧客との要件定義WS予約か、現場の技術リスク精査が急務です。」"
   };
 
   renderAll();

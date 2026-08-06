@@ -113,7 +113,7 @@ export class Project {
   constructor(name, deadlineWeeks, customer) {
     this.name = name;
     this.deadlineWeeks = deadlineWeeks;
-    this.customer = customer;
+    this.customer = customer || new Customer("cust_1", "顧客部長");
     this.week = 1;
     this.day = 1;
     this.maxDays = deadlineWeeks * 5; // 4週間 = 20営業日
