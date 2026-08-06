@@ -114,7 +114,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     if (statusBar) {
       expect(statusBar.style.display).toBe("flex");
     }
-    expect(document.getElementById("dialog-text").textContent).toContain("件名:");
+    expect(document.getElementById("dialog-text").textContent).toContain("【件名】");
   });
 
   it("should execute team kickoff and holiday work request actions in TEAM scene", async () => {
