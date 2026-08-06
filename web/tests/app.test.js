@@ -49,26 +49,39 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     `;
   });
 
-  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide status bar", async () => {
+  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide location bar & status bar", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
     const startBtn = document.getElementById("btn-start-new-project");
     expect(startBtn).not.toBeNull();
-    expect(document.getElementById("location-title").textContent).toContain("タイトル画面");
 
-    const statusBar = document.getElementById("project-status-bar");
-    if (statusBar) {
-      expect(statusBar.style.display).toBe("none");
+    // タイトル画面ではロケーションバーとステータスバーが非表示になっていること
+    const locationBar = document.getElementById("scene-location-bar");
+    if (locationBar) {
+      expect(locationBar.style.display).toBe("none");
     }
   });
 
-  it("should transit to PROLOGUE scene on '🚀 新規プロジェクトを開始する' click", async () => {
+  it("should transit to PROLOGUE_INTRO narrative scene on '🚀 新規プロジェクトを開始する' click", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
     const startBtn = document.getElementById("btn-start-new-project");
     startBtn.click();
+
+    expect(document.getElementById("dialog-text").textContent).toContain("呼び出された");
+
+    const enterBtn = document.getElementById("btn-enter-room");
+    expect(enterBtn).not.toBeNull();
+  });
+
+  it("should transit to PROLOGUE assignment speech on '🚪 執務室に入り、話を聞く' click", async () => {
+    const appModule = await import("../src/app.js?test=" + Date.now());
+    appModule.initGame();
+
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-enter-room").click();
 
     expect(document.getElementById("location-title").textContent).toContain("上司執務室");
     expect(document.getElementById("dialog-text").textContent).toContain("今期の大事な案件");
@@ -82,6 +95,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     appModule.initGame();
 
     document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
 
     expect(document.getElementById("location-title").textContent).toContain("PM自席");
@@ -96,6 +110,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     appModule.initGame();
 
     document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
     document.getElementById("nav-customer").click();
 
@@ -114,6 +129,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     appModule.initGame();
 
     document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
     document.getElementById("nav-customer").click();
 

@@ -105,6 +105,7 @@ export function renderHeaderStatus() {
 
 // 2. シーン・背景・キャラクターの更新
 export function renderSceneView() {
+  const locationBarEl = document.getElementById("scene-location-bar");
   const iconEl = document.getElementById("location-icon");
   const titleEl = document.getElementById("location-title");
   const sceneBgEl = document.getElementById("scene-bg");
@@ -116,13 +117,24 @@ export function renderSceneView() {
   // 背景クラスのリセット
   sceneBgEl.className = "scene-bg";
 
+  // タイトル画面ではロケーションバーを非表示にする
+  if (locationBarEl) {
+    locationBarEl.style.display = currentUIMode === UIMode.TITLE ? "none" : "flex";
+  }
+
   switch (currentUIMode) {
     case UIMode.TITLE:
-      if (iconEl) iconEl.textContent = "🎮";
-      if (titleEl) titleEl.textContent = "タイトル画面";
       sceneBgEl.classList.add("bg-title");
       if (avatarEl) avatarEl.textContent = "💼";
       if (nameEl) nameEl.textContent = "PM Simulator";
+      break;
+
+    case UIMode.PROLOGUE_INTRO:
+      if (iconEl) iconEl.textContent = "🏢";
+      if (titleEl) titleEl.textContent = "上司執務室前 (呼び出し)";
+      sceneBgEl.classList.add("bg-manager");
+      if (avatarEl) avatarEl.textContent = "🚪";
+      if (nameEl) nameEl.textContent = "執務室のドア";
       break;
 
     case UIMode.PROLOGUE:
@@ -183,6 +195,10 @@ export function renderMessageBox() {
       speaker = "ナレーション";
       text = "PM Simulator へようこそ！ プロジェクトマネージャーとして意思決定とステークホルダーマネジメントの試練に挑みましょう。";
       break;
+    case UIMode.PROLOGUE_INTRO:
+      speaker = "ナレーション";
+      text = "「あなたは高橋事業部長から執務室へ呼び出された。今期のプロジェクトについての重要な話があるようだ…」";
+      break;
     case UIMode.PROLOGUE:
       speaker = "上司 (高橋事業部長)";
       text = "「おお、PMくん！ ちょうど君を呼ぼうと思っていたところだ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして、君をアサインする！ 予算は80%、納期は4週間だ。まずは君のデスクで方針を決め、顧客や現場とすり合わせをしてくれ。頼んだぞ！」";
@@ -238,10 +254,25 @@ export function renderActionPanel() {
     startBtn.style.alignItems = "center";
     startBtn.innerHTML = "<span>🚀 新規プロジェクトを開始する</span><span class='btn-sub-desc'>アサイン面談へ向かう</span>";
     startBtn.addEventListener("click", () => {
-      currentUIMode = UIMode.PROLOGUE;
+      currentUIMode = UIMode.PROLOGUE_INTRO;
       renderAll();
     });
     panelEl.appendChild(startBtn);
+
+  } else if (currentUIMode === UIMode.PROLOGUE_INTRO) {
+    // 【プロローグ導入画面】室に入るボタン
+    const enterBtn = document.createElement("button");
+    enterBtn.id = "btn-enter-room";
+    enterBtn.className = "btn-adv btn-primary-category";
+    enterBtn.style.gridColumn = "span 2";
+    enterBtn.style.padding = "1.2rem";
+    enterBtn.style.alignItems = "center";
+    enterBtn.innerHTML = "<span>🚪 執務室に入り、話を聞く</span><span class='btn-sub-desc'>事業部長のデスクへ進む</span>";
+    enterBtn.addEventListener("click", () => {
+      currentUIMode = UIMode.PROLOGUE;
+      renderAll();
+    });
+    panelEl.appendChild(enterBtn);
 
   } else if (currentUIMode === UIMode.PROLOGUE) {
     // 【プロローグ画面】アサイン了解ボタン
