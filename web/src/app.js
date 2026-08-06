@@ -78,7 +78,25 @@ export function renderHeaderStatus() {
 
   if (apEl) apEl.textContent = pmState.ap;
 
+  const commandContainerEl = document.querySelector(".command-panel-container");
+  const commandHeaderEl = document.querySelector(".command-panel-header");
   const apTagEl = document.querySelector(".command-ap-tag");
+
+  if (commandContainerEl) {
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      commandContainerEl.classList.add("plain-panel");
+    } else {
+      commandContainerEl.classList.remove("plain-panel");
+    }
+  }
+
+  if (commandHeaderEl) {
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      commandHeaderEl.style.display = "none";
+    } else {
+      commandHeaderEl.style.display = "flex";
+    }
+  }
   if (apTagEl) {
     if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
       apTagEl.style.display = "none";
@@ -197,6 +215,34 @@ export function renderSceneView() {
   }
 }
 
+// 2.5 PMO軍師アドバイス専用パネルの更新
+export function renderPMOAdvicePanel() {
+  const containerEl = document.getElementById("pmo-advice-container");
+  const badgeEl = document.getElementById("pmo-advice-badge");
+  const textEl = document.getElementById("pmo-advice-text");
+
+  if (!containerEl) return;
+
+  if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+    containerEl.style.display = "none";
+    return;
+  }
+
+  containerEl.style.display = "flex";
+
+  const pmoAdvice = getPMOAdvice(projectState, kickoffHistory, projectState ? projectState.day : 1);
+
+  if (badgeEl) badgeEl.textContent = pmoAdvice.badge;
+  if (textEl) textEl.textContent = pmoAdvice.text;
+
+  containerEl.classList.remove("pmo-alert", "pmo-combo");
+  if (pmoAdvice.type === "ALERT") {
+    containerEl.classList.add("pmo-alert");
+  } else if (pmoAdvice.type === "COMBO_HINT" || pmoAdvice.type === "READY") {
+    containerEl.classList.add("pmo-combo");
+  }
+}
+
 // 3. メッセージ / セリフダイアログの更新
 export function renderMessageBox() {
   const speakerEl = document.getElementById("speaker-name");
@@ -256,11 +302,8 @@ export function renderMessageBox() {
     text = activeSceneMessage.text;
   }
 
-  // 🦉 PMO軍師アドバイスの更新
-  const pmoAdvice = getPMOAdvice(projectState, kickoffHistory, projectState ? projectState.day : 1);
-  if (currentUIMode !== UIMode.TITLE && currentUIMode !== UIMode.PROLOGUE_INTRO && currentUIMode !== UIMode.PROLOGUE) {
-    text = `【${pmoAdvice.badge}】\n${pmoAdvice.text}\n\n${text}`;
-  }
+  // 🦉 PMO軍師アドバイスの更新 (専用パネルへの描画)
+  renderPMOAdvicePanel();
 
   if (speakerEl) speakerEl.textContent = speaker;
   dialogEl.textContent = text;
