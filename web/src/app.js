@@ -78,6 +78,15 @@ export function renderHeaderStatus() {
 
   if (apEl) apEl.textContent = pmState.ap;
 
+  const apTagEl = document.querySelector(".command-ap-tag");
+  if (apTagEl) {
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      apTagEl.style.display = "none";
+    } else {
+      apTagEl.style.display = "inline-block";
+    }
+  }
+
   // タイトル画面、プロローグ画面、およびPCメール未確認時はステータスバーを非表示に設定
   if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE || (projectState && !projectState.isStatusDisclosed)) {
     if (statusBarEl) statusBarEl.style.display = "none";
