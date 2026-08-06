@@ -545,3 +545,100 @@ export function processYearlyClosing(pm, developers) {
 
   return logs;
 }
+
+// =========================================================================
+// 🕹️ ADV用 イベント生成 ＆ モーダル処理エンジン
+// =========================================================================
+
+export function generateWeeklyMeetingEvent(project, week) {
+  const archetype = project.customerArchetype || CUSTOMER_ARCHETYPES.PARTNER;
+  let title = `👥 第${week}週 週次定例ミーティング`;
+  let speaker = `顧客 (${project.customer ? project.customer.name : "渡辺部長"})`;
+  let speech = "";
+  let choices = [];
+
+  if (week === 1) {
+    speech = `「PMさん、いよいよ今週から本格始動ですね！ ${archetype.hint}」`;
+    choices = [
+      {
+        text: "💬「任せてください！最高のプロとしてご期待に応えます。」",
+        effect: (p) => { p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 3); },
+        log: "顧客は期待感を膨らませています！(顧客満足度+3%)"
+      },
+      {
+        text: "💬「はい。何か気になる点があればすぐにご相談ください。」",
+        effect: () => {},
+        log: "定例会議をスムーズに進行しました。"
+      }
+    ];
+  } else if (week === 2) {
+    speech = "「先週の進捗は拝見しましたよ。ところで、画面デザインの細かいフォントや配色ですが、もう少し修正できませんか？」";
+    choices = [
+      {
+        text: "💬「承知しました。現場と調整して修正案を提示します！」",
+        effect: (p) => { p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 5); },
+        log: "顧客の要望を受け入れました！ (顧客満足度+5%)"
+      },
+      {
+        text: "💬「初期リリースではコア機能に集中し、デザイン微調整は後半で検討しましょう。」",
+        effect: (p) => { p.clarityLevel = Math.min(5, p.clarityLevel + 1); },
+        log: "スコープを維持し、要件の優先順位を整理しました。(要件明確化+1)"
+      }
+    ];
+  } else if (week === 3) {
+    speech = "「そろそろ後半戦ですね。本番公開に向けたセキュリティやインフラの試験は順調ですか？」";
+    choices = [
+      {
+        text: "💬「現場PLとリスク精査済みですのでご安心ください！」",
+        effect: (p) => { p.managerSatisfaction = Math.min(100, p.managerSatisfaction + 3); },
+        log: "顧客・社内へ安心感を与えました！(上司信頼度+3%)"
+      },
+      {
+        text: "💬「念のためテストシナリオを強化して万全を期します。」",
+        effect: (p) => { p.bugsTotal = Math.max(0, p.bugsTotal - 1); },
+        log: "テスト方針を強化しました。"
+      }
+    ];
+  } else {
+    speech = "「最終週ですね！チームの皆さんもラストスパート、よろしくお願いします！」";
+    choices = [
+      {
+        text: "💬「チーム一丸となって最後まで無事故で完遂します！」",
+        effect: (p) => { p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 5); },
+        log: "ラストスパートに向け決意を新たにしました！(満足度+5%)"
+      }
+    ];
+  }
+
+  return { title, speaker, speech, choices };
+}
+
+export function checkRandomEventTrigger(_project) {
+  // 20%の確率で突発障害・トラブルイベントが発生
+  if (Math.random() < 0.20) {
+    return {
+      title: "🚨 突発トラブル発生！",
+      speaker: "PL タツヤ",
+      speech: "「PMさん、大変です！ 既存APIの仕様変更の影響で、連携モジュールで原因不明のエラーが発生しています！」",
+      choices: [
+        {
+          text: "🛠️ PM自ら現場に入ってデバッグサポートする",
+          effect: (p) => {
+            const devs = p.getAllDevelopers();
+            devs.forEach(d => d.fatigue = Math.max(0, d.fatigue - 5));
+          },
+          log: "PMが現場を直接サポート！ 開発メンバーの負担が軽減されました。"
+        },
+        {
+          text: "🏢 上司に報告して技術サポートを要請する",
+          effect: (p) => {
+            p.managerSatisfaction = Math.min(100, p.managerSatisfaction + 2);
+          },
+          log: "上司へ速やかに報連相を行い、社内サポートを獲得しました。"
+        }
+      ]
+    };
+  }
+  return null;
+}
+
