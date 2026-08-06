@@ -1,6 +1,6 @@
 ---
 name: clean-branches
-description: ユーザーが `/clean-branches` や `/merged` または「マージしました」「マージ完了」「PRマージ」「ブランチ削除」等のメッセージを入力した際に必ず自動発動。main への同期・リモート追跡消去・作業ブランチ削除の完全クリーンアップを一貫実行するスキル。
+description: スラッシュコマンド `/clean-branches` の実行や、ユーザーから「/merged」「マージしました」「マージ完了」「ブランチ削除」等のメッセージを受けた際に必ず自動発動。main への同期・リモート追跡消去・作業ブランチ削除の完全クリーンアップを一貫実行するスキル。
 ---
 
 # Clean Branches (PR Clean-up) Skill

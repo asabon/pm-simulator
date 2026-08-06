@@ -46,7 +46,7 @@
 * **PR作成・自動クローズ ＆ マージ後完全クリーンアップフロー (`create-pr` スキルの実行)**:
   * ユーザーから PR の作成を依頼された場合（例: 「PR出してください」「PR作成」等）は、必ず `.agents/skills/create-pr/SKILL.md` のワークフローに従うこと。
   * スキル実行時に専門スキル（`code-review`, `doc-review`, `run-tests`）による自動検証・自動修正を行い、統一PRテンプレートを適用して GitHub CLI (`gh`) からPRを発行すること。
-  * **PRマージ完了報告受託時 (`/clean-branches` や `/merged` スラッシュコマンド ＆ `clean-branches` スキルの実行)**: ユーザーから `/clean-branches` や `/merged` または「マージしました」等の連絡を受けた際は、**直ちに `clean-branches` スキルのワークフローに従い、`git checkout main` ➔ `git pull origin main` ➔ `git fetch --prune` ➔ `git branch -d <branch_name>` の4ステップを連続実行し、リモート追跡情報も含めて100%完全クリーンアップ**すること。
+  * **PRマージ完了報告受託時 (`/clean-branches` スラッシュコマンド ＆ `clean-branches` スキルの実行)**: ユーザーから `/clean-branches` や `/merged` または「マージしました」等の連絡を受けた際は、**直ちに `clean-branches` スキルのワークフローに従い、`git checkout main` ➔ `git pull origin main` ➔ `git fetch --prune` ➔ `git branch -d <branch_name>` の4ステップを連続実行し、リモート追跡情報も含めて100%完全クリーンアップ**すること。
 
 ---
 
