@@ -201,7 +201,7 @@ export function renderMessageBox() {
       break;
     case UIMode.PROLOGUE:
       speaker = "上司 (高橋事業部長)";
-      text = "「おお、PMくん！ ちょうど君を呼ぼうと思っていたところだ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして、君をアサインする！ 予算は80%、納期は4週間だ。まずは君のデスクで方針を決め、顧客や現場とすり合わせをしてくれ。頼んだぞ！」";
+      text = "「おお、PMくん！ 待っていたよ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして君をアサインする！ 納期は4週間(全20営業日)、予算は80%だ。体制は君の部署のメンバーで進めてくれ。詳しい案件資料はメールで送っておいたので、自席のPCで確認して活動方針を決めてくれ。頼んだぞ！」";
       break;
     case UIMode.DASHBOARD:
       speaker = "PMの思考";
@@ -290,7 +290,7 @@ export function renderActionPanel() {
     acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>本日の活動方針を決定する</span>";
     acceptBtn.addEventListener("click", () => {
       currentUIMode = UIMode.DASHBOARD;
-      logs.push("上司から案件がアサインされました！ 本日のアクションを決定してください。");
+      logs.push("上司から案件がアサインされました！ 自席PCのメール（案件概要・チーム構成）を確認し、本日の行動を決定してください。");
       renderAll();
     });
     panelEl.appendChild(acceptBtn);
