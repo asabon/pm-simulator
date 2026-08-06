@@ -94,7 +94,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(acceptBtn).not.toBeNull();
   });
 
-  it("should transit to DASHBOARD scene on '💼 了解しました！' click and display 4 main buttons", async () => {
+  it("should transit to DASHBOARD scene and hide status bar until PC mail check", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -103,10 +103,44 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-accept-assignment").click();
 
     expect(document.getElementById("location-title").textContent).toContain("PM自席");
+    expect(document.getElementById("btn-check-pc-mail")).not.toBeNull();
     expect(document.getElementById("nav-customer")).not.toBeNull();
     expect(document.getElementById("nav-manager")).not.toBeNull();
     expect(document.getElementById("nav-team")).not.toBeNull();
     expect(document.getElementById("nav-next-day")).not.toBeNull();
+
+    // メール確認前はステータスバーが非表示
+    const statusBar = document.getElementById("project-status-bar");
+    if (statusBar) {
+      expect(statusBar.style.display).toBe("none");
+    }
+
+    // PCメール確認ボタンをクリック
+    document.getElementById("btn-check-pc-mail").click();
+
+    // メール確認後はステータスバーが表示されること
+    if (statusBar) {
+      expect(statusBar.style.display).toBe("flex");
+    }
+    expect(document.getElementById("dialog-text").textContent).toContain("件名:");
+  });
+
+  it("should execute team kickoff action in TEAM scene and log effect", async () => {
+    const appModule = await import("../src/app.js?test=" + Date.now());
+    appModule.initGame();
+
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-enter-room").click();
+    document.getElementById("btn-accept-assignment").click();
+    document.getElementById("nav-team").click();
+
+    const kickoffBtn = document.getElementById("btn-act-team_kickoff");
+    expect(kickoffBtn).not.toBeNull();
+
+    kickoffBtn.click();
+
+    const logContainer = document.getElementById("action-log-container");
+    expect(logContainer.innerHTML).toContain("チームキックオフ完了");
   });
 
   it("should schedule meeting on appointment action execution and show in log", async () => {

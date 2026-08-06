@@ -78,8 +78,8 @@ export function renderHeaderStatus() {
   if (completedEl) completedEl.textContent = pmState.completedProjects;
   if (apEl) apEl.textContent = pmState.ap;
 
-  // タイトル画面およびプロローグ画面ではプロジェクト未開始のためステータスバーを非表示/ハイフンに設定
-  if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE) {
+  // タイトル画面、プロローグ画面、およびPCメール未確認時はステータスバーを非表示に設定
+  if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE || (projectState && !projectState.isStatusDisclosed)) {
     if (statusBarEl) statusBarEl.style.display = "none";
     if (weekInfoEl) weekInfoEl.textContent = "-";
     if (custSatEl) custSatEl.textContent = "-";
@@ -88,7 +88,7 @@ export function renderHeaderStatus() {
     return;
   }
 
-  // メインダッシュボード移行後は表示
+  // メインダッシュボードかつメール確認完了後は表示
   if (statusBarEl) statusBarEl.style.display = "flex";
 
   if (projectState) {
@@ -204,10 +204,15 @@ export function renderMessageBox() {
       text = "「おお、PMくん！ 待っていたよ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして君をアサインする！ 納期は4週間(全20営業日)、予算は80%だ。体制は君の部署のメンバーで進めてくれ。詳しい案件資料はメールで送っておいたので、自席のPCで確認して活動方針を決めてくれ。頼んだぞ！」";
       break;
     case UIMode.DASHBOARD:
-      speaker = "PMの思考";
-      text = pmState.ap > 0 
-        ? `「本日(Day ${projectState.day})のAP残量は ${pmState.ap} だ。どこへ移動して誰と話すか、あるいはアポを入れるか決めよう。」`
-        : "「本日のAPを使い切りました。⏱️ 1日を進める ボタンで次の日へ進行させてください。」";
+      if (activeMailContent) {
+        speaker = activeMailContent.speaker;
+        text = activeMailContent.text;
+      } else {
+        speaker = "PMの思考";
+        text = pmState.ap > 0 
+          ? `「本日(Day ${projectState.day})のAP残量は ${pmState.ap} だ。どこへ移動して誰と話すか、あるいはアポを入れるか決めよう。」`
+          : "「本日のAPを使い切りました。⏱️ 1日を進める ボタンで次の日へ進行させてください。」";
+      }
       break;
     case UIMode.SCENE_CUSTOMER:
       speaker = "顧客 (渡辺部長)";
@@ -296,8 +301,16 @@ export function renderActionPanel() {
     panelEl.appendChild(acceptBtn);
 
   } else if (currentUIMode === UIMode.DASHBOARD) {
-    // 【第一階層コマンド】メイン画面での4大ボタン
+    // 【第一階層コマンド】メイン画面での5大ボタン
+    const isUnopened = projectState && !projectState.isStatusDisclosed;
+
     const navButtons = [
+      {
+        id: "btn-check-pc-mail",
+        label: isUnopened ? "💻 PCメール・案件情報を確認 (★要確認)" : "💻 PCメール・案件情報を確認",
+        desc: isUnopened ? "【重要】案件概要・チーム構成を確認しステータスを解禁" : "案件概要・要求・チーム構成を再確認",
+        isMail: true
+      },
       {
         id: "nav-customer",
         label: "💬 顧客と話す",
@@ -313,7 +326,7 @@ export function renderActionPanel() {
       {
         id: "nav-team",
         label: "🛠️ 現場と調整",
-        desc: "【即時】技術リスク精査・教訓共有・1on1",
+        desc: "【即時】体制構築・技術リスク・1on1",
         mode: UIMode.SCENE_TEAM
       },
       {
@@ -330,10 +343,13 @@ export function renderActionPanel() {
       btn.className = "btn-adv btn-primary-category";
       btn.innerHTML = `<span>${b.label}</span><span class="btn-sub-desc">${b.desc}</span>`;
       
-      if (b.isSpecial) {
+      if (b.isMail) {
+        btn.addEventListener("click", handleCheckPcMail);
+      } else if (b.isSpecial) {
         btn.addEventListener("click", handleAdvanceDay);
       } else {
         btn.addEventListener("click", () => {
+          activeMailContent = null;
           currentUIMode = b.mode;
           renderAll();
         });
@@ -376,6 +392,29 @@ export function renderActionPanel() {
   }
 }
 
+// PCメール確認ハンドラ (ステータス解禁)
+export let activeMailContent = null;
+
+export function handleCheckPcMail() {
+  if (projectState) {
+    const isFirstTime = !projectState.isStatusDisclosed;
+    projectState.isStatusDisclosed = true;
+
+    if (isFirstTime) {
+      logs.push("✨ 【ステータス開示】 自席PCのメールを確認しました！ 画面上部のプロジェクトステータス（顧客満足度・上司信頼度・チーム健全性）が開示されました。");
+    } else {
+      logs.push("📧 自席PCで案件概要メールとチーム構成を再確認しました。");
+    }
+  }
+
+  activeMailContent = {
+    speaker: "自席PC (メール受信トレイ)",
+    text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆体制\n「顧客(渡辺部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。チーム体制はPLタツヤ率いる開発4名体制。納期はDay 20(4週間)、初期予算枠は80%。まずは顧客との要件定義WS予約か、現場の技術リスク精査が急務です。」"
+  };
+
+  renderAll();
+}
+
 // =========================================================================
 // アクション実行ハンドラ (即時 vs アポ予約)
 // =========================================================================
@@ -398,7 +437,11 @@ export function handleExecuteAction(action) {
     // ⚡ 即時アクション処理
     let effectLog = `▶ 『${action.name}』 を現場で即時実行しました。`;
 
-    if (action.id === "prototype_demo") {
+    if (action.id === "team_kickoff") {
+      const devs = projectState.getAllDevelopers();
+      devs.forEach(d => { d.fatigue = Math.max(0, d.fatigue - 10); });
+      effectLog += " (チームキックオフ完了！ 役割分担を整理し、チーム健全性が向上！)";
+    } else if (action.id === "prototype_demo") {
       projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 5);
       effectLog += " (モック提示で認識統一！ 満足度+5%)";
     } else if (action.id === "boss_risk_check") {
@@ -420,6 +463,7 @@ export function handleExecuteAction(action) {
 // ⏱️ 日進行 ＆ イベント・アポ会議判定ハンドラ
 // =========================================================================
 export function handleAdvanceDay() {
+  activeMailContent = null;
   const dailyLogs = runDailyProgress(projectState, [], pmState);
   logs.push(`--- Day ${projectState.day} 開始 (Week ${projectState.week}) ---`);
   logs.push(...dailyLogs);
