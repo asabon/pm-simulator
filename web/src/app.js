@@ -41,7 +41,7 @@ export function initGame() {
 
   // プロジェクト・メンバー初期データ生成
   developerPool = getInitialDeveloperPool();
-  const { project } = getInitialProjectData(pmState.completedProjects + 1);
+  const { project } = getInitialProjectData(1);
   projectState = project;
   projectState.day = 1;
   projectState.maxDays = 20;
@@ -69,8 +69,6 @@ export function renderAll() {
 
 // 1. ヘッダー / ステータスバーの更新
 export function renderHeaderStatus() {
-  const yearsEl = document.getElementById("pm-career-years");
-  const completedEl = document.getElementById("pm-completed-pjs");
   const apEl = document.getElementById("pm-ap");
   const statusBarEl = document.getElementById("project-status-bar");
   const weekInfoEl = document.getElementById("status-week-info");
@@ -78,8 +76,6 @@ export function renderHeaderStatus() {
   const bossTrustEl = document.getElementById("status-boss-trust");
   const teamSafetyEl = document.getElementById("status-team-safety");
 
-  if (yearsEl) yearsEl.textContent = pmState.careerYears;
-  if (completedEl) completedEl.textContent = pmState.completedProjects;
   if (apEl) apEl.textContent = pmState.ap;
 
   // タイトル画面、プロローグ画面、およびPCメール未確認時はステータスバーを非表示に設定

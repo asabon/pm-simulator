@@ -514,9 +514,7 @@ export function calculateFinalScore(project, _pm) {
 
 export function processYearlyClosing(pm, developers) {
   const logs = [];
-  pm.completedProjects += 1;
-  pm.careerYears += 1;
-  logs.push(`📈 PMキャリアが ${pm.careerYears} 年目に突入しました！`);
+  logs.push(`🏆 プロジェクトの振り返りとクロージングが完了しました。`);
 
   for (let i = developers.length - 1; i >= 0; i--) {
     const dev = developers[i];

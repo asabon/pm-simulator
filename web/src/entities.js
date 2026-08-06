@@ -156,9 +156,10 @@ export class PM {
   constructor(maxAp = 3) {
     this.maxAp = maxAp;
     this.ap = maxAp;
-    this.careerYears = 1;
-    this.completedProjects = 0;
   }
+
+  get careerYears() { return 1; }
+  get completedProjects() { return 0; }
 
   resetAp() {
     this.ap = this.maxAp;
