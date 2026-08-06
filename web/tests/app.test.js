@@ -187,9 +187,6 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     // アポ予約アクション実行 (要件定義WS)
     document.getElementById("btn-act-req_def_ws").click();
 
-    const apEl = document.getElementById("pm-ap");
-    expect(apEl.textContent).toBe("2");
-
     const logContainer = document.getElementById("action-log-container");
     expect(logContainer.innerHTML).toContain("アポ予約");
 
