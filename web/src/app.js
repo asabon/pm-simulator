@@ -78,7 +78,25 @@ export function renderHeaderStatus() {
 
   if (apEl) apEl.textContent = pmState.ap;
 
+  const commandContainerEl = document.querySelector(".command-panel-container");
+  const commandHeaderEl = document.querySelector(".command-panel-header");
   const apTagEl = document.querySelector(".command-ap-tag");
+
+  if (commandContainerEl) {
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      commandContainerEl.classList.add("plain-panel");
+    } else {
+      commandContainerEl.classList.remove("plain-panel");
+    }
+  }
+
+  if (commandHeaderEl) {
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      commandHeaderEl.style.display = "none";
+    } else {
+      commandHeaderEl.style.display = "flex";
+    }
+  }
   if (apTagEl) {
     if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
       apTagEl.style.display = "none";
