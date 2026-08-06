@@ -748,4 +748,86 @@ export function generateScheduledMeetingEvent(project, meetingData, history = []
   return { title, speaker, speech, choices };
 }
 
+// =========================================================================
+// 🦉 PMO（軍師・参謀）アドバイス＆キックオフ決起評価ロジック
+// =========================================================================
+
+export function getPMOAdvice(projectState, kickoffHistory = [], currentDay = 1) {
+  const isKickoffDone = kickoffHistory.includes("team_kickoff") || kickoffHistory.includes("team_kickoff_rally");
+  const prepCount = kickoffHistory.filter(id => id !== "team_kickoff" && id !== "team_kickoff_rally").length;
+
+  if (!isKickoffDone && currentDay >= 3) {
+    return {
+      type: "ALERT",
+      badge: "🚨 PMOの緊急警告 (準備オーバー)",
+      text: "「PMさん！ キックオフ下準備に時間をかけすぎています！ すでにDay 3です。これ以上遅れると実開発期間が圧迫され納期遅延のリスクが高まります。そろそろキックオフを執り行いましょう！」"
+    };
+  }
+
+  if (kickoffHistory.includes("tech_risk_check") && !kickoffHistory.includes("phased_release")) {
+    return {
+      type: "COMBO_HINT",
+      badge: "🌟 PMOの戦略進言 (順序コンボ発動可)",
+      text: "「現場の工数・技術リスクの精査が完了しましたね！ 今なら現場の明確な根拠を持って顧客に『段階リリース提案』を打診できますよ。」"
+    };
+  }
+
+  if (!isKickoffDone && prepCount >= 2) {
+    return {
+      type: "READY",
+      badge: "🚀 PMOの決起推奨",
+      text: "「十分な下準備と根拠が整いましたね！ 開発チームフロアへ向かい『🚀 チームキックオフ決起』を執り行いましょう！」"
+    };
+  }
+
+  if (!isKickoffDone) {
+    return {
+      type: "GUIDE",
+      badge: "💡 PMOの助言 (下準備のセオリー)",
+      text: "「キックオフ前ですね。まずは現場のPLと話して『技術リスク精査』を行うか、顧客フロアで『QCD優先軸のすり合わせ』を行うのがPMのセオリーですよ。」"
+    };
+  }
+
+  return {
+    type: "SPRINT",
+    badge: "🛡️ PMOの伴走アドバイス",
+    text: "「チーム体制が発足しました。開発陣の疲労度に注意しつつ、定期的な1on1やデモ提示で品質と満足度を維持しましょう。」"
+  };
+}
+
+export function evaluateKickoffReadiness(kickoffHistory = []) {
+  const prepActions = kickoffHistory.filter(id => id !== "team_kickoff" && id !== "team_kickoff_rally");
+  const count = prepActions.length;
+
+  if (count >= 3) {
+    return {
+      rank: "S",
+      title: "🌟 Sランク (万全の態勢)",
+      desc: "事前調整と根拠獲得がカンペキ！ 開発陣の不安が払拭され、最高の士気と体制でスタート！",
+      teamHealthBonus: 20
+    };
+  } else if (count === 2) {
+    return {
+      rank: "A",
+      title: "🟢 Aランク (良好な準備)",
+      desc: "十分な事前調整と根拠を獲得。スムーズなチーム発足に成功しました！",
+      teamHealthBonus: 10
+    };
+  } else if (count === 1) {
+    return {
+      rank: "B",
+      title: "🟡 Bランク (標準的な発足)",
+      desc: "最低限の顔合わせのみで発足。技術リスクや見落としに注意が必要です。",
+      teamHealthBonus: 0
+    };
+  } else {
+    return {
+      rank: "C",
+      title: "🔴 Cランク (準備不足の強行発足)",
+      desc: "下準備なしでの突撃キックオフ！ 現場の不安と手戻り懸念が残ったままスタートします…",
+      teamHealthBonus: -10
+    };
+  }
+}
+
 

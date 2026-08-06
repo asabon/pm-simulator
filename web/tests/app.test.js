@@ -136,14 +136,14 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(document.getElementById("dialog-text").textContent).toContain("開発チームフロアへようこそ");
 
     // キックオフ実行
-    const kickoffBtn = document.getElementById("btn-act-team_kickoff");
+    const kickoffBtn = document.getElementById("btn-act-team_kickoff_rally") || document.getElementById("btn-act-team_kickoff");
     expect(kickoffBtn).not.toBeNull();
     kickoffBtn.click();
 
     // 【2. キックオフ実行直後】の即時会話応答確認
     expect(document.getElementById("sprite-name").textContent).toBe("開発リーダー(PL) & チーム");
     expect(document.getElementById("speaker-name").textContent).toBe("開発リーダー (PL)");
-    expect(document.getElementById("dialog-text").textContent).toContain("キックオフの開催ありがとうございます");
+    expect(document.getElementById("dialog-text").textContent).toContain("キックオフ決起の宣言ありがとうございます");
 
     // 休日出勤依頼の実行
     const holidayBtn = document.getElementById("btn-act-holiday_work_request");
