@@ -18,9 +18,6 @@
         <span class="logo-icon">💼</span>
         <h1 class="logo-title">PM Simulator</h1>
       </div>
-      <div class="pm-status-badge">
-        <span class="pm-stat-item ap-container"><span class="ap-tag">AP <span id="pm-ap">3</span>/3</span></span>
-      </div>
     </div>
     <div id="project-status-bar" class="project-status-bar">
       <div class="status-bar-row status-bar-date-row">
@@ -44,6 +41,7 @@
 
     <!-- ビジュアル表示エリア (メインビュー) -->
     <div id="main-view" class="main-view-container">
+      <span class="situation-badge">🖼️ 状況ビジュアル</span>
       <div id="scene-bg" class="scene-bg bg-dashboard">
         <div id="character-sprite" class="character-sprite">
           <div class="sprite-avatar" id="sprite-avatar">💻</div>
@@ -61,9 +59,15 @@
       </div>
     </div>
 
-    <!-- コマンドパネル (第一階層 ↔ シーン別具体アクション) -->
-    <div id="action-panel" class="action-panel">
-      <!-- JSで動的にボタンを生成・更新します -->
+    <!-- コマンドパネル (意思決定エリア) -->
+    <div class="command-panel-container">
+      <div class="command-panel-header">
+        <span class="command-title">🎮 意思決定コマンド</span>
+        <span class="command-ap-tag">⚡ 本日の残AP: <strong id="pm-ap">3</strong> / 3</span>
+      </div>
+      <div id="action-panel" class="action-panel">
+        <!-- JSで動的にボタンを生成・更新します -->
+      </div>
     </div>
   </main>
 

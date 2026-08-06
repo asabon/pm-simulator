@@ -152,6 +152,24 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   position: relative;
+  cursor: default;
+  user-select: none;
+}
+
+.situation-badge {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  pointer-events: none;
 }
 
 .scene-bg {
@@ -162,6 +180,7 @@ body {
   align-items: center;
   transition: background 0.4s ease;
   position: relative;
+  cursor: default;
 }
 
 .bg-title {
@@ -251,6 +270,51 @@ body {
   padding-top: 0.5rem;
 }
 
+/* Command Panel Container & AP Header */
+.command-panel-container {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid var(--accent-indigo);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: 0 0 20px rgba(129, 140, 248, 0.25), var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.command-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgba(129, 140, 248, 0.3);
+}
+
+.command-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.command-ap-tag {
+  background: linear-gradient(135deg, var(--accent-amber), #d97706);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.45);
+}
+
+.command-ap-tag strong {
+  font-size: 1.05rem;
+}
+
 /* Action Panel (Buttons) */
 .action-panel {
   display: grid;
@@ -260,7 +324,7 @@ body {
 
 .btn-adv {
   background: rgba(30, 41, 59, 0.9);
-  border: 1px solid var(--panel-border);
+  border: 1.5px solid var(--panel-border);
   color: var(--text-main);
   padding: 1rem;
   border-radius: var(--radius-md);
@@ -276,10 +340,10 @@ body {
 }
 
 .btn-adv:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.15);
-  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.2);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35);
 }
 
 .btn-adv:disabled {
