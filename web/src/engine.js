@@ -619,7 +619,7 @@ export function checkRandomEventTrigger(_project) {
     return {
       title: "🚨 突発トラブル発生！",
       speaker: "PL タツヤ",
-      speech: "「PMさん、大変です！ 既存APIの仕様変更の影響で、連携モジュールで原因不明のエラーが発生しています！」",
+      speech: "「PMさん、大変です！ 既存APIの仕様変更の影響で、原因不明のエラーが発生しています！」",
       choices: [
         {
           text: "🛠️ PM自ら現場に入ってデバッグサポートする",
@@ -641,4 +641,111 @@ export function checkRandomEventTrigger(_project) {
   }
   return null;
 }
+
+// 1日単位の進行処理
+export function runDailyProgress(project, tasks, pm) {
+  const logs = [];
+  project.day += 1;
+  project.week = Math.floor((project.day - 1) / 5) + 1;
+
+  // 1日分の作業消化
+  const devs = project.getAllDevelopers().filter(d => d.assignedRole === "DEV");
+  devs.forEach(dev => {
+    let currentTask = tasks.find(t => t.assignedDeveloperId === dev.id && t.status === "IN_PROGRESS");
+    if (!currentTask) {
+      currentTask = tasks.find(t => t.status === "TODO");
+      if (currentTask) {
+        currentTask.status = "IN_PROGRESS";
+        currentTask.assignedDeveloperId = dev.id;
+      }
+    }
+    if (currentTask) {
+      const addedProgress = (8.0 / currentTask.estimatedHours) * 100.0;
+      currentTask.progress = Math.min(100.0, currentTask.progress + addedProgress);
+      if (currentTask.progress >= 100.0) {
+        currentTask.status = "DONE";
+        logs.push(`✅ タスク 『${currentTask.name}』 が完了しました！`);
+      }
+    }
+  });
+
+  pm.resetAp();
+  return logs;
+}
+
+// アポ予約会議イベントの生成
+export function generateScheduledMeetingEvent(project, meetingData, history = []) {
+  let title = `📅 【予定会議】 ${meetingData.title}`;
+  let speaker = meetingData.actionId.startsWith("boss") || meetingData.actionId.startsWith("buffer") || meetingData.actionId.startsWith("helper") 
+    ? "上司 (高橋事業部長)" 
+    : `顧客 (${project.customer ? project.customer.name : "渡辺部長"})`;
+  let speech = `「本日 ${meetingData.title} の予定日ですね。面談・打ち合わせをはじめましょう。」`;
+  let choices = [];
+
+  // 事前に「現場リスク精査(TEAM_RISK_CHECK)」を実施していた場合、順序コンボが発動
+  const hasGroundwork = history.includes("TEAM_RISK_CHECK") || history.includes("tech_risk_check");
+
+  if (meetingData.actionId === "phased_release") {
+    if (hasGroundwork) {
+      speech = "「現場の実工数とリスク根拠を提示してくれてありがとう！ その明確な理由なら、初期リリースは必須機能だけに絞る提案を受け入れよう。」";
+      choices = [
+        {
+          text: "💬「ありがとうございます！ 現場と協力して確実に仕上げます。」",
+          effect: (p) => {
+            p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 5);
+          },
+          log: "🌟 【順序コンボ成功】根拠ある段階リリース交渉が大成功！(満足度+5%)"
+        }
+      ];
+    } else {
+      speech = "「えっ、根拠もなくいきなり初期機能を削るってどういうこと！？ 約束通り全部作ってよ！」";
+      choices = [
+        {
+          text: "💬「申し訳ありません…再検討します。」",
+          effect: (p) => {
+            p.customer.satisfaction = Math.max(0, p.customer.satisfaction - 10);
+          },
+          log: "🔴 【事前準備不足】無根拠な交渉により顧客が不満を感じました。(満足度-10%)"
+        }
+      ];
+    }
+  } else if (meetingData.actionId === "req_def_ws") {
+    speech = "「要件定義ワークショップですね！ 画面イメージを見ながら一緒に仕様を詰めましょう！」";
+    choices = [
+      {
+        text: "💬「しっかり納得いくまで仕様を決めましょう！」",
+        effect: (p) => {
+          p.clarityLevel = Math.min(5, p.clarityLevel + 2);
+          p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 4);
+        },
+        log: "🟢 要件定義WSを実施し、仕様確定度が大きく上がりました！(明確化+2, 満足度+4%)"
+      }
+    ];
+  } else if (meetingData.actionId === "buffer_request") {
+    speech = "「納期延長の直訴だな。君がそこまで計画を考えているなら、1週間のバッファを役員会で確保してやろう！」";
+    choices = [
+      {
+        text: "💬「ありがとうございます！ 助かります！」",
+        effect: (p) => {
+          p.deadlineWeeks += 1;
+          p.maxDays += 5;
+        },
+        log: "🟢 上司に納期バッファ直訴が通り、納期が1週間(+5日)延長されました！"
+      }
+    ];
+  } else {
+    choices = [
+      {
+        text: "💬「引き続きよろしくお願いいたします！」",
+        effect: (p) => {
+          p.customer.satisfaction = Math.min(100, p.customer.satisfaction + 2);
+        },
+        log: "予約会議を無事に完了しました。"
+      }
+    ];
+  }
+
+  return { title, speaker, speech, choices };
+}
+
 

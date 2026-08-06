@@ -96,6 +96,9 @@ export class Project {
     this.deadlineWeeks = deadlineWeeks;
     this.customer = customer;
     this.week = 1;
+    this.day = 1;
+    this.maxDays = deadlineWeeks * 5; // 4週間 = 20営業日
+    this.scheduledMeetings = []; // [{ day: 5, actionId: "req_def_ws", title: "要件定義WS" }]
     this.methodology = "WATERFALL"; // WATERFALL vs AGILE
     this.teams = [];
     
@@ -155,79 +158,99 @@ export const ADV_ACTIONS = {
   CUSTOMER: [
     {
       id: "req_def_ws",
-      name: "💡 要件定義WSを開く",
+      name: "💡 要件定義WSのアポを取る",
       targetGroup: "CUSTOMER",
       costAp: 1,
-      desc: "要件確定度を上昇させるが、顧客のこだわりを引き出すリスクあり"
+      isAppointment: true,
+      delayDays: 2,
+      desc: "【アポ予約】2日後に要件定義ワークショップを予約設定する"
     },
     {
       id: "phased_release",
-      name: "👥 段階リリースを提案",
+      name: "👥 段階リリース交渉のアポを取る",
       targetGroup: "CUSTOMER",
       costAp: 1,
-      desc: "初期リリース範囲を絞りリスクを下げるが、満足度が微減"
+      isAppointment: true,
+      delayDays: 3,
+      desc: "【アポ予約】3日後にスコープ調整の役員面談を予約設定する"
     },
     {
       id: "prototype_demo",
-      name: "📱 プロトタイプ先行提示",
+      name: "📱 プロトタイプを先行提示",
       targetGroup: "CUSTOMER",
       costAp: 1,
-      desc: "開発初期の認識ズレを強力に防止する"
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時】開発初期の認識ズレをモックで即時防止する"
     },
     {
       id: "qcd_align",
-      name: "🤝 QCD優先順位の合意",
+      name: "🤝 QCD優先順位の合意アポを取る",
       targetGroup: "CUSTOMER",
       costAp: 1,
-      desc: "顧客との期待値ギャップを最小化する"
+      isAppointment: true,
+      delayDays: 1,
+      desc: "【アポ予約】翌日に期待値すり合わせ面談を予約設定する"
     }
   ],
   // 上司執務室でのアクション
   MANAGER: [
     {
       id: "buffer_request",
-      name: "🏢 納期バッファの直訴",
+      name: "🏢 納期バッファ直訴のアポを取る",
       targetGroup: "MANAGER",
       costAp: 1,
-      desc: "上司に直訴して納期猶予を確保するが、評価リスクあり"
+      isAppointment: true,
+      delayDays: 1,
+      desc: "【アポ予約】翌日に上司へ納期猶予直訴の面談を予約設定する"
     },
     {
       id: "helper_request",
-      name: "🙋‍♂️ 助っ人アサイン要請",
+      name: "🙋‍♂️ 助っ人要請の面談アポを取る",
       targetGroup: "MANAGER",
       costAp: 1,
-      desc: "助っ人エンジニアを追加し現場の開発速度を上げる"
+      isAppointment: true,
+      delayDays: 1,
+      desc: "【アポ予約】翌日に助っ人エンジニア要請の面談を予約設定する"
     },
     {
       id: "boss_risk_check",
-      name: "❓ 上司のリスク容許範囲確認",
+      name: "❓ 上司のリスク許容範囲確認",
       targetGroup: "MANAGER",
       costAp: 0,
-      desc: "ノーリスクで上司の評価ラインと期待値を確認する"
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時/無料】ノーリスクで上司の評価ラインと期待値を確認する"
     }
   ],
-  // 開発チームデスクでのアクション
+  // 開発チームデスクでのアクション (現場アクションは即時中心)
   TEAM: [
     {
       id: "tech_risk_check",
       name: "🛠️ 技術リスク・見積精査",
       targetGroup: "TEAM",
       costAp: 1,
-      desc: "現場のコード・設計リスクを精査し事故を防ぐ"
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時】現場のコード・見積精度を自ら精査し交渉の根拠を作る"
     },
     {
       id: "retrospective_share",
       name: "📚 過去の失敗教訓共有",
       targetGroup: "TEAM",
       costAp: 1,
-      desc: "チームの安全度を上げバグ発生率を低減する"
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時】チームの安全度を上げバグ発生率を低減する"
     },
     {
       id: "one_on_one",
       name: "❓ チームの懸念点1on1",
       targetGroup: "TEAM",
       costAp: 0,
-      desc: "メンバーの隠れ不安やモチベーション状態を対話で看破する"
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時/無料】メンバーの隠れ不安やモチベーション状態を対話で看破する"
     }
   ]
 };

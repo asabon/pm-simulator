@@ -8,10 +8,12 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
         <span id="pm-career-years">1</span>
         <span id="pm-completed-pjs">0</span>
         <span id="pm-ap">3</span>
-        <span id="status-week-info">Week 1/4</span>
-        <span id="status-cust-sat">70%</span>
-        <span id="status-boss-trust">60%</span>
-        <span id="status-team-safety">良好</span>
+        <div id="project-status-bar">
+          <span id="status-week-info">Day 1/20 (Week 1)</span>
+          <span id="status-cust-sat">70%</span>
+          <span id="status-boss-trust">60%</span>
+          <span id="status-team-safety">良好</span>
+        </div>
       </header>
 
       <main id="app-container" class="adv-app-container">
@@ -55,7 +57,6 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(startBtn).not.toBeNull();
     expect(document.getElementById("location-title").textContent).toContain("タイトル画面");
 
-    // タイトル画面ではプロジェクトステータスバーが非表示になっていること
     const statusBar = document.getElementById("project-status-bar");
     if (statusBar) {
       expect(statusBar.style.display).toBe("none");
@@ -76,7 +77,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(acceptBtn).not.toBeNull();
   });
 
-  it("should transit to DASHBOARD scene on '💼 了解しました！' click", async () => {
+  it("should transit to DASHBOARD scene on '💼 了解しました！' click and display 4 main buttons", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -87,23 +88,10 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(document.getElementById("nav-customer")).not.toBeNull();
     expect(document.getElementById("nav-manager")).not.toBeNull();
     expect(document.getElementById("nav-team")).not.toBeNull();
-    expect(document.getElementById("nav-next-week")).not.toBeNull();
+    expect(document.getElementById("nav-next-day")).not.toBeNull();
   });
 
-  it("should transit to SCENE_CUSTOMER on '💬 顧客と話す' button click", async () => {
-    const appModule = await import("../src/app.js?test=" + Date.now());
-    appModule.initGame();
-
-    // タイトル ➔ プロローグ ➔ ダッシュボード ➔ 顧客室
-    document.getElementById("btn-start-new-project").click();
-    document.getElementById("btn-accept-assignment").click();
-    document.getElementById("nav-customer").click();
-
-    expect(document.getElementById("location-title").textContent).toContain("顧客のオフィス");
-    expect(document.getElementById("btn-act-req_def_ws")).not.toBeNull();
-  });
-
-  it("should consume AP and add log on specific action execution", async () => {
+  it("should schedule meeting on appointment action execution and show in log", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -111,25 +99,37 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-accept-assignment").click();
     document.getElementById("nav-customer").click();
 
-    // アクション実行
+    // アポ予約アクション実行 (要件定義WS)
     document.getElementById("btn-act-req_def_ws").click();
 
     const apEl = document.getElementById("pm-ap");
     expect(apEl.textContent).toBe("2");
 
     const logContainer = document.getElementById("action-log-container");
-    expect(logContainer.innerHTML).toContain("要件定義WS");
+    expect(logContainer.innerHTML).toContain("アポ予約");
   });
 
-  it("should advance week and open weekly meeting event modal on '⏱️ 週を進める' click", async () => {
+  it("should advance day on '⏱️ 1日を進める' click and trigger event on scheduled day", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
     document.getElementById("btn-start-new-project").click();
     document.getElementById("btn-accept-assignment").click();
-    document.getElementById("nav-next-week").click();
+    document.getElementById("nav-customer").click();
 
+    // 翌日(Day 2)のアポ予約 (qcd_align)
+    document.getElementById("btn-act-qcd_align").click();
+    document.getElementById("btn-back-dashboard").click();
+
+    // 1日進める (Day 1 ➔ Day 2へ)
+    const navNextDay = document.getElementById("nav-next-day");
+    navNextDay.click();
+
+    // 予約当日に到達し、モーダルが開いていることの検証
     const modalOverlay = document.getElementById("event-modal-overlay");
     expect(modalOverlay.classList.contains("hidden")).toBe(false);
+
+    const modalTitle = document.getElementById("event-modal-title");
+    expect(modalTitle.textContent).toContain("予定会議");
   });
 });

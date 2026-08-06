@@ -8,16 +8,17 @@ import {
 import {
   calculateFinalScore,
   checkRandomEventTrigger,
+  generateScheduledMeetingEvent,
   generateWeeklyMeetingEvent,
   getInitialDeveloperPool,
   getInitialProjectData,
-  runWeeklySprint
+  runDailyProgress
 } from "./engine.js";
 
 // =========================================================================
 // 状態変数 (State Management)
 // =========================================================================
-export let currentUIMode = UIMode.DASHBOARD;
+export let currentUIMode = UIMode.TITLE;
 export let projectState = null;
 export let developerPool = [];
 export let pmState = new PM(3);
@@ -38,6 +39,9 @@ export function initGame() {
   developerPool = getInitialDeveloperPool();
   const { project } = getInitialProjectData(pmState.completedProjects + 1);
   projectState = project;
+  projectState.day = 1;
+  projectState.maxDays = 20;
+  projectState.scheduledMeetings = [];
 
   // チーム結成 (仮のメインチーム)
   const team = {
@@ -88,7 +92,7 @@ export function renderHeaderStatus() {
   if (statusBarEl) statusBarEl.style.display = "flex";
 
   if (projectState) {
-    if (weekInfoEl) weekInfoEl.textContent = `Week ${projectState.week}/${projectState.deadlineWeeks + projectState.week - 1}`;
+    if (weekInfoEl) weekInfoEl.textContent = `Day ${projectState.day}/${projectState.maxDays || 20} (Week ${projectState.week})`;
     if (custSatEl) custSatEl.textContent = `${projectState.customer.satisfaction.toFixed(0)}%`;
     if (bossTrustEl) bossTrustEl.textContent = `${(projectState.managerSatisfaction || 60).toFixed(0)}%`;
     if (teamSafetyEl) {
@@ -131,7 +135,7 @@ export function renderSceneView() {
 
     case UIMode.DASHBOARD:
       if (iconEl) iconEl.textContent = "🖥️";
-      if (titleEl) titleEl.textContent = "PM自席 (ダッシュボード)";
+      if (titleEl) titleEl.textContent = `PM自席 [Day ${projectState ? projectState.day : 1}]`;
       sceneBgEl.classList.add("bg-dashboard");
       if (avatarEl) avatarEl.textContent = "💻";
       if (nameEl) nameEl.textContent = "PMのデスク";
@@ -186,29 +190,33 @@ export function renderMessageBox() {
     case UIMode.DASHBOARD:
       speaker = "PMの思考";
       text = pmState.ap > 0 
-        ? `「今週のAP残量は ${pmState.ap} だ。どこへ移動して誰と話すか決めよう。」`
-        : "「今週のAPを使い切りました。⏱️ 週を進める ボタンで開発ターンを進行させてください。」";
+        ? `「本日(Day ${projectState.day})のAP残量は ${pmState.ap} だ。どこへ移動して誰と話すか、あるいはアポを入れるか決めよう。」`
+        : "「本日のAPを使い切りました。⏱️ 1日を進める ボタンで次の日へ進行させてください。」";
       break;
     case UIMode.SCENE_CUSTOMER:
       speaker = "顧客 (渡辺部長)";
-      text = "「やあPMさん！ 今週の進捗はどうですか？ 何かご相談やご提案でも？」";
+      text = "「やあPMさん！ 今日の用件は？ 重要な会議ならアポを取ってカレンダーにセットしてくれよ。」";
       break;
     case UIMode.SCENE_MANAGER:
-      speaker = "上司 (高橋部長)";
-      text = "「おお、PMくんか。プロジェクトの進捗やリソースで懸念はあるか？」";
+      speaker = "上司 (高橋事業部長)";
+      text = "「おお、PMくんか。直訴や重大相談なら日程を調整して面談を入れよう。」";
       break;
     case UIMode.SCENE_TEAM:
       speaker = "PL タツヤ";
-      text = "「PMさん、お疲れ様です！ 現場の見積もり精査や1on1サポートですか？」";
+      text = "「PMさん！ 現場の技術リスク精査や1on1なら今日すぐに動けますよ！」";
       break;
   }
 
   if (speakerEl) speakerEl.textContent = speaker;
   dialogEl.textContent = text;
 
-  // ログ表示
+  // ログおよびカレンダー予定表示
   if (logContainerEl) {
-    logContainerEl.innerHTML = logs.map(l => `<div class="log-item">${l}</div>`).join("");
+    let scheduleInfo = "";
+    if (projectState && projectState.scheduledMeetings.length > 0) {
+      scheduleInfo = `<div style="color:#fbbf24; font-weight:bold; margin-bottom:0.4rem;">📅 予約カレンダー: ${projectState.scheduledMeetings.map(m => `[Day ${m.day}: ${m.title}]`).join(", ")}</div>`;
+    }
+    logContainerEl.innerHTML = scheduleInfo + logs.map(l => `<div class="log-item">${l}</div>`).join("");
     logContainerEl.scrollTop = logContainerEl.scrollHeight;
   }
 }
@@ -243,10 +251,10 @@ export function renderActionPanel() {
     acceptBtn.style.gridColumn = "span 2";
     acceptBtn.style.padding = "1.2rem";
     acceptBtn.style.alignItems = "center";
-    acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>今週の活動方針を決定する</span>";
+    acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>本日の活動方針を決定する</span>";
     acceptBtn.addEventListener("click", () => {
       currentUIMode = UIMode.DASHBOARD;
-      logs.push("上司から案件がアサインされました！ 今週のアクションを決定してください。");
+      logs.push("上司から案件がアサインされました！ 本日のアクションを決定してください。");
       renderAll();
     });
     panelEl.appendChild(acceptBtn);
@@ -257,25 +265,25 @@ export function renderActionPanel() {
       {
         id: "nav-customer",
         label: "💬 顧客と話す",
-        desc: "要件確認、デモ提示、スコープ・納期交渉",
+        desc: "要件・デモ・アポ予約（WS/交渉）",
         mode: UIMode.SCENE_CUSTOMER
       },
       {
         id: "nav-manager",
         label: "🏢 上司に相談",
-        desc: "状況報告、バッファ直訴、助っ人要請",
+        desc: "状況確認・面談アポ予約（直訴/助っ人）",
         mode: UIMode.SCENE_MANAGER
       },
       {
         id: "nav-team",
         label: "🛠️ 現場と調整",
-        desc: "技術リスク精査、過去教訓共有、1on1",
+        desc: "【即時】技術リスク精査・教訓共有・1on1",
         mode: UIMode.SCENE_TEAM
       },
       {
-        id: "nav-next-week",
-        label: "⏱️ 週を進める",
-        desc: "今週の作業を進め、週次定例会議・ターン経過へ",
+        id: "nav-next-day",
+        label: "⏱️ 1日を進める",
+        desc: "本日を終了し次の日へ。予約会議・イベント判定",
         isSpecial: true
       }
     ];
@@ -287,7 +295,7 @@ export function renderActionPanel() {
       btn.innerHTML = `<span>${b.label}</span><span class="btn-sub-desc">${b.desc}</span>`;
       
       if (b.isSpecial) {
-        btn.addEventListener("click", handleAdvanceWeek);
+        btn.addEventListener("click", handleAdvanceDay);
       } else {
         btn.addEventListener("click", () => {
           currentUIMode = b.mode;
@@ -333,7 +341,7 @@ export function renderActionPanel() {
 }
 
 // =========================================================================
-// アクション実行ハンドラ
+// アクション実行ハンドラ (即時 vs アポ予約)
 // =========================================================================
 export function handleExecuteAction(action) {
   if (pmState.ap < action.costAp) return;
@@ -341,63 +349,70 @@ export function handleExecuteAction(action) {
   pmState.ap -= action.costAp;
   kickoffHistory.push(action.id);
 
-  let effectLog = `▶ 『${action.name}』 を実行しました。`;
+  if (action.isAppointment) {
+    // 📅 アポ予約アクション処理
+    const scheduledDay = projectState.day + action.delayDays;
+    projectState.scheduledMeetings.push({
+      day: scheduledDay,
+      actionId: action.id,
+      title: action.name
+    });
+    logs.push(`📅 【アポ予約完了】 『${action.name}』 を ${scheduledDay} 日目 (Day ${scheduledDay}) の予定表にセットしました！`);
+  } else {
+    // ⚡ 即時アクション処理
+    let effectLog = `▶ 『${action.name}』 を現場で即時実行しました。`;
 
-  // アクション効果の適用
-  if (action.id === "req_def_ws") {
-    projectState.clarityLevel = Math.min(5, projectState.clarityLevel + 1);
-    effectLog += " (要件明確度+1)";
-  } else if (action.id === "phased_release") {
-    projectState.customer.satisfaction = Math.max(0, projectState.customer.satisfaction - 3);
-    effectLog += " (初期スコープ調整 / 顧客満足度-3%)";
-  } else if (action.id === "prototype_demo") {
-    projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 5);
-    effectLog += " (モック提示で認識統一！ 満足度+5%)";
-  } else if (action.id === "qcd_align") {
-    projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 4);
-    effectLog += " (期待値調整完了！ 満足度+4%)";
-  } else if (action.id === "buffer_request") {
-    projectState.deadlineWeeks += 1;
-    projectState.managerSatisfaction = Math.max(0, projectState.managerSatisfaction - 5);
-    effectLog += " (納期バッファ+1週獲得！ 上司評価-5%)";
-  } else if (action.id === "helper_request") {
-    effectLog += " (助っ人エンジニアを追加依頼！ 現場開発速度UP)";
-  } else if (action.id === "boss_risk_check") {
-    effectLog += ` (上司の期待ライン確認: 上司信頼度 ${projectState.managerSatisfaction.toFixed(0)}%)`;
-  } else if (action.id === "tech_risk_check") {
-    effectLog += " (技術リスク精査完了！ 安全度上昇)";
-  } else if (action.id === "retrospective_share") {
-    effectLog += " (過去教訓を共有！ 事故率低減)";
-  } else if (action.id === "one_on_one") {
-    effectLog += " (チーム1on1実施！ 隠れた不安を看破)";
+    if (action.id === "prototype_demo") {
+      projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 5);
+      effectLog += " (モック提示で認識統一！ 満足度+5%)";
+    } else if (action.id === "boss_risk_check") {
+      effectLog += ` (上司の期待ライン確認: 上司信頼度 ${projectState.managerSatisfaction.toFixed(0)}%)`;
+    } else if (action.id === "tech_risk_check") {
+      effectLog += " (技術リスク・見積精査完了！ 今後の交渉の『明確な根拠』を獲得)";
+    } else if (action.id === "retrospective_share") {
+      effectLog += " (過去教訓を共有！ 事故率低減)";
+    } else if (action.id === "one_on_one") {
+      effectLog += " (チーム1on1実施！ 隠れた不安を看破)";
+    }
+    logs.push(effectLog);
   }
 
-  logs.push(effectLog);
   renderAll();
 }
 
 // =========================================================================
-// ⏱️ 週進捗 ＆ イベント発生ハンドラ
+// ⏱️ 日進行 ＆ イベント・アポ会議判定ハンドラ
 // =========================================================================
-export function handleAdvanceWeek() {
-  // 週の進行計算
-  const sprintLogs = runWeeklySprint(projectState, [], new Set(), pmState);
-  logs.push(`--- Week ${projectState.week - 1} 進行完了 ---`);
-  logs.push(...sprintLogs);
+export function handleAdvanceDay() {
+  const dailyLogs = runDailyProgress(projectState, [], pmState);
+  logs.push(`--- Day ${projectState.day} 開始 (Week ${projectState.week}) ---`);
+  logs.push(...dailyLogs);
 
-  // プロジェクト完了・失敗判定
-  if (projectState.week > projectState.deadlineWeeks + 1) {
+  // 日数上限オーバー判定
+  if (projectState.day > projectState.maxDays) {
     showResultScreen();
     return;
   }
 
-  // 1. 【定期イベント（定例会議）】の発生
-  const meetingEvent = generateWeeklyMeetingEvent(projectState, projectState.week);
-  if (meetingEvent) {
-    triggerEventModal(meetingEvent);
+  // 1. 【アポ予約会議】の判定 (本日予約されている会議があれば自動起動)
+  const scheduledIndex = projectState.scheduledMeetings.findIndex(m => m.day === projectState.day);
+  if (scheduledIndex !== -1) {
+    const meetingData = projectState.scheduledMeetings.splice(scheduledIndex, 1)[0];
+    const meetingEvent = generateScheduledMeetingEvent(projectState, meetingData, kickoffHistory);
+    if (meetingEvent) {
+      triggerEventModal(meetingEvent);
+    }
   }
 
-  // 2. 突発トラブルの判定（モーダル未発生時のみ）
+  // 2. 【定期イベント（週末定例会議）】 (Day 5, 10, 15, 20 の朝に起動)
+  if (!activeModalEvent && projectState.day % 5 === 0) {
+    const meetingEvent = generateWeeklyMeetingEvent(projectState, projectState.week);
+    if (meetingEvent) {
+      triggerEventModal(meetingEvent);
+    }
+  }
+
+  // 3. 突発トラブルの判定（モーダル未発生時のみ）
   if (!activeModalEvent) {
     const randomEvent = checkRandomEventTrigger(projectState);
     if (randomEvent) {
@@ -407,6 +422,9 @@ export function handleAdvanceWeek() {
 
   renderAll();
 }
+
+// レガシー互換用のエイリアス
+export const handleAdvanceWeek = handleAdvanceDay;
 
 // イベントモーダルの起動
 export function triggerEventModal(eventData) {
