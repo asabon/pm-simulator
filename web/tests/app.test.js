@@ -33,6 +33,11 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
           </div>
         </div>
 
+        <div id="pmo-advice-container">
+          <div id="pmo-advice-badge"></div>
+          <div id="pmo-advice-text"></div>
+        </div>
+
         <div id="message-box">
           <div id="speaker-name">ナレーション</div>
           <div id="dialog-text">PM Simulator へようこそ！</div>
