@@ -1,5 +1,10 @@
 // Web Prototype Data Models (Entities)
 
+export const GamePhase = {
+  KICKOFF_PREP: "KICKOFF_PREP",
+  DEVELOPMENT_SPRINT: "DEVELOPMENT_SPRINT"
+};
+
 export class Developer {
   constructor(id, name, options = {}) {
     this.id = id;
@@ -255,13 +260,13 @@ export const ADV_ACTIONS = {
       desc: "【即時】開発進捗を大幅リカバリー！ ただしメンバー疲労度+25%急上昇のジレンマ"
     },
     {
-      id: "team_kickoff",
-      name: "🚀 チームキックオフ・役割分担の整理 (体制構築)",
+      id: "team_kickoff_rally",
+      name: "🚀 チームキックオフ決起 (方針宣言)",
       targetGroup: "TEAM",
       costAp: 1,
       isAppointment: false,
       delayDays: 0,
-      desc: "【即時】チームの顔合わせと各人の役割分担を整理し健全性を向上させる"
+      desc: "【即時】下準備の成果・根拠を携えてキックオフを執り行い、チーム体制を発足させる"
     },
     {
       id: "tech_risk_check",

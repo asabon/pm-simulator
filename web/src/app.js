@@ -8,10 +8,12 @@ import {
 import {
   calculateFinalScore,
   checkRandomEventTrigger,
+  evaluateKickoffReadiness,
   generateScheduledMeetingEvent,
   generateWeeklyMeetingEvent,
   getInitialDeveloperPool,
   getInitialProjectData,
+  getPMOAdvice,
   runDailyProgress
 } from "./engine.js";
 
@@ -184,7 +186,7 @@ export function renderSceneView() {
       sceneBgEl.classList.add("bg-team");
       if (avatarEl) avatarEl.textContent = "👨‍💻";
       if (nameEl) {
-        nameEl.textContent = kickoffHistory.includes("team_kickoff") ? "開発リーダー(PL) & チーム" : "開発チーム (体制構築中)";
+        nameEl.textContent = (kickoffHistory.includes("team_kickoff") || kickoffHistory.includes("team_kickoff_rally")) ? "開発リーダー(PL) & チーム" : "開発チーム (体制構築中)";
       }
       break;
   }
@@ -234,12 +236,12 @@ export function renderMessageBox() {
       text = "「おお、PMくんか。直訴や重大相談なら日程を調整して面談を入れよう。」";
       break;
     case UIMode.SCENE_TEAM:
-      if (kickoffHistory.includes("team_kickoff")) {
+      if (kickoffHistory.includes("team_kickoff") || kickoffHistory.includes("team_kickoff_rally")) {
         speaker = "開発リーダー (PL)";
         text = "「PMさん！ 現場の技術リスク精査や1on1なら今日すぐに動けますよ！」";
       } else {
         speaker = "開発メンバー候補";
-        text = "「PMさん、開発チームフロアへようこそ！ 今回の改修案件ですね。まずはキックオフで役割分担（PL決定）と開発方針を固めましょう！」";
+        text = "「PMさん、開発チームフロアへようこそ！ 事前調整で根拠を集めたら、いつでも『🚀 チームキックオフ決起』を執り行いましょう！」";
       }
       break;
   }
@@ -247,6 +249,12 @@ export function renderMessageBox() {
   if (activeSceneMessage) {
     speaker = activeSceneMessage.speaker;
     text = activeSceneMessage.text;
+  }
+
+  // 🦉 PMO軍師アドバイスの更新
+  const pmoAdvice = getPMOAdvice(projectState, kickoffHistory, projectState ? projectState.day : 1);
+  if (currentUIMode !== UIMode.TITLE && currentUIMode !== UIMode.PROLOGUE_INTRO && currentUIMode !== UIMode.PROLOGUE) {
+    text = `【${pmoAdvice.badge}】\n${pmoAdvice.text}\n\n${text}`;
   }
 
   if (speakerEl) speakerEl.textContent = speaker;
@@ -382,11 +390,11 @@ export function renderActionPanel() {
     if (currentUIMode === UIMode.SCENE_CUSTOMER) actionsList = ADV_ACTIONS.CUSTOMER;
     if (currentUIMode === UIMode.SCENE_MANAGER) actionsList = ADV_ACTIONS.MANAGER;
     if (currentUIMode === UIMode.SCENE_TEAM) {
-      const isKickoffDone = kickoffHistory.includes("team_kickoff");
+      const isKickoffDone = kickoffHistory.includes("team_kickoff") || kickoffHistory.includes("team_kickoff_rally");
       if (isKickoffDone) {
-        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "team_kickoff");
+        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "team_kickoff" && act.id !== "team_kickoff_rally");
       } else {
-        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id === "team_kickoff" || act.id === "tech_risk_check");
+        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "holiday_work_request");
       }
     }
 
@@ -476,13 +484,15 @@ export function handleExecuteAction(action) {
         speaker: "開発メンバー",
         text: "「休日出勤の件、承知しました…！ 納期に間に合わせるため踏ん張り時ですね。みんなでラストスパートをかけます！」"
       };
-    } else if (action.id === "team_kickoff") {
+    } else if (action.id === "team_kickoff" || action.id === "team_kickoff_rally") {
+      const evalRes = evaluateKickoffReadiness(kickoffHistory);
       const devs = projectState.getAllDevelopers();
-      devs.forEach(d => { d.fatigue = Math.max(0, d.fatigue - 10); });
-      effectLog += " (チームキックオフ完了！ 役割分担を整理し、チーム健全性が向上！)";
+      devs.forEach(d => { d.fatigue = Math.max(0, d.fatigue - Math.max(0, evalRes.teamHealthBonus)); });
+      
+      effectLog += ` (🚀 チームキックオフ決起完了！ 【${evalRes.title}】 ${evalRes.desc})`;
       activeSceneMessage = {
         speaker: "開発リーダー (PL)",
-        text: "「PMさん、キックオフの開催ありがとうございます！ 役割分担と基本方針がクリアになりました。私（PL）を中心に現場一丸となって開発を進めます！」"
+        text: `「PMさん、キックオフ決起の宣言ありがとうございます！ 【キックオフ診断: ${evalRes.title}】 ${evalRes.desc} 私を中心にチーム一丸となって開発本番をやり抜きます！」`
       };
     } else if (action.id === "prototype_demo") {
       projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 5);
