@@ -18,25 +18,6 @@ export class Developer {
     this.isRetired = false;
   }
 
-  // 11月2日(月)を開始基準としたリアルな月日・曜日文字列を取得ヘルパー
-  getDateString(dayNum = this.day) {
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-    // 基準日: 2026年11月2日(月)
-    const current = new Date(2026, 10, 2);
-    let workDaysCount = 1;
-    while (workDaysCount < dayNum) {
-      current.setDate(current.getDate() + 1);
-      const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        workDaysCount++;
-      }
-    }
-    const month = current.getMonth() + 1;
-    const date = current.getDate();
-    const wday = weekdays[current.getDay()];
-    return `${month}月${date}日(${wday})`;
-  }
-
   get isPlQualified() {
     return this.leadershipSkill >= 3;
   }
@@ -131,6 +112,25 @@ export class Project {
     this.bugsTotal = 0;
     this.reportedBugs = 0;
     this.priorityExpectation = "QUALITY";
+  }
+
+  // 11月2日(月)を開始基準としたリアルな月日・曜日文字列を取得ヘルパー
+  getDateString(dayNum = this.day) {
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+    // 基準日: 2026年11月2日(月)
+    const current = new Date(2026, 10, 2);
+    let workDaysCount = 1;
+    while (workDaysCount < dayNum) {
+      current.setDate(current.getDate() + 1);
+      const dayOfWeek = current.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        workDaysCount++;
+      }
+    }
+    const month = current.getMonth() + 1;
+    const date = current.getDate();
+    const wday = weekdays[current.getDay()];
+    return `${month}月${date}日(${wday})`;
   }
 
   registerTeam(team) {
