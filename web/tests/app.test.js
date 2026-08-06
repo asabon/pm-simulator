@@ -5,8 +5,6 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     // DOM の初期化セットアップ (index.html と同構造)
     document.body.innerHTML = `
       <header id="global-header">
-        <span id="pm-career-years">1</span>
-        <span id="pm-completed-pjs">0</span>
         <span id="pm-ap">3</span>
         <div id="project-status-bar" class="project-status-bar">
           <div class="status-bar-row status-bar-date-row">
