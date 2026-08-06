@@ -92,8 +92,14 @@ export function renderHeaderStatus() {
   if (statusBarEl) statusBarEl.style.display = "flex";
 
   if (projectState) {
-    const dateStr = projectState.getDateString ? projectState.getDateString() : `Day ${projectState.day}`;
-    if (weekInfoEl) weekInfoEl.textContent = `${dateStr} [納期: 11/27(金)]`;
+    const currentDateStr = projectState.getDateString ? projectState.getDateString(projectState.day) : `Day ${projectState.day}`;
+    const deadlineDateStr = projectState.getDateString ? projectState.getDateString(projectState.maxDays) : "Day 20";
+    const remainingDays = projectState.maxDays - projectState.day;
+    const remainingText = remainingDays > 0 ? `残り ${remainingDays}営業日` : "本日最終日！";
+
+    if (weekInfoEl) {
+      weekInfoEl.textContent = `📅 ${currentDateStr} (Day ${projectState.day}/${projectState.maxDays}) | 納期: ${deadlineDateStr} (${remainingText})`;
+    }
     if (custSatEl) custSatEl.textContent = `${projectState.customer.satisfaction.toFixed(0)}%`;
     if (bossTrustEl) bossTrustEl.textContent = `${(projectState.managerSatisfaction || 60).toFixed(0)}%`;
     if (teamSafetyEl) {

@@ -30,6 +30,8 @@ describe("Web Entities Tests", () => {
     expect(project.mainTeam).toBe(team);
     expect(project.mainTeam.leader.name).toBe("開発者A");
     expect(dev.assignedRole).toBe("PL");
+    expect(project.getDateString(1)).toBe("11月2日(月)");
+    expect(project.getDateString(20)).toBe("11月27日(金)");
   });
 
   it("should reset PM AP correctly", () => {

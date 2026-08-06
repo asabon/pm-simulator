@@ -8,11 +8,15 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
         <span id="pm-career-years">1</span>
         <span id="pm-completed-pjs">0</span>
         <span id="pm-ap">3</span>
-        <div id="project-status-bar">
-          <span id="status-week-info">Day 1/20 (Week 1)</span>
-          <span id="status-cust-sat">70%</span>
-          <span id="status-boss-trust">60%</span>
-          <span id="status-team-safety">良好</span>
+        <div id="project-status-bar" class="project-status-bar">
+          <div class="status-bar-row status-bar-date-row">
+            <span id="status-week-info">-</span>
+          </div>
+          <div class="status-bar-row status-bar-params-row">
+            <span id="status-cust-sat">70%</span>
+            <span id="status-boss-trust">60%</span>
+            <span id="status-team-safety">良好</span>
+          </div>
         </div>
       </header>
 

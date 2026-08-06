@@ -89,13 +89,29 @@ body {
 /* Status Bar */
 .project-status-bar {
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  gap: 0.4rem;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1rem;
   font-size: 0.85rem;
   color: var(--text-sub);
+}
+
+.status-bar-date-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.status-bar-params-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .project-status-bar span {
