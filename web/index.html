@@ -22,6 +22,7 @@
     <div id="project-status-bar" class="project-status-bar">
       <div class="status-bar-row status-bar-date-row">
         <span id="status-week-info">-</span>
+        <span id="status-next-schedule" class="status-next-schedule" title="クリックで全予約一覧を表示">📌 次の予定: なし</span>
       </div>
       <div class="status-bar-row status-bar-params-row">
         <div class="status-bar-item">🤝 顧客満足: <span id="status-cust-sat">70%</span></div>
@@ -86,6 +87,21 @@
       </div>
       <div class="event-modal-choices" id="event-modal-choices">
         <!-- モーダルの選択肢ボタンがここに追加されます -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 全アポ予約一覧確認モーダル -->
+  <div id="schedule-modal-overlay" class="event-modal-overlay hidden">
+    <div class="event-modal-card schedule-modal-card">
+      <div class="event-modal-header">📅 予約中の会議・アポ一覧</div>
+      <div class="event-modal-body">
+        <div id="schedule-list-container" class="schedule-list-container">
+          <!-- 予約一覧がJSで動的挿入されます -->
+        </div>
+      </div>
+      <div class="event-modal-choices">
+        <button id="btn-close-schedule-modal" class="btn-event-choice">閉じる</button>
       </div>
     </div>
   </div>

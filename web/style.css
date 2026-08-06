@@ -101,11 +101,63 @@ body {
 
 .status-bar-date-row {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.status-next-schedule {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: var(--accent-amber) !important;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.status-next-schedule:hover {
+  background: rgba(251, 191, 36, 0.3);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+  transform: translateY(-1px);
+}
+
+.schedule-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+.schedule-item-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 4px solid var(--accent-amber);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.schedule-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--accent-amber);
+  font-weight: 700;
+}
+
+.schedule-item-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .status-bar-params-row {

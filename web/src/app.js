@@ -134,7 +134,69 @@ export function renderHeaderStatus() {
       const avgFatigue = devs.length > 0 ? devs.reduce((sum, d) => sum + d.fatigue, 0) / devs.length : 0;
       teamSafetyEl.textContent = avgFatigue >= 70 ? "危険 (高疲労)" : (avgFatigue >= 40 ? "注意" : "良好");
     }
+
+    const nextScheduleEl = document.getElementById("status-next-schedule");
+    if (nextScheduleEl) {
+      if (projectState.scheduledMeetings.length > 0) {
+        const sorted = [...projectState.scheduledMeetings].sort((a, b) => a.day - b.day);
+        const next = sorted[0];
+        const daysLeft = next.day - projectState.day;
+        const daysLeftText = daysLeft > 0 ? `あと${daysLeft}日` : "本日!";
+        const countSuffix = sorted.length > 1 ? ` (他${sorted.length - 1}件 🔍)` : " 🔍";
+        nextScheduleEl.textContent = `📌 次: Day ${next.day} (${daysLeftText}) ${next.title}${countSuffix}`;
+      } else {
+        nextScheduleEl.textContent = "📌 次の予定: なし 🔍";
+      }
+
+      if (!nextScheduleEl.dataset.hasListener) {
+        nextScheduleEl.dataset.hasListener = "true";
+        nextScheduleEl.addEventListener("click", openScheduleModal);
+      }
+    }
   }
+}
+
+// 全アポ予約一覧モーダルの表示・削除
+export function openScheduleModal() {
+  const overlayEl = document.getElementById("schedule-modal-overlay");
+  const listEl = document.getElementById("schedule-list-container");
+  if (!overlayEl || !listEl) return;
+
+  listEl.innerHTML = "";
+
+  if (!projectState || projectState.scheduledMeetings.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; color:#94a3b8;">現在、予約されている会議アポはありません。</div>`;
+  } else {
+    const sorted = [...projectState.scheduledMeetings].sort((a, b) => a.day - b.day);
+    sorted.forEach(m => {
+      const daysLeft = m.day - projectState.day;
+      const daysLeftText = daysLeft > 0 ? `あと ${daysLeft} 営業日` : "本日開催！";
+      const card = document.createElement("div");
+      card.className = "schedule-item-card";
+      card.innerHTML = `
+        <div class="schedule-item-header">
+          <span>📅 開催予定: Day ${m.day}</span>
+          <span style="color:#38bdf8;">${daysLeftText}</span>
+        </div>
+        <div class="schedule-item-title">${m.title}</div>
+        <div style="font-size:0.8rem; color:#94a3b8;">対象: ${m.targetGroup === "CUSTOMER" ? "顧客 (渡辺部長)" : "上司 (事業部長)"}</div>
+      `;
+      listEl.appendChild(card);
+    });
+  }
+
+  const closeBtn = document.getElementById("btn-close-schedule-modal");
+  if (closeBtn && !closeBtn.dataset.hasListener) {
+    closeBtn.dataset.hasListener = "true";
+    closeBtn.addEventListener("click", closeScheduleModal);
+  }
+
+  overlayEl.classList.remove("hidden");
+}
+
+export function closeScheduleModal() {
+  const overlayEl = document.getElementById("schedule-modal-overlay");
+  if (overlayEl) overlayEl.classList.add("hidden");
 }
 
 // 2. シーン・背景・キャラクターの更新
