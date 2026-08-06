@@ -22,5 +22,6 @@
 数値バランス・トレードオフ要素・技術データモデルを記述します。
 
 * [design/action_balance.md](file:///e:/work/pm-simulator/docs/design/action_balance.md): **キックオフ全8アクションのメリット・副作用・コンボ設定**
+* [design/adv_ui_spec.md](file:///e:/work/pm-simulator/docs/design/adv_ui_spec.md): **ADV風コマンド選択式 Web UI 仕様書 (場所・人物移動型 & イベントシステム)**
 * [design/methodology_balance.md](file:///e:/work/pm-simulator/docs/design/methodology_balance.md): **開発手法（🌊 WF vs 🔄 アジャイル）のメリット・デメリット対比**
 * [design/data_architecture.md](file:///e:/work/pm-simulator/docs/design/data_architecture.md): **データモデル・データ駆動型エンジン設計 (Python / Web / Godot共通)**
