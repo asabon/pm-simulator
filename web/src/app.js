@@ -181,7 +181,9 @@ export function renderSceneView() {
       if (titleEl) titleEl.textContent = "開発チームフロア";
       sceneBgEl.classList.add("bg-team");
       if (avatarEl) avatarEl.textContent = "👨‍💻";
-      if (nameEl) nameEl.textContent = "開発リーダー(PL) & チーム";
+      if (nameEl) {
+        nameEl.textContent = kickoffHistory.includes("team_kickoff") ? "開発リーダー(PL) & チーム" : "開発チーム (体制構築中)";
+      }
       break;
   }
 }
@@ -230,8 +232,13 @@ export function renderMessageBox() {
       text = "「おお、PMくんか。直訴や重大相談なら日程を調整して面談を入れよう。」";
       break;
     case UIMode.SCENE_TEAM:
-      speaker = "開発リーダー (PL)";
-      text = "「PMさん！ 現場の技術リスク精査や1on1なら今日すぐに動けますよ！」";
+      if (kickoffHistory.includes("team_kickoff")) {
+        speaker = "開発リーダー (PL)";
+        text = "「PMさん！ 現場の技術リスク精査や1on1なら今日すぐに動けますよ！」";
+      } else {
+        speaker = "開発メンバー候補";
+        text = "「PMさん、開発チームフロアへようこそ！ 今回の改修案件ですね。まずはキックオフで役割分担（PL決定）と開発方針を固めましょう！」";
+      }
       break;
   }
 
@@ -366,7 +373,14 @@ export function renderActionPanel() {
     let actionsList = [];
     if (currentUIMode === UIMode.SCENE_CUSTOMER) actionsList = ADV_ACTIONS.CUSTOMER;
     if (currentUIMode === UIMode.SCENE_MANAGER) actionsList = ADV_ACTIONS.MANAGER;
-    if (currentUIMode === UIMode.SCENE_TEAM) actionsList = ADV_ACTIONS.TEAM;
+    if (currentUIMode === UIMode.SCENE_TEAM) {
+      const isKickoffDone = kickoffHistory.includes("team_kickoff");
+      if (isKickoffDone) {
+        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "team_kickoff");
+      } else {
+        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id === "team_kickoff" || act.id === "tech_risk_check");
+      }
+    }
 
     actionsList.forEach(act => {
       const btn = document.createElement("button");
