@@ -29,10 +29,10 @@ export let activeModalEvent = null;
 // 初期化 (Initialization)
 // =========================================================================
 export function initGame() {
-  currentUIMode = UIMode.DASHBOARD;
+  currentUIMode = UIMode.TITLE;
   pmState.resetAp();
   kickoffHistory = [];
-  logs = ["今週の活動方針を決定してください。どこへ移動して働きかけますか？"];
+  logs = ["ゲームを開始しました。新規プロジェクトをスタートしてください。"];
 
   // プロジェクト・メンバー初期データ生成
   developerPool = getInitialDeveloperPool();
@@ -99,6 +99,22 @@ export function renderSceneView() {
   sceneBgEl.className = "scene-bg";
 
   switch (currentUIMode) {
+    case UIMode.TITLE:
+      if (iconEl) iconEl.textContent = "🎮";
+      if (titleEl) titleEl.textContent = "タイトル画面";
+      sceneBgEl.classList.add("bg-title");
+      if (avatarEl) avatarEl.textContent = "💼";
+      if (nameEl) nameEl.textContent = "PM Simulator";
+      break;
+
+    case UIMode.PROLOGUE:
+      if (iconEl) iconEl.textContent = "🏢";
+      if (titleEl) titleEl.textContent = "上司執務室 (アサイン面談)";
+      sceneBgEl.classList.add("bg-manager");
+      if (avatarEl) avatarEl.textContent = "👔";
+      if (nameEl) nameEl.textContent = "高橋事業部長";
+      break;
+
     case UIMode.DASHBOARD:
       if (iconEl) iconEl.textContent = "🖥️";
       if (titleEl) titleEl.textContent = "PM自席 (ダッシュボード)";
@@ -145,6 +161,14 @@ export function renderMessageBox() {
   let text = "";
 
   switch (currentUIMode) {
+    case UIMode.TITLE:
+      speaker = "ナレーション";
+      text = "PM Simulator へようこそ！ プロジェクトマネージャーとして意思決定とステークホルダーマネジメントの試練に挑みましょう。";
+      break;
+    case UIMode.PROLOGUE:
+      speaker = "上司 (高橋事業部長)";
+      text = "「おお、PMくん！ ちょうど君を呼ぼうと思っていたところだ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして、君をアサインする！ 予算は80%、納期は4週間だ。まずは君のデスクで方針を決め、顧客や現場とすり合わせをしてくれ。頼んだぞ！」";
+      break;
     case UIMode.DASHBOARD:
       speaker = "PMの思考";
       text = pmState.ap > 0 
@@ -182,7 +206,38 @@ export function renderActionPanel() {
 
   panelEl.innerHTML = "";
 
-  if (currentUIMode === UIMode.DASHBOARD) {
+  if (currentUIMode === UIMode.TITLE) {
+    // 【タイトル画面】新規スタートボタン
+    const startBtn = document.createElement("button");
+    startBtn.id = "btn-start-new-project";
+    startBtn.className = "btn-adv btn-primary-category";
+    startBtn.style.gridColumn = "span 2";
+    startBtn.style.padding = "1.2rem";
+    startBtn.style.alignItems = "center";
+    startBtn.innerHTML = "<span>🚀 新規プロジェクトを開始する</span><span class='btn-sub-desc'>アサイン面談へ向かう</span>";
+    startBtn.addEventListener("click", () => {
+      currentUIMode = UIMode.PROLOGUE;
+      renderAll();
+    });
+    panelEl.appendChild(startBtn);
+
+  } else if (currentUIMode === UIMode.PROLOGUE) {
+    // 【プロローグ画面】アサイン了解ボタン
+    const acceptBtn = document.createElement("button");
+    acceptBtn.id = "btn-accept-assignment";
+    acceptBtn.className = "btn-adv btn-primary-category";
+    acceptBtn.style.gridColumn = "span 2";
+    acceptBtn.style.padding = "1.2rem";
+    acceptBtn.style.alignItems = "center";
+    acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>今週の活動方針を決定する</span>";
+    acceptBtn.addEventListener("click", () => {
+      currentUIMode = UIMode.DASHBOARD;
+      logs.push("上司から案件がアサインされました！ 今週のアクションを決定してください。");
+      renderAll();
+    });
+    panelEl.appendChild(acceptBtn);
+
+  } else if (currentUIMode === UIMode.DASHBOARD) {
     // 【第一階層コマンド】メイン画面での4大ボタン
     const navButtons = [
       {

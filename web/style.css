@@ -148,6 +148,11 @@ body {
   position: relative;
 }
 
+.bg-title {
+  background: radial-gradient(circle at center, #312e81 0%, #0f172a 100%);
+  border: 2px solid var(--accent-cyan);
+}
+
 .bg-dashboard {
   background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
 }

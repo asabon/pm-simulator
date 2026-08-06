@@ -140,6 +140,8 @@ export class PM {
 
 // UI 遷移モード定義
 export const UIMode = {
+  TITLE: "TITLE",
+  PROLOGUE: "PROLOGUE",
   DASHBOARD: "DASHBOARD",
   SCENE_CUSTOMER: "SCENE_CUSTOMER",
   SCENE_MANAGER: "SCENE_MANAGER",
