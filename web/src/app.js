@@ -98,11 +98,7 @@ export function renderHeaderStatus() {
     }
   }
   if (apTagEl) {
-    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
-      apTagEl.style.display = "none";
-    } else {
-      apTagEl.style.display = "inline-block";
-    }
+    apTagEl.style.display = "none";
   }
 
   // タイトル画面、プロローグ画面、およびPCメール未確認時はステータスバーを非表示に設定
@@ -335,9 +331,7 @@ export function renderMessageBox() {
         text = activeMailContent.text;
       } else {
         speaker = "PMの思考";
-        text = pmState.ap > 0 
-          ? `「本日(Day ${projectState.day})のAP残量は ${pmState.ap} だ。どこへ移動して誰と話すか、あるいはアポを入れるか決めよう。」`
-          : "「本日のAPを使い切りました。⏱️ 1日を進める ボタンで次の日へ進行させてください。」";
+        text = `「本日(Day ${projectState.day})のアクションを決定しましょう。必要な顧客調整・現場調整・アポ予約を行ったら、⏱️ 1日を進める ボタンで次の日へ進行させてください。」`;
       }
       break;
     case UIMode.SCENE_CUSTOMER:
@@ -512,11 +506,9 @@ export function renderActionPanel() {
       const btn = document.createElement("button");
       btn.id = `btn-act-${act.id}`;
       btn.className = "btn-adv";
-      const isDisabled = pmState.ap < act.costAp;
-      btn.disabled = isDisabled;
       
       btn.innerHTML = `
-        <span>${act.name} ${act.costAp > 0 ? `(AP ${act.costAp})` : "(AP 0/無料)"}</span>
+        <span>${act.name}</span>
         <span class="btn-sub-desc">${act.desc}</span>
       `;
       btn.addEventListener("click", () => handleExecuteAction(act));
@@ -564,9 +556,6 @@ export function handleCheckPcMail() {
 // アクション実行ハンドラ (即時 vs アポ予約)
 // =========================================================================
 export function handleExecuteAction(action) {
-  if (pmState.ap < action.costAp) return;
-
-  pmState.ap -= action.costAp;
   kickoffHistory.push(action.id);
 
   if (action.isAppointment) {
