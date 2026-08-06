@@ -33,7 +33,7 @@ export function initGame() {
   currentUIMode = UIMode.TITLE;
   pmState.resetAp();
   kickoffHistory = [];
-  logs = ["ゲームを開始しました。新規プロジェクトをスタートしてください。"];
+  logs = [];
 
   // プロジェクト・メンバー初期データ生成
   developerPool = getInitialDeveloperPool();
@@ -226,14 +226,19 @@ export function renderMessageBox() {
   if (speakerEl) speakerEl.textContent = speaker;
   dialogEl.textContent = text;
 
-  // ログおよびカレンダー予定表示
+  // タイトル〜プロローグ中はアクションログ枠を非表示にする
   if (logContainerEl) {
-    let scheduleInfo = "";
-    if (projectState && projectState.scheduledMeetings.length > 0) {
-      scheduleInfo = `<div style="color:#fbbf24; font-weight:bold; margin-bottom:0.4rem;">📅 予約カレンダー: ${projectState.scheduledMeetings.map(m => `[Day ${m.day}: ${m.title}]`).join(", ")}</div>`;
+    if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE_INTRO || currentUIMode === UIMode.PROLOGUE) {
+      logContainerEl.style.display = "none";
+    } else {
+      logContainerEl.style.display = "flex";
+      let scheduleInfo = "";
+      if (projectState && projectState.scheduledMeetings.length > 0) {
+        scheduleInfo = `<div style="color:#fbbf24; font-weight:bold; margin-bottom:0.4rem;">📅 予約カレンダー: ${projectState.scheduledMeetings.map(m => `[Day ${m.day}: ${m.title}]`).join(", ")}</div>`;
+      }
+      logContainerEl.innerHTML = scheduleInfo + logs.map(l => `<div class="log-item">${l}</div>`).join("");
+      logContainerEl.scrollTop = logContainerEl.scrollHeight;
     }
-    logContainerEl.innerHTML = scheduleInfo + logs.map(l => `<div class="log-item">${l}</div>`).join("");
-    logContainerEl.scrollTop = logContainerEl.scrollHeight;
   }
 }
 

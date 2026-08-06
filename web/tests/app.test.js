@@ -49,17 +49,21 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     `;
   });
 
-  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide location bar & status bar", async () => {
+  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide location bar, status bar, and log container", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
     const startBtn = document.getElementById("btn-start-new-project");
     expect(startBtn).not.toBeNull();
 
-    // タイトル画面ではロケーションバーとステータスバーが非表示になっていること
+    // タイトル画面ではロケーションバー・ステータスバー・ログ枠が非表示になっていること
     const locationBar = document.getElementById("scene-location-bar");
     if (locationBar) {
       expect(locationBar.style.display).toBe("none");
+    }
+    const logContainer = document.getElementById("action-log-container");
+    if (logContainer) {
+      expect(logContainer.style.display).toBe("none");
     }
   });
 
