@@ -9,6 +9,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
         <div id="project-status-bar" class="project-status-bar">
           <div class="status-bar-row status-bar-date-row">
             <span id="status-week-info">-</span>
+            <span id="status-next-schedule" class="status-next-schedule">📌 次の予定: なし</span>
           </div>
           <div class="status-bar-row status-bar-params-row">
             <span id="status-cust-sat">70%</span>
@@ -17,6 +18,14 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
           </div>
         </div>
       </header>
+
+      <div id="schedule-modal-overlay" class="event-modal-overlay hidden">
+        <div class="event-modal-card schedule-modal-card">
+          <div class="event-modal-header">📅 予約中の会議・アポ一覧</div>
+          <div id="schedule-list-container"></div>
+          <button id="btn-close-schedule-modal">閉じる</button>
+        </div>
+      </div>
 
       <main id="app-container" class="adv-app-container">
         <div id="scene-location-bar">
@@ -183,6 +192,22 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     const logContainer = document.getElementById("action-log-container");
     expect(logContainer.innerHTML).toContain("アポ予約");
+
+    // 直近予定バッジにアポ内容が表示されることの検証
+    const nextScheduleBadge = document.getElementById("status-next-schedule");
+    expect(nextScheduleBadge.textContent).toContain("📌 次:");
+
+    // バッジクリックで全予約一覧モーダルが開くことの検証
+    nextScheduleBadge.click();
+    const scheduleModal = document.getElementById("schedule-modal-overlay");
+    expect(scheduleModal.classList.contains("hidden")).toBe(false);
+
+    const listContainer = document.getElementById("schedule-list-container");
+    expect(listContainer.innerHTML).toContain("要件定義");
+
+    // 閉じるボタンでモーダルが閉じることの検証
+    document.getElementById("btn-close-schedule-modal").click();
+    expect(scheduleModal.classList.contains("hidden")).toBe(true);
   });
 
   it("should advance day on '⏱️ 1日を進める' click and trigger event on scheduled day", async () => {
