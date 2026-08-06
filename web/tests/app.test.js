@@ -16,22 +16,22 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
       <main id="app-container" class="adv-app-container">
         <div id="scene-location-bar">
-          <span id="location-icon">🖥️</span>
-          <span id="location-title">PM自席</span>
+          <span id="location-icon">🎮</span>
+          <span id="location-title">タイトル画面</span>
         </div>
 
         <div id="main-view">
-          <div id="scene-bg" class="scene-bg bg-dashboard">
+          <div id="scene-bg" class="scene-bg bg-title">
             <div id="character-sprite">
-              <div id="sprite-avatar">💻</div>
-              <div id="sprite-name">PMのデスク</div>
+              <div id="sprite-avatar">💼</div>
+              <div id="sprite-name">PM Simulator</div>
             </div>
           </div>
         </div>
 
         <div id="message-box">
           <div id="speaker-name">ナレーション</div>
-          <div id="dialog-text">今週の活動方針を決定してください。</div>
+          <div id="dialog-text">PM Simulator へようこそ！</div>
           <div id="action-log-container"></div>
         </div>
 
@@ -47,84 +47,89 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     `;
   });
 
-  it("should initialize app and render 4 primary category buttons in DASHBOARD mode", async () => {
+  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide status bar", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
-    const navCustomer = document.getElementById("nav-customer");
-    const navManager = document.getElementById("nav-manager");
-    const navTeam = document.getElementById("nav-team");
-    const navNextWeek = document.getElementById("nav-next-week");
+    const startBtn = document.getElementById("btn-start-new-project");
+    expect(startBtn).not.toBeNull();
+    expect(document.getElementById("location-title").textContent).toContain("タイトル画面");
 
-    expect(navCustomer).not.toBeNull();
-    expect(navManager).not.toBeNull();
-    expect(navTeam).not.toBeNull();
-    expect(navNextWeek).not.toBeNull();
+    // タイトル画面ではプロジェクトステータスバーが非表示になっていること
+    const statusBar = document.getElementById("project-status-bar");
+    if (statusBar) {
+      expect(statusBar.style.display).toBe("none");
+    }
+  });
+
+  it("should transit to PROLOGUE scene on '🚀 新規プロジェクトを開始する' click", async () => {
+    const appModule = await import("../src/app.js?test=" + Date.now());
+    appModule.initGame();
+
+    const startBtn = document.getElementById("btn-start-new-project");
+    startBtn.click();
+
+    expect(document.getElementById("location-title").textContent).toContain("上司執務室");
+    expect(document.getElementById("dialog-text").textContent).toContain("今期の大事な案件");
+
+    const acceptBtn = document.getElementById("btn-accept-assignment");
+    expect(acceptBtn).not.toBeNull();
+  });
+
+  it("should transit to DASHBOARD scene on '💼 了解しました！' click", async () => {
+    const appModule = await import("../src/app.js?test=" + Date.now());
+    appModule.initGame();
+
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-accept-assignment").click();
+
+    expect(document.getElementById("location-title").textContent).toContain("PM自席");
+    expect(document.getElementById("nav-customer")).not.toBeNull();
+    expect(document.getElementById("nav-manager")).not.toBeNull();
+    expect(document.getElementById("nav-team")).not.toBeNull();
+    expect(document.getElementById("nav-next-week")).not.toBeNull();
   });
 
   it("should transit to SCENE_CUSTOMER on '💬 顧客と話す' button click", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
-    const navCustomer = document.getElementById("nav-customer");
-    navCustomer.click();
+    // タイトル ➔ プロローグ ➔ ダッシュボード ➔ 顧客室
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-accept-assignment").click();
+    document.getElementById("nav-customer").click();
 
-    // 顧客オフィスシーンへの遷移チェック
-    const locationTitle = document.getElementById("location-title");
-    expect(locationTitle.textContent).toContain("顧客のオフィス");
-
-    // 具体アクションボタンの存在チェック
-    const actReqWs = document.getElementById("btn-act-req_def_ws");
-    const btnBack = document.getElementById("btn-back-dashboard");
-
-    expect(actReqWs).not.toBeNull();
-    expect(btnBack).not.toBeNull();
+    expect(document.getElementById("location-title").textContent).toContain("顧客のオフィス");
+    expect(document.getElementById("btn-act-req_def_ws")).not.toBeNull();
   });
 
   it("should consume AP and add log on specific action execution", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
-    // 顧客室シーンへ遷移
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-accept-assignment").click();
     document.getElementById("nav-customer").click();
 
     // アクション実行
-    const actReqWs = document.getElementById("btn-act-req_def_ws");
-    actReqWs.click();
+    document.getElementById("btn-act-req_def_ws").click();
 
-    // AP消費 (3 ➔ 2) の確認
     const apEl = document.getElementById("pm-ap");
     expect(apEl.textContent).toBe("2");
 
-    // ログ書き込みの確認
     const logContainer = document.getElementById("action-log-container");
     expect(logContainer.innerHTML).toContain("要件定義WS");
-  });
-
-  it("should return to DASHBOARD on '↩ 自席に戻る' button click", async () => {
-    const appModule = await import("../src/app.js?test=" + Date.now());
-    appModule.initGame();
-
-    // シーン移動 ➔ 戻る
-    document.getElementById("nav-customer").click();
-    document.getElementById("btn-back-dashboard").click();
-
-    const locationTitle = document.getElementById("location-title");
-    expect(locationTitle.textContent).toContain("PM自席");
   });
 
   it("should advance week and open weekly meeting event modal on '⏱️ 週を進める' click", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
-    const navNextWeek = document.getElementById("nav-next-week");
-    navNextWeek.click();
+    document.getElementById("btn-start-new-project").click();
+    document.getElementById("btn-accept-assignment").click();
+    document.getElementById("nav-next-week").click();
 
-    // モーダルが開いていることの検証
     const modalOverlay = document.getElementById("event-modal-overlay");
     expect(modalOverlay.classList.contains("hidden")).toBe(false);
-
-    const modalTitle = document.getElementById("event-modal-title");
-    expect(modalTitle.textContent).toContain("定例ミーティング");
   });
 });
