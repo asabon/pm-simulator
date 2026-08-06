@@ -175,7 +175,7 @@ export function renderSceneView() {
       if (titleEl) titleEl.textContent = "開発チームフロア";
       sceneBgEl.classList.add("bg-team");
       if (avatarEl) avatarEl.textContent = "👨‍💻";
-      if (nameEl) nameEl.textContent = "PL タツヤ & チーム";
+      if (nameEl) nameEl.textContent = "開発リーダー(PL) & チーム";
       break;
   }
 }
@@ -202,7 +202,7 @@ export function renderMessageBox() {
       break;
     case UIMode.PROLOGUE:
       speaker = "上司 (事業部長)";
-      text = "「おお、PMくん！ 待っていたよ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして君をアサインする！ 納期は4週間(全20営業日)。体制は君の部署のメンバーで進めてくれ。詳しい案件資料はメールで送っておいたので、自席のPCで確認して活動方針を決めてくれ。頼んだぞ！」";
+      text = "「おお、PMくん！ 待っていたよ。今期の大事な案件『第1期 基幹決済システム改修』のプロジェクトマネージャーとして君をアサインする！ 納期は4週間(全20営業日)。開発メンバーの選定やチーム体制の構築も含めて、君にマネジメントを任せる。詳しい案件資料はメールで送っておいたので、自席のPCで確認して活動方針を決めてくれ。頼んだぞ！」";
       break;
     case UIMode.DASHBOARD:
       if (activeMailContent) {
@@ -224,7 +224,7 @@ export function renderMessageBox() {
       text = "「おお、PMくんか。直訴や重大相談なら日程を調整して面談を入れよう。」";
       break;
     case UIMode.SCENE_TEAM:
-      speaker = "PL タツヤ";
+      speaker = "開発リーダー (PL)";
       text = "「PMさん！ 現場の技術リスク精査や1on1なら今日すぐに動けますよ！」";
       break;
   }
@@ -296,22 +296,21 @@ export function renderActionPanel() {
     acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>本日の活動方針を決定する</span>";
     acceptBtn.addEventListener("click", () => {
       currentUIMode = UIMode.DASHBOARD;
-      logs.push("上司から案件がアサインされました！ 自席PCのメール（案件概要・チーム構成）を確認し、本日の行動を決定してください。");
+      if (projectState) {
+        projectState.isStatusDisclosed = true;
+      }
+      activeMailContent = {
+        speaker: "自席PC (引き継ぎメール確認)",
+        text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆方針\n「顧客(部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。納期はDay 20(4週間)。まずは開発リーダー(PL)をはじめとするメンバーとの調整やチームビルディングを行い、顧客との要件定義WS予約や現場の技術リスク精査を進めてください。」"
+      };
+      logs.push("📧 自席PCで引き継ぎメールを確認し、プロジェクトステータスが開示されました。");
       renderAll();
     });
     panelEl.appendChild(acceptBtn);
 
   } else if (currentUIMode === UIMode.DASHBOARD) {
-    // 【第一階層コマンド】メイン画面での5大ボタン
-    const isUnopened = projectState && !projectState.isStatusDisclosed;
-
+    // 【第一階層コマンド】メイン画面での4大ボタン
     const navButtons = [
-      {
-        id: "btn-check-pc-mail",
-        label: isUnopened ? "💻 PCメール・案件情報を確認 (★要確認)" : "💻 PCメール・案件情報を確認",
-        desc: isUnopened ? "【重要】案件概要・チーム構成を確認しステータスを解禁" : "案件概要・要求・チーム構成を再確認",
-        isMail: true
-      },
       {
         id: "nav-customer",
         label: "💬 顧客と話す",
@@ -344,9 +343,7 @@ export function renderActionPanel() {
       btn.className = "btn-adv btn-primary-category";
       btn.innerHTML = `<span>${b.label}</span><span class="btn-sub-desc">${b.desc}</span>`;
       
-      if (b.isMail) {
-        btn.addEventListener("click", handleCheckPcMail);
-      } else if (b.isSpecial) {
+      if (b.isSpecial) {
         btn.addEventListener("click", handleAdvanceDay);
       } else {
         btn.addEventListener("click", () => {
@@ -410,7 +407,7 @@ export function handleCheckPcMail() {
 
   activeMailContent = {
     speaker: "自席PC (メール受信トレイ)",
-    text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆体制\n「顧客(部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。チーム体制はPLタツヤ率いる開発4名体制。納期はDay 20(4週間)。まずは顧客との要件定義WS予約か、現場の技術リスク精査が急務です。」"
+    text: "件名: 【指示・引き継ぎ】第1期 基幹決済システム改修 プロジェクト概要＆方針\n「顧客(部長)より『既存決済基盤の安定化と新決済手段追加の両立』が強く要求されています。納期はDay 20(4週間)。まずは開発リーダー(PL)をはじめとするメンバーとの調整やチームビルディングを行い、顧客との要件定義WS予約や現場の技術リスク精査を進めてください。」"
   };
 
   renderAll();

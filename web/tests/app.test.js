@@ -94,7 +94,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(acceptBtn).not.toBeNull();
   });
 
-  it("should transit to DASHBOARD scene and hide status bar until PC mail check", async () => {
+  it("should transit to DASHBOARD scene, automatically check mail, disclose status bar, and show main navigation buttons", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -103,22 +103,14 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-accept-assignment").click();
 
     expect(document.getElementById("location-title").textContent).toContain("PM自席");
-    expect(document.getElementById("btn-check-pc-mail")).not.toBeNull();
+    expect(document.getElementById("btn-check-pc-mail")).toBeNull();
     expect(document.getElementById("nav-customer")).not.toBeNull();
     expect(document.getElementById("nav-manager")).not.toBeNull();
     expect(document.getElementById("nav-team")).not.toBeNull();
     expect(document.getElementById("nav-next-day")).not.toBeNull();
 
-    // メール確認前はステータスバーが非表示
+    // デスク着席直後に自動的にステータスバーが表示され、メール本文がセットされること
     const statusBar = document.getElementById("project-status-bar");
-    if (statusBar) {
-      expect(statusBar.style.display).toBe("none");
-    }
-
-    // PCメール確認ボタンをクリック
-    document.getElementById("btn-check-pc-mail").click();
-
-    // メール確認後はステータスバーが表示されること
     if (statusBar) {
       expect(statusBar.style.display).toBe("flex");
     }
