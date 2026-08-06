@@ -121,7 +121,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(document.getElementById("dialog-text").textContent).toContain("【件名】");
   });
 
-  it("should execute team kickoff and holiday work request actions in TEAM scene", async () => {
+  it("should execute team kickoff and switch dialog messages and speaker names correctly before and after kickoff", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -130,16 +130,37 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-accept-assignment").click();
     document.getElementById("nav-team").click();
 
+    // 【1. キックオフ前】の確認
+    expect(document.getElementById("sprite-name").textContent).toBe("開発チーム (体制構築中)");
+    expect(document.getElementById("speaker-name").textContent).toBe("開発メンバー候補");
+    expect(document.getElementById("dialog-text").textContent).toContain("開発チームフロアへようこそ");
+
+    // キックオフ実行
     const kickoffBtn = document.getElementById("btn-act-team_kickoff");
     expect(kickoffBtn).not.toBeNull();
     kickoffBtn.click();
 
+    // 【2. キックオフ実行直後】の即時会話応答確認
+    expect(document.getElementById("sprite-name").textContent).toBe("開発リーダー(PL) & チーム");
+    expect(document.getElementById("speaker-name").textContent).toBe("開発リーダー (PL)");
+    expect(document.getElementById("dialog-text").textContent).toContain("キックオフの開催ありがとうございます");
+
+    // 休日出勤依頼の実行
     const holidayBtn = document.getElementById("btn-act-holiday_work_request");
     expect(holidayBtn).not.toBeNull();
     holidayBtn.click();
+    expect(document.getElementById("dialog-text").textContent).toContain("休日出勤の件、承知しました");
 
     const logContainer = document.getElementById("action-log-container");
     expect(logContainer.innerHTML).toContain("休日出勤依頼");
+
+    // 【3. 自席に戻り、再度フロア訪問時】の通常セリフ確認
+    document.getElementById("btn-back-dashboard").click();
+    document.getElementById("nav-team").click();
+
+    expect(document.getElementById("sprite-name").textContent).toBe("開発リーダー(PL) & チーム");
+    expect(document.getElementById("speaker-name").textContent).toBe("開発リーダー (PL)");
+    expect(document.getElementById("dialog-text").textContent).toContain("現場の技術リスク精査や1on1なら今日すぐに動けますよ");
   });
 
   it("should schedule meeting on appointment action execution and show in log", async () => {

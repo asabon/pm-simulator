@@ -25,6 +25,7 @@ export let pmState = new PM(3);
 export let kickoffHistory = [];
 export let logs = [];
 export let activeModalEvent = null;
+export let activeSceneMessage = null;
 
 // =========================================================================
 // 初期化 (Initialization)
@@ -34,6 +35,7 @@ export function initGame() {
   pmState.resetAp();
   kickoffHistory = [];
   logs = [];
+  activeSceneMessage = null;
 
   // プロジェクト・メンバー初期データ生成
   developerPool = getInitialDeveloperPool();
@@ -242,6 +244,11 @@ export function renderMessageBox() {
       break;
   }
 
+  if (activeSceneMessage) {
+    speaker = activeSceneMessage.speaker;
+    text = activeSceneMessage.text;
+  }
+
   if (speakerEl) speakerEl.textContent = speaker;
   dialogEl.textContent = text;
 
@@ -361,6 +368,7 @@ export function renderActionPanel() {
       } else {
         btn.addEventListener("click", () => {
           activeMailContent = null;
+          activeSceneMessage = null;
           currentUIMode = b.mode;
           renderAll();
         });
@@ -403,6 +411,7 @@ export function renderActionPanel() {
     backBtn.className = "btn-adv btn-back";
     backBtn.innerHTML = "<span>↩ 自席に戻る</span>";
     backBtn.addEventListener("click", () => {
+      activeSceneMessage = null;
       currentUIMode = UIMode.DASHBOARD;
       renderAll();
     });
@@ -450,6 +459,10 @@ export function handleExecuteAction(action) {
       actionId: action.id,
       title: action.name
     });
+    activeSceneMessage = {
+      speaker: "PMの思考",
+      text: `「『${action.name}』のアポをセットした。指定の日に備えてしっかり準備を進めよう。」`
+    };
     logs.push(`📅 【アポ予約完了】 『${action.name}』 を ${scheduledDay} 日目 (Day ${scheduledDay}) の予定表にセットしました！`);
   } else {
     // ⚡ 即時アクション処理
@@ -459,21 +472,49 @@ export function handleExecuteAction(action) {
       const devs = projectState.getAllDevelopers();
       devs.forEach(d => { d.fatigue = Math.min(100, d.fatigue + 25); });
       effectLog += " (🚨 休日出勤依頼！ 開発進捗を大きく回復。ただし開発陣の疲労度+25%急上昇！)";
+      activeSceneMessage = {
+        speaker: "開発メンバー",
+        text: "「休日出勤の件、承知しました…！ 納期に間に合わせるため踏ん張り時ですね。みんなでラストスパートをかけます！」"
+      };
     } else if (action.id === "team_kickoff") {
       const devs = projectState.getAllDevelopers();
       devs.forEach(d => { d.fatigue = Math.max(0, d.fatigue - 10); });
       effectLog += " (チームキックオフ完了！ 役割分担を整理し、チーム健全性が向上！)";
+      activeSceneMessage = {
+        speaker: "開発リーダー (PL)",
+        text: "「PMさん、キックオフの開催ありがとうございます！ 役割分担と基本方針がクリアになりました。私（PL）を中心に現場一丸となって開発を進めます！」"
+      };
     } else if (action.id === "prototype_demo") {
       projectState.customer.satisfaction = Math.min(100, projectState.customer.satisfaction + 5);
       effectLog += " (モック提示で認識統一！ 満足度+5%)";
+      activeSceneMessage = {
+        speaker: "顧客 (部長)",
+        text: "「おお、動くプロトタイプを見せてくれるのか！ 実際の画面があると完成イメージが湧きやすくて助かるよ。」"
+      };
     } else if (action.id === "boss_risk_check") {
       effectLog += ` (上司の期待ライン確認: 上司信頼度 ${projectState.managerSatisfaction.toFixed(0)}%)`;
+      activeSceneMessage = {
+        speaker: "上司 (事業部長)",
+        text: "「我が部門としてのラインは『稼働後の致命障害ゼロ』だ。無理な納期で品質を落とすことだけは避けてくれたまえ。」"
+      };
     } else if (action.id === "tech_risk_check") {
       effectLog += " (技術リスク・見積精査完了！ 今後の交渉の『明確な根拠』を獲得)";
+      activeSceneMessage = {
+        speaker: "開発リーダー (PL)",
+        text: "「現場のソースコードと見積精度を再チェックしました。これで顧客や上司との交渉に必要な『明確な技術根拠』が揃いましたよ！」"
+      };
     } else if (action.id === "retrospective_share") {
       effectLog += " (過去教訓を共有！ 事故率低減)";
+      activeSceneMessage = {
+        speaker: "開発リーダー (PL)",
+        text: "「過去の類似プロジェクトでの失敗ケースですね。事前にハマりやすい罠を共有してもらえたので、チームで対策を打っておきます！」"
+      };
     } else if (action.id === "one_on_one") {
       effectLog += " (チーム1on1実施！ 隠れた不安を看破)";
+      activeSceneMessage = {
+        speaker: "開発メンバー",
+        text: "「PMさん、個別の相談に乗っていただきありがとうございます！ 懸念していた仕様の疑問点がすっきり解消しました。」"
+      };
     }
     logs.push(effectLog);
   }
@@ -486,6 +527,7 @@ export function handleExecuteAction(action) {
 // =========================================================================
 export function handleAdvanceDay() {
   activeMailContent = null;
+  activeSceneMessage = null;
   const dailyLogs = runDailyProgress(projectState, [], pmState);
   logs.push(`--- Day ${projectState.day} 開始 (Week ${projectState.week}) ---`);
   logs.push(...dailyLogs);
