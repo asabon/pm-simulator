@@ -389,20 +389,20 @@ export function renderActionPanel() {
     const navButtons = [
       {
         id: "nav-customer",
-        label: "💬 顧客と話す",
-        desc: "要件・デモ・アポ予約（WS/交渉）",
+        label: "💬 顧客との会議調整",
+        desc: "要件確認・アポ予約（WS/交渉）",
         mode: UIMode.SCENE_CUSTOMER
       },
       {
         id: "nav-manager",
-        label: "🏢 上司に相談",
-        desc: "状況確認・面談アポ予約（直訴/助っ人）",
+        label: "🏢 上司に相談・報告",
+        desc: "進捗報告・重要面談予約（直訴/助っ人）",
         mode: UIMode.SCENE_MANAGER
       },
       {
         id: "nav-team",
-        label: "🛠️ 現場と調整",
-        desc: "【即時】体制構築・技術リスク・1on1",
+        label: "🛠️ 現場へ行く (開発フロア)",
+        desc: "【即時】体制構築・技術リスク精査・1on1",
         mode: UIMode.SCENE_TEAM
       },
       {
