@@ -779,10 +779,17 @@ export function getPMOAdvice(projectState, kickoffHistory = [], currentDay = 1) 
   }
 
   if (!isKickoffDone) {
+    if (prepCount === 1) {
+      return {
+        type: "GUIDE",
+        badge: "💡 PMOの助言 (次の下準備)",
+        text: "「案件の前提が見えてきましたね！ 次は開発フロアに向かって現場のエンジニア候補陣と対話し『技術リスク精査』や事前調整を行いましょう。」"
+      };
+    }
     return {
       type: "GUIDE",
       badge: "💡 PMOの助言 (下準備のセオリー)",
-      text: "「キックオフ前ですね。まずは現場のPLと話して『技術リスク精査』を行うか、顧客フロアで『QCD優先軸のすり合わせ』を行うのがPMのセオリーですよ。」"
+      text: "「キックオフ前ですね。まずは自席のPCメールで案件要件や前提の詳細を確認し、顧客フロアで『QCD優先軸のすり合わせ』を行って前提を固めるのがPMのセオリーですよ。」"
     };
   }
 

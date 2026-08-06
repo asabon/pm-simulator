@@ -7,7 +7,7 @@ describe("PMO Advisor & Kickoff Prep Logic", () => {
     const advice = getPMOAdvice(project, [], 1);
     expect(advice.type).toBe("GUIDE");
     expect(advice.badge).toContain("下準備のセオリー");
-    expect(advice.text).toContain("技術リスク精査");
+    expect(advice.text).toContain("PCメール");
   });
 
   it("should trigger combo hint when tech risk check is done without phased release", () => {
