@@ -64,6 +64,7 @@ export function renderHeaderStatus() {
   const yearsEl = document.getElementById("pm-career-years");
   const completedEl = document.getElementById("pm-completed-pjs");
   const apEl = document.getElementById("pm-ap");
+  const statusBarEl = document.getElementById("project-status-bar");
   const weekInfoEl = document.getElementById("status-week-info");
   const custSatEl = document.getElementById("status-cust-sat");
   const bossTrustEl = document.getElementById("status-boss-trust");
@@ -72,6 +73,19 @@ export function renderHeaderStatus() {
   if (yearsEl) yearsEl.textContent = pmState.careerYears;
   if (completedEl) completedEl.textContent = pmState.completedProjects;
   if (apEl) apEl.textContent = pmState.ap;
+
+  // タイトル画面およびプロローグ画面ではプロジェクト未開始のためステータスバーを非表示/ハイフンに設定
+  if (currentUIMode === UIMode.TITLE || currentUIMode === UIMode.PROLOGUE) {
+    if (statusBarEl) statusBarEl.style.display = "none";
+    if (weekInfoEl) weekInfoEl.textContent = "-";
+    if (custSatEl) custSatEl.textContent = "-";
+    if (bossTrustEl) bossTrustEl.textContent = "-";
+    if (teamSafetyEl) teamSafetyEl.textContent = "-";
+    return;
+  }
+
+  // メインダッシュボード移行後は表示
+  if (statusBarEl) statusBarEl.style.display = "flex";
 
   if (projectState) {
     if (weekInfoEl) weekInfoEl.textContent = `Week ${projectState.week}/${projectState.deadlineWeeks + projectState.week - 1}`;

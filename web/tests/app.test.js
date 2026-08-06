@@ -47,13 +47,19 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     `;
   });
 
-  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button", async () => {
+  it("should initialize app and render Title Screen first with '🚀 新規プロジェクトを開始する' button and hide status bar", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
     const startBtn = document.getElementById("btn-start-new-project");
     expect(startBtn).not.toBeNull();
     expect(document.getElementById("location-title").textContent).toContain("タイトル画面");
+
+    // タイトル画面ではプロジェクトステータスバーが非表示になっていること
+    const statusBar = document.getElementById("project-status-bar");
+    if (statusBar) {
+      expect(statusBar.style.display).toBe("none");
+    }
   });
 
   it("should transit to PROLOGUE scene on '🚀 新規プロジェクトを開始する' click", async () => {
