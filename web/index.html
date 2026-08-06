@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PM Simulator - 通年キャリアマネジメント Webプロトタイプ</title>
-  <meta name="description" content="責任感とジレンマを体験するプロジェクトマネージャー（PM）シミュレーションゲーム">
+  <title>PM Simulator - ADV風コマンド選択式シミュレーション</title>
+  <meta name="description" content="責任感とジレンマを体験するアドベンチャーゲーム風プロジェクトマネージャー（PM）シミュレーション">
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
+  <header id="global-header">
     <div class="header-main-bar">
       <div class="logo-container">
         <span class="logo-icon">💼</span>
@@ -20,25 +20,68 @@
       </div>
       <div class="pm-status-badge">
         <span class="pm-stat-item">キャリア: <strong id="pm-career-years">1</strong>年目</span>
-        <span class="pm-stat-item">完了: <strong id="pm-completed-pjs">0</strong>件</span>
+        <span class="pm-stat-item">完了案件: <strong id="pm-completed-pjs">0</strong>件</span>
         <span class="pm-stat-item ap-container"><span class="ap-tag">AP <span id="pm-ap">3</span>/3</span></span>
       </div>
     </div>
-    <div class="phase-stepper">
-      <div class="step-item" id="step-kickoff">① キックオフ</div>
-      <span class="step-arrow">➔</span>
-      <div class="step-item" id="step-dashboard">② 開発スプリント</div>
-      <span class="step-arrow">➔</span>
-      <div class="step-item" id="step-result">③ リザルト</div>
+    <!-- プロジェクト全体のステータスバー (ADV用) -->
+    <div id="project-status-bar" class="project-status-bar">
+      <div class="status-bar-item">📅 周数: <span id="status-week-info">Week 1/4</span></div>
+      <div class="status-bar-item">🤝 顧客満足: <span id="status-cust-sat">70%</span></div>
+      <div class="status-bar-item">🏢 上司信頼: <span id="status-boss-trust">60%</span></div>
+      <div class="status-bar-item">🛠️ チーム安全: <span id="status-team-safety">良好</span></div>
     </div>
   </header>
 
-  <main id="app-container">
-    <!-- 動的にJSでビュー（Kickoff, Dashboard, Result）を更新します -->
+  <!-- ADVメインコンテナ -->
+  <main id="app-container" class="adv-app-container">
+    <!-- シーンヘッダー / ロケーション表示 -->
+    <div id="scene-location-bar" class="scene-location-bar">
+      <span class="location-icon" id="location-icon">🖥️</span>
+      <span class="location-title" id="location-title">PM自席 (ダッシュボード)</span>
+    </div>
+
+    <!-- ビジュアル表示エリア (メインビュー) -->
+    <div id="main-view" class="main-view-container">
+      <div id="scene-bg" class="scene-bg bg-dashboard">
+        <div id="character-sprite" class="character-sprite">
+          <div class="sprite-avatar" id="sprite-avatar">💻</div>
+          <div class="sprite-name" id="sprite-name">PMのデスク</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- メッセージ / セリフ / ログウィンドウ -->
+    <div id="message-box" class="message-box">
+      <div id="speaker-name" class="speaker-name">ナレーション</div>
+      <div id="dialog-text" class="dialog-text">今週の活動方針を決定してください。どこへ移動して働きかけますか？</div>
+      <div id="action-log-container" class="action-log-container">
+        <!-- 過去のアクションログがここに追加されます -->
+      </div>
+    </div>
+
+    <!-- コマンドパネル (第一階層 ↔ シーン別具体アクション) -->
+    <div id="action-panel" class="action-panel">
+      <!-- JSで動的にボタンを生成・更新します -->
+    </div>
   </main>
 
+  <!-- イベント・モーダルオーバーレイ (週次定例会議・突発トラブル用) -->
+  <div id="event-modal-overlay" class="event-modal-overlay hidden">
+    <div class="event-modal-card">
+      <div class="event-modal-header" id="event-modal-title">👥 第1週 週次定例ミーティング</div>
+      <div class="event-modal-body">
+        <div class="event-speaker" id="event-modal-speaker">顧客 (渡辺部長)</div>
+        <div class="event-speech" id="event-modal-speech">「今週からよろしくお願いしますよ！」</div>
+      </div>
+      <div class="event-modal-choices" id="event-modal-choices">
+        <!-- モーダルの選択肢ボタンがここに追加されます -->
+      </div>
+    </div>
+  </div>
+
   <footer>
-    <p>PM Simulator Web Prototype &copy; 2026 asabon / Antigravity AI Team</p>
+    <p>PM Simulator Web ADV Edition &copy; 2026 asabon / Antigravity AI Team</p>
   </footer>
 
   <script type="module" src="src/app.js?v=999"></script>

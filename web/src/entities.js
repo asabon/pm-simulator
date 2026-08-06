@@ -137,3 +137,96 @@ export class PM {
     this.ap = this.maxAp;
   }
 }
+
+// UI 遷移モード定義
+export const UIMode = {
+  DASHBOARD: "DASHBOARD",
+  SCENE_CUSTOMER: "SCENE_CUSTOMER",
+  SCENE_MANAGER: "SCENE_MANAGER",
+  SCENE_TEAM: "SCENE_TEAM",
+  EVENT_MODAL: "EVENT_MODAL"
+};
+
+// アクション定義 (ADV UIの各シーンでの具体アクション)
+export const ADV_ACTIONS = {
+  // 顧客会議室でのアクション
+  CUSTOMER: [
+    {
+      id: "req_def_ws",
+      name: "💡 要件定義WSを開く",
+      targetGroup: "CUSTOMER",
+      costAp: 1,
+      desc: "要件確定度を上昇させるが、顧客のこだわりを引き出すリスクあり"
+    },
+    {
+      id: "phased_release",
+      name: "👥 段階リリースを提案",
+      targetGroup: "CUSTOMER",
+      costAp: 1,
+      desc: "初期リリース範囲を絞りリスクを下げるが、満足度が微減"
+    },
+    {
+      id: "prototype_demo",
+      name: "📱 プロトタイプ先行提示",
+      targetGroup: "CUSTOMER",
+      costAp: 1,
+      desc: "開発初期の認識ズレを強力に防止する"
+    },
+    {
+      id: "qcd_align",
+      name: "🤝 QCD優先順位の合意",
+      targetGroup: "CUSTOMER",
+      costAp: 1,
+      desc: "顧客との期待値ギャップを最小化する"
+    }
+  ],
+  // 上司執務室でのアクション
+  MANAGER: [
+    {
+      id: "buffer_request",
+      name: "🏢 納期バッファの直訴",
+      targetGroup: "MANAGER",
+      costAp: 1,
+      desc: "上司に直訴して納期猶予を確保するが、評価リスクあり"
+    },
+    {
+      id: "helper_request",
+      name: "🙋‍♂️ 助っ人アサイン要請",
+      targetGroup: "MANAGER",
+      costAp: 1,
+      desc: "助っ人エンジニアを追加し現場の開発速度を上げる"
+    },
+    {
+      id: "boss_risk_check",
+      name: "❓ 上司のリスク容許範囲確認",
+      targetGroup: "MANAGER",
+      costAp: 0,
+      desc: "ノーリスクで上司の評価ラインと期待値を確認する"
+    }
+  ],
+  // 開発チームデスクでのアクション
+  TEAM: [
+    {
+      id: "tech_risk_check",
+      name: "🛠️ 技術リスク・見積精査",
+      targetGroup: "TEAM",
+      costAp: 1,
+      desc: "現場のコード・設計リスクを精査し事故を防ぐ"
+    },
+    {
+      id: "retrospective_share",
+      name: "📚 過去の失敗教訓共有",
+      targetGroup: "TEAM",
+      costAp: 1,
+      desc: "チームの安全度を上げバグ発生率を低減する"
+    },
+    {
+      id: "one_on_one",
+      name: "❓ チームの懸念点1on1",
+      targetGroup: "TEAM",
+      costAp: 0,
+      desc: "メンバーの隠れ不安やモチベーション状態を対話で看破する"
+    }
+  ]
+};
+
