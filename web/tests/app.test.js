@@ -125,7 +125,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(document.getElementById("dialog-text").textContent).toContain("件名:");
   });
 
-  it("should execute team kickoff action in TEAM scene and log effect", async () => {
+  it("should execute team kickoff and holiday work request actions in TEAM scene", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -136,11 +136,14 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     const kickoffBtn = document.getElementById("btn-act-team_kickoff");
     expect(kickoffBtn).not.toBeNull();
-
     kickoffBtn.click();
 
+    const holidayBtn = document.getElementById("btn-act-holiday_work_request");
+    expect(holidayBtn).not.toBeNull();
+    holidayBtn.click();
+
     const logContainer = document.getElementById("action-log-container");
-    expect(logContainer.innerHTML).toContain("チームキックオフ完了");
+    expect(logContainer.innerHTML).toContain("休日出勤依頼");
   });
 
   it("should schedule meeting on appointment action execution and show in log", async () => {

@@ -92,7 +92,8 @@ export function renderHeaderStatus() {
   if (statusBarEl) statusBarEl.style.display = "flex";
 
   if (projectState) {
-    if (weekInfoEl) weekInfoEl.textContent = `Day ${projectState.day}/${projectState.maxDays || 20} (Week ${projectState.week})`;
+    const dateStr = projectState.getDateString ? projectState.getDateString() : `Day ${projectState.day}`;
+    if (weekInfoEl) weekInfoEl.textContent = `${dateStr} [納期: 11/27(金)]`;
     if (custSatEl) custSatEl.textContent = `${projectState.customer.satisfaction.toFixed(0)}%`;
     if (bossTrustEl) bossTrustEl.textContent = `${(projectState.managerSatisfaction || 60).toFixed(0)}%`;
     if (teamSafetyEl) {
@@ -147,7 +148,7 @@ export function renderSceneView() {
 
     case UIMode.DASHBOARD:
       if (iconEl) iconEl.textContent = "🖥️";
-      if (titleEl) titleEl.textContent = `PM自席 [Day ${projectState ? projectState.day : 1}]`;
+      if (titleEl) titleEl.textContent = "PM自席";
       sceneBgEl.classList.add("bg-dashboard");
       if (avatarEl) avatarEl.textContent = "💻";
       if (nameEl) nameEl.textContent = "PMのデスク";
@@ -437,7 +438,11 @@ export function handleExecuteAction(action) {
     // ⚡ 即時アクション処理
     let effectLog = `▶ 『${action.name}』 を現場で即時実行しました。`;
 
-    if (action.id === "team_kickoff") {
+    if (action.id === "holiday_work_request") {
+      const devs = projectState.getAllDevelopers();
+      devs.forEach(d => { d.fatigue = Math.min(100, d.fatigue + 25); });
+      effectLog += " (🚨 休日出勤依頼！ 開発進捗を大きく回復。ただし開発陣の疲労度+25%急上昇！)";
+    } else if (action.id === "team_kickoff") {
       const devs = projectState.getAllDevelopers();
       devs.forEach(d => { d.fatigue = Math.max(0, d.fatigue - 10); });
       effectLog += " (チームキックオフ完了！ 役割分担を整理し、チーム健全性が向上！)";
