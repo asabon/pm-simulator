@@ -1,0 +1,81 @@
+# Git & GitHub 運用規約ガイドライン
+
+本ドキュメントは、本リポジトリ（PM Simulator）における Git / GitHub のブランチ運用、開発フロー、およびプルリクエスト（PR）作成・クリーンアップの標準ガイドラインを定義します。人間（開発者）および AI（Antigravity）共通の仕様規格として運用します。
+
+---
+
+## 🎯 1. 基本原則
+
+1. **`main` ブランチ保護**: `main` ブランチへの直接のコミットおよび直接プッシュは**厳禁**とします。
+2. **専用ブランチ必須**: すべてのコード変更・テキスト修正・仕様策定・バグ修正は、必ず専用のトピックブランチを作成して作業を行います。
+3. **シングル・ソース・オブ・トゥルース（Single Source of Truth）**: 開発ルールや仕様の変更は本ドキュメントおよび `docs/` 配下に集約し、AIスキルや指示書からは本仕様を参照します。
+
+---
+
+## 🌿 2. ブランチ運用 ＆ 命名規則
+
+### 2.1 作業着手前のブランチ自動検証
+ファイルを1文字でも編集・変更する前に、必ず現在のブランチを確認します。
+```bash
+git branch --show-current
+```
+* 現在のブランチが `main` の場合は、作業を開始する前に直ちに専用ブランチを作成・切り替えます。
+
+### 2.2 タイムスタンプ命名規則 (重複衝突防止)
+過去のローカル・リモートブランチとの命名衝突を100%防止するため、ブランチ名の末尾には必ず現在日時のタイムスタンプ（`MMDD-HHMM`）を付与します。
+
+| 種別 | ブランチ名の形式 | 例 |
+| :--- | :--- | :--- |
+| **新機能・拡張** | `feature/<概要>-MMDD-HHMM` | `feature/kickoff-dynamic-engine-0807-1816` |
+| **バグ・表記修正** | `fix/<概要>-MMDD-HHMM` | `fix/my-desk-wording-0807-1801` |
+| **ドキュメント・ルール** | `docs/<概要>-MMDD-HHMM` | `docs/git-workflow-rule-consolidation-0807-1816` |
+
+---
+
+## 📝 3. 仕様書駆動 ＋ PR 差分レビュー方式
+
+1. **原則 Issue 起票なし（トークン節約＆仕様可視化）**:
+   - タスクや仕様変更を行う際は、原則として GitHub Issue を作成せず、直接ブランチを切って作業を開始します。
+2. **`docs/` 先行更新**:
+   - 変更内容・合意内容を、まず `docs/` 配下の該当ドキュメント（`docs/spec/` や `docs/design/`）に明記・更新した上で、ソースコードの実装を行います。
+3. **PR 差分レビュー**:
+   - レビュアー（ユーザー）は PR の `docs/` 差分（File Changed）を見ることで、「どのような仕様・設計に変更されたか」を一目瞭然で確認・レビュー・承認できます。
+   *※長期的なプロジェクト管理などで明示指示があった場合のみ、例外として `create-issue` スキルで Issue を起票します。*
+
+---
+
+## 🚀 4. PR（プルリクエスト）作成フロー
+
+PRの作成時は、事前品質検証と統一テンプレートを適用するため、必ず `.agents/skills/create-pr/SKILL.md`（または `/create-pr` スラッシュコマンド）のワークフローに従います。
+
+### 4.1 事前品質レビュー ＆ テスト自動実行
+PR作成前に、以下の専門スキルによるセルフレビューを実施します。
+* **コード変更** ➔ `run-tests` スキル（`npm test` / `npm run lint` 等）＆ `code-review` スキル
+* **ドキュメント変更** ➔ `doc-review` スキル（用語の統一、リンク切れチェック）
+
+### 4.2 統一テンプレートと CLI 発行
+* PRの説明文は、`.git/pr_body.md` 一時ファイルに統一フォーマットで生成します。
+* ワンライナー文字列指定（`--body "..."`）は禁止し、必ず `--body-file` オプションを使用して `gh` CLI から発行します。
+```powershell
+# PR本文を .git/pr_body.md に記述した上で実行
+$env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "<タイトル>" --body-file .git/pr_body.md
+```
+
+---
+
+## 🧹 5. マージ完了後のクリーンアップフロー
+
+PRがGitHub上でマージされた後は、`.agents/skills/clean-branches/SKILL.md`（または `/clean-branches` / `/merged`）のワークフローに従い、ローカルおよびリモート追跡情報を完全クリーンアップします。
+
+### 実行4ステップ:
+1. **`main` へ切り替え**: `git checkout main`
+2. **最新の変更を同期**: `git pull origin main`
+3. **リモート追跡情報の消去**: `git fetch --prune`
+4. **ローカル作業ブランチの削除**: `git branch -d <target_branch>`
+
+---
+
+## 🔗 関連ファイル
+* ルール統括: [.agents/AGENTS.md](file:///e:/work/pm-simulator/.agents/AGENTS.md)
+* PR作成スキル: [.agents/skills/create-pr/SKILL.md](file:///e:/work/pm-simulator/.agents/skills/create-pr/SKILL.md)
+* クリーンアップスキル: [.agents/skills/clean-branches/SKILL.md](file:///e:/work/pm-simulator/.agents/skills/clean-branches/SKILL.md)

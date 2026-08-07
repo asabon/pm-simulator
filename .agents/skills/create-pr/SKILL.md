@@ -7,6 +7,8 @@ description: ユーザーから「PR出して」「PR作成」「PR提出」「�
 
 本スキルは、ユーザーからプルリクエスト（PR）の作成を依頼された際に、事前品質チェック・自動修正・ブランチ操作・統一テンプレートによるPR生成を一括で安全に自動実行するワークフローを定義します。
 
+> 📖 **関連規約**: 本スキルの処理は [docs/development/git_workflow.md](file:///e:/work/pm-simulator/docs/development/git_workflow.md) の「4. PR作成フロー」に準拠します。
+
 ## 🛠 実行フロー
 
 ### STEP 1: 差分確認 ＆ レビュースキル自動実行
