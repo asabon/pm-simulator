@@ -7,6 +7,8 @@ description: スラッシュコマンド `/clean-branches` の実行や、ユー
 
 本スキルは、ユーザーから GitHub PR のマージ完了連絡（スラッシュコマンド `/clean-branches` や `/merged`、「マージしました」「マージ完了」等）を受けた際に、自動的に `main` ブランチへの同期と作業用ブランチの完全クリーンアップを安全かつ迅速に行うワークフローを定義します。
 
+> 📖 **関連規約**: 本スキルの処理は [docs/development/git_workflow.md](file:///e:/work/pm-simulator/docs/development/git_workflow.md) の「5. マージ完了後のクリーンアップフロー」に準拠します。
+
 ## 🛠 実行フロー
 
 ### STEP 1: 現在のブランチ・削除対象ブランチの特定
