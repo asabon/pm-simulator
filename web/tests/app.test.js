@@ -118,7 +118,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
 
-    expect(document.getElementById("location-title").textContent).toContain("PM自席");
+    expect(document.getElementById("location-title").textContent).toContain("自席");
     expect(document.getElementById("btn-check-pc-mail")).toBeNull();
     expect(document.getElementById("nav-customer")).not.toBeNull();
     expect(document.getElementById("nav-manager")).not.toBeNull();

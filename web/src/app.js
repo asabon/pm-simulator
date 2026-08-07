@@ -239,10 +239,10 @@ export function renderSceneView() {
 
     case UIMode.DASHBOARD:
       if (iconEl) iconEl.textContent = "🖥️";
-      if (titleEl) titleEl.textContent = "PM自席";
+      if (titleEl) titleEl.textContent = "自席 (ダッシュボード)";
       sceneBgEl.classList.add("bg-dashboard");
       if (avatarEl) avatarEl.textContent = "💻";
-      if (nameEl) nameEl.textContent = "PMのデスク";
+      if (nameEl) nameEl.textContent = "自分のデスク";
       break;
 
     case UIMode.SCENE_CUSTOMER:
@@ -425,7 +425,7 @@ export function renderActionPanel() {
     acceptBtn.style.gridColumn = "span 2";
     acceptBtn.style.padding = "1.2rem";
     acceptBtn.style.alignItems = "center";
-    acceptBtn.innerHTML = "<span>💼 了解しました！ PMのデスクへ向かう</span><span class='btn-sub-desc'>本日の活動方針を決定する</span>";
+    acceptBtn.innerHTML = "<span>💼 了解しました！ 自分のデスクへ向かう</span><span class='btn-sub-desc'>本日の活動方針を決定する</span>";
     acceptBtn.addEventListener("click", () => {
       currentUIMode = UIMode.DASHBOARD;
       if (projectState) {
