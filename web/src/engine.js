@@ -855,4 +855,32 @@ export function evaluateKickoffReadiness(kickoffHistory = []) {
   }
 }
 
+export function executeAgendaPrepAction(projectState, kickoffState = {}) {
+  const scheduled = (projectState && projectState.scheduledMeetings) || [];
+  const cardsChecked = kickoffState.assessmentCards || [];
+
+  if (!cardsChecked.includes("CARD_AGENDA")) {
+    cardsChecked.push("CARD_AGENDA");
+  }
+  kickoffState.assessmentCards = cardsChecked;
+
+  if (scheduled.length > 0) {
+    const sorted = [...scheduled].sort((a, b) => a.day - b.day);
+    const nextMeeting = sorted[0];
+    return {
+      speaker: "開発リーダー (PL)",
+      text: `「直近予定の『Day ${nextMeeting.day}: ${nextMeeting.title}』ですね！ 顧客に確認すべき具体的な機能や技術質問のリストを整理しておきました。これで当日はキーマンと深い議論ができます！」`,
+      log: `📝 【論点整理】直近予定会議『${nextMeeting.title}』のアジェンダ・質問整理が完了しました！（事前アジェンダカード獲得）`,
+      targetMeetingTitle: nextMeeting.title
+    };
+  } else {
+    return {
+      speaker: "開発リーダー (PL)",
+      text: "「次回の顧客会議に向けた論点整理ですね！ 顧客に確認すべき質問とアジェンダのテンプレートを作成しました。これでアポ調整時も『〜について相談したい』と具体的に伝えられますよ！」",
+      log: "📝 【論点整理】次回顧客会議の論点・アジェンダ整理（CARD_AGENDA）を完了しました！",
+      targetMeetingTitle: null
+    };
+  }
+}
+
 

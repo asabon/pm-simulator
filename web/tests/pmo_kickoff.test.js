@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateKickoffAction, evaluateKickoffReadiness, getPMOAdvice } from "../src/engine.js";
+import { evaluateKickoffAction, evaluateKickoffReadiness, executeAgendaPrepAction, getPMOAdvice } from "../src/engine.js";
 
 describe("PMO Advisor & Kickoff Prep Logic", () => {
   it("should generate initial advice for kickoff prep in Day 1-2 with agenda guidance", () => {
@@ -40,6 +40,26 @@ describe("PMO Advisor & Kickoff Prep Logic", () => {
     const res = evaluateKickoffAction([], "CLIENT_WS", project, { assessmentCards: ["CARD_AGENDA"] });
     expect(res.customerSatisfactionBonus).toBeGreaterThan(0);
     expect(res.synergyName).toContain("キーマン同席成功");
+  });
+
+  it("should execute executeAgendaPrepAction dynamically for upcoming meeting if present", () => {
+    const project = {
+      scheduledMeetings: [{ day: 3, title: "💡 要件定義WS" }]
+    };
+    const kickoffState = { assessmentCards: [] };
+    const res = executeAgendaPrepAction(project, kickoffState);
+    expect(kickoffState.assessmentCards).toContain("CARD_AGENDA");
+    expect(res.text).toContain("💡 要件定義WS");
+    expect(res.targetMeetingTitle).toBe("💡 要件定義WS");
+  });
+
+  it("should execute executeAgendaPrepAction for general next meeting if no scheduled meeting exists", () => {
+    const project = { scheduledMeetings: [] };
+    const kickoffState = { assessmentCards: [] };
+    const res = executeAgendaPrepAction(project, kickoffState);
+    expect(kickoffState.assessmentCards).toContain("CARD_AGENDA");
+    expect(res.text).toContain("次回の顧客会議に向けた論点整理");
+    expect(res.targetMeetingTitle).toBeNull();
   });
 
   it("should evaluate kickoff readiness rank S for 3 or more prep actions", () => {

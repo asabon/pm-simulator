@@ -252,6 +252,15 @@ export const ADV_ACTIONS = {
   // 開発チームデスクでのアクション (現場アクションは即時中心)
   TEAM: [
     {
+      id: "agenda_prep",
+      name: "📝 会議の論点・アジェンダ整理",
+      targetGroup: "TEAM",
+      costAp: 1,
+      isAppointment: false,
+      delayDays: 0,
+      desc: "【即時】直近予定の会議（または次回会議）に向けた論点・質問項目をPLと整理する"
+    },
+    {
       id: "holiday_work_request",
       name: "🚨 現場チームに休日出勤を依頼する (土曜出社)",
       targetGroup: "TEAM",
