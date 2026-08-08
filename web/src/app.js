@@ -9,6 +9,7 @@ import {
   calculateFinalScore,
   checkRandomEventTrigger,
   evaluateKickoffReadiness,
+  executeAgendaPrepAction,
   generateScheduledMeetingEvent,
   generateWeeklyMeetingEvent,
   getInitialDeveloperPool,
@@ -575,7 +576,18 @@ export function handleExecuteAction(action) {
     // ⚡ 即時アクション処理
     let effectLog = `▶ 『${action.name}』 を現場で即時実行しました。`;
 
-    if (action.id === "holiday_work_request") {
+    if (action.id === "agenda_prep") {
+      const res = executeAgendaPrepAction(projectState, { assessmentCards: projectState.assessmentCards || [] });
+      if (!projectState.assessmentCards) projectState.assessmentCards = [];
+      if (!projectState.assessmentCards.includes("CARD_AGENDA")) {
+        projectState.assessmentCards.push("CARD_AGENDA");
+      }
+      effectLog = res.log;
+      activeSceneMessage = {
+        speaker: res.speaker,
+        text: res.text
+      };
+    } else if (action.id === "holiday_work_request") {
       const devs = projectState.getAllDevelopers();
       devs.forEach(d => { d.fatigue = Math.min(100, d.fatigue + 25); });
       effectLog += " (🚨 休日出勤依頼！ 開発進捗を大きく回復。ただし開発陣の疲労度+25%急上昇！)";
