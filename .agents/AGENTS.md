@@ -42,7 +42,7 @@
   * 現在のブランチが `main` の場合は、**作業を開始する前に、直ちに専用ブランチ（`feature/xxx-MMDD-HHMM`, `fix/xxx-MMDD-HHMM`, `docs/xxx-MMDD-HHMM`）を新規作成・切り替えてから作業を開始すること。**
 * **自動化スキルの実行要件**:
   * **PR作成時**: ユーザーから「PR作成」「PR提出」等の依頼を受けた場合、または上記の通り議論確定後の作業完了時、必ず `create-pr` スキルのワークフローを実行すること。
-  * **マージ後クリーンアップ**: ユーザーから `/clean-branches`, `/merged`, 「マージ完了」等の連絡を受けた場合、必ず `clean-branches` スキルのワークフローを実行すること。
+  * **マージ後クリーンアップ**: ユーザーから `/clean-merged-branches`, `/clean-branches`, `/merged`, 「マージ完了」等の連絡を受けた場合、必ず `clean-merged-branches` スキルのワークフローを実行すること。
 
 ---
 

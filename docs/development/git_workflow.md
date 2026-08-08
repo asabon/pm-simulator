@@ -68,7 +68,7 @@ $env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "<タイト�
 
 ## 🧹 5. マージ完了後のクリーンアップフロー
 
-PRがGitHub上でマージされた後は、`.agents/skills/clean-branches/SKILL.md`（または `/clean-branches` / `/merged`）のワークフローに従い、ローカルおよびリモート追跡情報を完全クリーンアップします。
+PRがGitHub上でマージされた後は、`.agents/skills/clean-merged-branches/SKILL.md`（または `/clean-merged-branches` / `/clean-branches` / `/merged`）のワークフローに従い、ローカルおよびリモート追跡情報を完全クリーンアップします。
 
 ### 実行4ステップ:
 1. **`main` へ切り替え**: `git checkout main`
@@ -81,4 +81,4 @@ PRがGitHub上でマージされた後は、`.agents/skills/clean-branches/SKILL
 ## 🔗 関連ファイル
 * ルール統括: [.agents/AGENTS.md](file:///e:/work/pm-simulator/.agents/AGENTS.md)
 * PR作成スキル: [.agents/skills/create-pr/SKILL.md](file:///e:/work/pm-simulator/.agents/skills/create-pr/SKILL.md)
-* クリーンアップスキル: [.agents/skills/clean-branches/SKILL.md](file:///e:/work/pm-simulator/.agents/skills/clean-branches/SKILL.md)
+* クリーンアップスキル: [.agents/skills/clean-merged-branches/SKILL.md](file:///e:/work/pm-simulator/.agents/skills/clean-merged-branches/SKILL.md)
