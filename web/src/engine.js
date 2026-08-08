@@ -67,6 +67,13 @@ export function getInitialProjectData(projectNumber) {
 }
 
 export const STEP1_ASSESSMENT_CARDS = {
+  CARD_AGENDA: {
+    id: "CARD_AGENDA",
+    name: "📝 事前アジェンダ・質問項目の策定",
+    target: "🛠️ PL",
+    desc: "顧客会議の議題と確認質問をPLと整理し、業務キーマンを同席させる準備を整える。",
+    getSpeech: () => "💬 PL:「事前に質問と議題を整理できて助かります！ これなら顧客も業務キーマンを同席させてくれるはずです！」 (※事前アジェンダ獲得！)"
+  },
   CARD_QCD: {
     id: "CARD_QCD",
     name: "❓ QCD優先軸の事前すり合わせ",
@@ -140,11 +147,10 @@ export const KICKOFF_SYNERGY_RULES = [
     condition: (history, currentActionId) => 
       history.includes("CLIENT_WS") && currentActionId === "TEAM_RISK_CHECK",
     speaker: "PL",
-    comment: "顧客の欲しい仕様イメージがハッキリしたので、めちゃくちゃ見積もりと設計がやりやすくなりました！",
+    comment: "顧客とすり合わせた仕様をもとに工数見積もりができました！これなら精度高く進められます。",
     applyEffects: (project, stats) => {
-      stats.synergyName = "🌟 【順序コンボ】明確化からの現場着地 (チーム士気大爆発)";
+      stats.synergyName = "🌟 【順序コンボ】仕様明確化からの工数算出";
       stats.teamSafetyStars += 1;
-      stats.moraleBonus += 20;
     }
   },
   // コンボ4: 【筋を通す順番】上司納期直訴 ➔ 助っ人要請
@@ -192,7 +198,21 @@ export function evaluateKickoffAction(history, currentActionId, project, kickoff
     return result;
   }
 
-  // 2. 🔴 後出し大ペナルティ判定 (Step 1 で確認せずに Step 2 で確認した場合)
+  // 2. 🔴 アジェンダ準備なし（アポ先行）ペナルティ / 🟢 アジェンダ提示ボーナス
+  if (actionInfo.category === "CLIENT") {
+    if (!cardsChecked.includes("CARD_AGENDA")) {
+      result.speaker = "顧客";
+      result.comment = "えっ、とりあえず打ち合わせしたいって…？ アジェンダ（議題）がないと、うちの業務担当者を呼ぶべきなのか、インフラ担当だけでいいのか判断できなくて、会議に誰を呼べばいいか分からないよ…";
+      result.synergyName = "🔴 【準備不足ペナルティ】キーマン不在・アジェンダ欠如";
+      result.customerSatisfactionBonus -= 5;
+      return result;
+    } else {
+      result.customerSatisfactionBonus += 5;
+      result.synergyName = "🟢 【キーマン同席成功】アジェンダ提示による事前調整完了";
+    }
+  }
+
+  // 3. 🔴 後出し大ペナルティ判定 (Step 1 で確認せずに Step 2 で確認した場合)
   if (currentActionId === "CLIENT_TRADEOFF" && !cardsChecked.includes("CARD_QCD")) {
     result.speaker = "顧客";
     result.comment = "えっ、最初のキックオフの時に聞いてくれよ…今さら改まってそんな初歩的なこと確認されても不安になるよ。";
@@ -209,7 +229,7 @@ export function evaluateKickoffAction(history, currentActionId, project, kickoff
     return result;
   }
 
-  // 3. 🧠 顧客隠れタイプ依存の動的セリフ・納得度分岐
+  // 4. 🧠 顧客隠れタイプ依存の動的セリフ・納得度分岐
   if (actionInfo.category === "CLIENT") {
     if (archetype.favors.includes(currentActionId)) {
       if (currentActionId === "CLIENT_WS") {
@@ -783,13 +803,13 @@ export function getPMOAdvice(projectState, kickoffHistory = [], currentDay = 1) 
       return {
         type: "GUIDE",
         badge: "💡 PMOの助言 (次の下準備)",
-        text: "「案件の前提が見えてきましたね！ 次は開発フロアに向かって現場のエンジニア候補陣と対話し『技術リスク精査』や事前調整を行いましょう。」"
+        text: "「アジェンダの準備ができましたね！ 次は顧客フロアまたは開発フロアに向かい、整理した議題を提示して関係者との調整を進めましょう。」"
       };
     }
     return {
       type: "GUIDE",
-      badge: "💡 PMOの助言 (下準備のセオリー)",
-      text: "「キックオフ前ですね。まずは自席のPCメールで案件要件や前提の詳細を確認し、顧客フロアで『QCD優先軸のすり合わせ』を行って前提を固めるのがPMのセオリーですよ。」"
+      badge: "💡 PMOの助言 (アジェンダセオリー)",
+      text: "「アサイン直後ですね！ まずは案件資料を確認し、現場PLと『顧客会議のアジェンダ・質問内容』を固めるのがセオリーですよ。アジェンダがないまま会議調整しても、顧客が誰を同席させるべきか迷ってしまい、必要な情報が引き出せなくなります。」"
     };
   }
 
