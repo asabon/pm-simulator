@@ -1,11 +1,11 @@
 ---
-name: clean-branches
-description: スラッシュコマンド `/clean-branches` の実行や、ユーザーから「/merged」「マージしました」「マージ完了」「ブランチ削除」等のメッセージを受けた際に必ず自動発動。main への同期・リモート追跡消去・作業ブランチ削除の完全クリーンアップを一貫実行するスキル。
+name: clean-merged-branches
+description: スラッシュコマンド `/clean-merged-branches` や `/clean-branches` の実行、ユーザーから「/merged」「マージしました」「マージ完了」「ブランチ削除」等のメッセージを受けた際に必ず自動発動。main への同期・リモート追跡消去・作業ブランチ削除の完全クリーンアップを一貫実行するスキル。
 ---
 
-# Clean Branches (PR Clean-up) Skill
+# Clean Merged Branches (PR Clean-up) Skill
 
-本スキルは、ユーザーから GitHub PR のマージ完了連絡（スラッシュコマンド `/clean-branches` や `/merged`、「マージしました」「マージ完了」等）を受けた際に、自動的に `main` ブランチへの同期と作業用ブランチの完全クリーンアップを安全かつ迅速に行うワークフローを定義します。
+本スキルは、ユーザーから GitHub PR のマージ完了連絡（スラッシュコマンド `/clean-merged-branches`, `/clean-branches`, `/merged`、「マージしました」「マージ完了」等）を受けた際に、自動的に `main` ブランチへの同期と作業用ブランチの完全クリーンアップを安全かつ迅速に行うワークフローを定義します。
 
 > 📖 **関連規約**: 本スキルの処理は [docs/development/git_workflow.md](file:///e:/work/pm-simulator/docs/development/git_workflow.md) の「5. マージ完了後のクリーンアップフロー」に準拠します。
 
