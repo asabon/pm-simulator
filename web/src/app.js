@@ -2,7 +2,6 @@
 
 import {
   ADV_ACTIONS,
-  PM,
   UIMode
 } from "./entities.js";
 import {
@@ -12,19 +11,19 @@ import {
   executeAgendaPrepAction,
   generateScheduledMeetingEvent,
   generateWeeklyMeetingEvent,
-  getInitialDeveloperPool,
-  getInitialProjectData,
   getPMOAdvice,
   runDailyProgress
 } from "./engine.js";
+import { GameSession } from "./game_session.js";
 
 // =========================================================================
-// 状態変数 (State Management)
+// 状態変数 (State Management & Game Session Architecture)
 // =========================================================================
+export let gameSession = new GameSession();
 export let currentUIMode = UIMode.TITLE;
-export let projectState = null;
-export let developerPool = [];
-export let pmState = new PM(3);
+export let projectState = gameSession.project;
+export let developerPool = gameSession.teamService.getMembers();
+export let pmState = gameSession.pm;
 export let kickoffHistory = [];
 export let logs = [];
 export let activeModalEvent = null;
@@ -34,16 +33,17 @@ export let activeSceneMessage = null;
 // 初期化 (Initialization)
 // =========================================================================
 export function initGame() {
+  gameSession = new GameSession();
+  projectState = gameSession.project;
+  developerPool = gameSession.teamService.getMembers();
+  pmState = gameSession.pm;
+
   currentUIMode = UIMode.TITLE;
   pmState.resetAp();
   kickoffHistory = [];
   logs = [];
   activeSceneMessage = null;
 
-  // プロジェクト・メンバー初期データ生成
-  developerPool = getInitialDeveloperPool();
-  const { project } = getInitialProjectData(1);
-  projectState = project;
   projectState.day = 1;
   projectState.maxDays = 20;
   projectState.scheduledMeetings = [];
