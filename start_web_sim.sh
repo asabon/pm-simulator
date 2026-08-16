@@ -5,6 +5,10 @@ echo "==================================================="
 echo "Starting web server at http://127.0.0.1:8000 ..."
 echo ""
 
+if [ -f "scripts/update_version.js" ]; then
+  node scripts/update_version.js
+fi
+
 if command -v open > /dev/null; then
   (sleep 2 && open http://127.0.0.1:8000) &
 elif command -v xdg-open > /dev/null; then

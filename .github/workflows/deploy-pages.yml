@@ -29,6 +29,9 @@ jobs:
         with:
           enablement: true
 
+      - name: Update Version Tracking
+        run: node scripts/update_version.js
+
       - name: Upload Artifact (web directory)
         uses: actions/upload-pages-artifact@v3
         with:
