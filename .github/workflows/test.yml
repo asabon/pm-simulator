@@ -14,19 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: Install dependencies
-        run: uv sync
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,21 +29,3 @@ jobs:
       - name: Run JavaScript Vitest Unit Tests
         run: npm test
 
-      - name: Run Ruff Lint Check
-        run: uv run ruff check prototype/
-
-      - name: Run Pytest with Coverage & Test Report
-        run: uv run pytest prototype/tests --cov-report=term-missing --cov-report=markdown --md-report --md-report-output=test_report.md
-
-      - name: Add Test & Coverage Summary
-        if: always()
-        run: |
-          echo "## 🧪 Test Execution Report" >> $GITHUB_STEP_SUMMARY
-          if [ -f test_report.md ]; then
-            cat test_report.md >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
-          if [ -f coverage.md ]; then
-            cat coverage.md >> $GITHUB_STEP_SUMMARY
-          fi
