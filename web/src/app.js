@@ -1,7 +1,6 @@
 // Web ADV Edition App Controller (app.js)
 
 import {
-  ADV_ACTIONS,
   UIMode
 } from "./entities.js";
 import {
@@ -446,94 +445,59 @@ export function renderActionPanel() {
     panelEl.appendChild(acceptBtn);
 
   } else if (currentUIMode === UIMode.DASHBOARD) {
-    // 【第一階層コマンド】メイン画面での4大ボタン
-    const navButtons = [
-      {
-        id: "nav-customer",
-        label: "💬 顧客との会議調整",
-        desc: "要件確認・アポ予約（WS/交渉）",
-        mode: UIMode.SCENE_CUSTOMER
-      },
-      {
-        id: "nav-manager",
-        label: "🏢 上司に相談・報告",
-        desc: "進捗報告・重要面談予約（直訴/助っ人）",
-        mode: UIMode.SCENE_MANAGER
-      },
-      {
-        id: "nav-team",
-        label: "🛠️ 現場へ行く (開発フロア)",
-        desc: "【即時】体制構築・技術リスク精査・1on1",
-        mode: UIMode.SCENE_TEAM
-      },
-      {
-        id: "nav-next-day",
-        label: "⏱️ 1日を進める",
-        desc: "本日を終了し次の日へ。予約会議・イベント判定",
-        isSpecial: true
-      }
-    ];
+    // 【PM 意思決定コマンド】ProjectManager public method の取得結果を直接レンダリング
+    const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands({ kickoffHistory }) : [];
 
-    navButtons.forEach(b => {
+    availableCommands.forEach(cmd => {
       const btn = document.createElement("button");
-      btn.id = b.id;
-      btn.className = "btn-adv btn-primary-category";
-      btn.innerHTML = `<span>${b.label}</span><span class="btn-sub-desc">${b.desc}</span>`;
+      btn.id = `btn-act-${cmd.id}`;
+      btn.className = `btn-adv btn-category-${cmd.category ? cmd.category.toLowerCase() : "default"}`;
       
-      if (b.isSpecial) {
-        btn.addEventListener("click", handleAdvanceDay);
-      } else {
-        btn.addEventListener("click", () => {
-          activeMailContent = null;
-          activeSceneMessage = null;
-          currentUIMode = b.mode;
-          renderAll();
-        });
-      }
-      panelEl.appendChild(btn);
-    });
-
-  } else {
-    // 【具体アクション】シーン遷移後のボタン群
-    let actionsList = [];
-    if (currentUIMode === UIMode.SCENE_CUSTOMER) actionsList = ADV_ACTIONS.CUSTOMER;
-    if (currentUIMode === UIMode.SCENE_MANAGER) actionsList = ADV_ACTIONS.MANAGER;
-    if (currentUIMode === UIMode.SCENE_TEAM) {
-      const isKickoffDone = kickoffHistory.includes("team_kickoff") || kickoffHistory.includes("team_kickoff_rally");
-      if (isKickoffDone) {
-        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "team_kickoff" && act.id !== "team_kickoff_rally");
-      } else {
-        actionsList = ADV_ACTIONS.TEAM.filter(act => act.id !== "holiday_work_request");
-      }
-    }
-
-    const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands() : [];
-
-    actionsList.forEach(act => {
-      const btn = document.createElement("button");
-      btn.id = `btn-act-${act.id}`;
-      btn.className = "btn-adv";
-      
-      const actCost = act.cost !== undefined ? act.cost : 1;
-      let isDisabled = pmState.ap < actCost;
-      let disabledReason = isDisabled ? " (AP不足)" : "";
-
-      // ProjectManagerの動的コマンドメタデータと突合
-      const matchingCmd = availableCommands.find(c => c.id.toLowerCase() === act.id.toLowerCase());
-      if (matchingCmd && !matchingCmd.enabled) {
-        isDisabled = true;
-        disabledReason = ` (${matchingCmd.disabledReason})`;
-      }
-
-      if (isDisabled) {
+      const disabledSuffix = !cmd.enabled ? ` (${cmd.disabledReason})` : "";
+      if (!cmd.enabled) {
         btn.disabled = true;
       }
 
       btn.innerHTML = `
-        <span>${act.name}${disabledReason}</span>
-        <span class="btn-sub-desc">${act.desc}</span>
+        <span>${cmd.name}${disabledSuffix}</span>
+        <span class="btn-sub-desc">${cmd.desc || ""}</span>
       `;
-      btn.addEventListener("click", () => handleExecuteAction(act));
+
+      btn.addEventListener("click", () => {
+        if (cmd.id === "advance_day") {
+          handleAdvanceDay();
+        } else {
+          handleExecuteAction(cmd);
+        }
+      });
+      panelEl.appendChild(btn);
+    });
+
+  } else {
+    // 【具体アクション】個別シーン画面 (後方互換・直接遷移)
+    const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands({ kickoffHistory }) : [];
+
+    availableCommands.forEach(act => {
+      const btn = document.createElement("button");
+      btn.id = `btn-act-${act.id}`;
+      btn.className = "btn-adv";
+      
+      const disabledSuffix = !act.enabled ? ` (${act.disabledReason})` : "";
+      if (!act.enabled) {
+        btn.disabled = true;
+      }
+
+      btn.innerHTML = `
+        <span>${act.name}${disabledSuffix}</span>
+        <span class="btn-sub-desc">${act.desc || ""}</span>
+      `;
+      btn.addEventListener("click", () => {
+        if (act.id === "advance_day") {
+          handleAdvanceDay();
+        } else {
+          handleExecuteAction(act);
+        }
+      });
       panelEl.appendChild(btn);
     });
 
@@ -564,7 +528,7 @@ export function renderDebugPanel() {
   screenIdEl.textContent = `Screen ID: ${currentUIMode}`;
 
   // 1. ProjectManager public method で取得できたコマンド一覧
-  const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands() : [];
+  const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands({ kickoffHistory }) : [];
   if (availableCommands.length === 0) {
     commandsListEl.textContent = "（取得可能コマンドなし）";
   } else {
@@ -623,6 +587,9 @@ export function handleCheckPcMail() {
 // アクション実行ハンドラ (即時 vs アポ予約)
 // =========================================================================
 export function handleExecuteAction(action) {
+  if (action.cost) {
+    pmState.consumeAp(action.cost);
+  }
   kickoffHistory.push(action.id);
 
   if (action.isAppointment) {

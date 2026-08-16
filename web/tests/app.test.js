@@ -117,7 +117,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(acceptBtn).not.toBeNull();
   });
 
-  it("should transit to DASHBOARD scene, automatically check mail, disclose status bar, and show main navigation buttons", async () => {
+  it("should transit to DASHBOARD scene, automatically check mail, disclose status bar, and show PM decision commands", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -127,10 +127,11 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     expect(document.getElementById("location-title").textContent).toContain("自席");
     expect(document.getElementById("btn-check-pc-mail")).toBeNull();
-    expect(document.getElementById("nav-customer")).not.toBeNull();
-    expect(document.getElementById("nav-manager")).not.toBeNull();
-    expect(document.getElementById("nav-team")).not.toBeNull();
-    expect(document.getElementById("nav-next-day")).not.toBeNull();
+
+    // DASHBOARD画面に直接PMの意思決定コマンドがレンダリングされていることの検証
+    expect(document.getElementById("btn-act-req_def_ws")).not.toBeNull();
+    expect(document.getElementById("btn-act-team_kickoff_rally")).not.toBeNull();
+    expect(document.getElementById("btn-act-advance_day")).not.toBeNull();
 
     // デスク着席直後に自動的にステータスバーが表示され、メール本文がセットされること
     const statusBar = document.getElementById("project-status-bar");
@@ -147,24 +148,17 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-start-new-project").click();
     document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
-    document.getElementById("nav-team").click();
 
-    // 【1. キックオフ前】の確認
-    expect(document.getElementById("sprite-name").textContent).toBe("開発チーム (体制構築中)");
-    expect(document.getElementById("speaker-name").textContent).toBe("開発メンバー候補");
-    expect(document.getElementById("dialog-text").textContent).toContain("開発チームフロアへようこそ");
-
-    // キックオフ実行
-    const kickoffBtn = document.getElementById("btn-act-team_kickoff_rally") || document.getElementById("btn-act-team_kickoff");
+    // 【1. キックオフ前】の確認 (DASHBOARDから直接実行可能)
+    const kickoffBtn = document.getElementById("btn-act-team_kickoff_rally");
     expect(kickoffBtn).not.toBeNull();
     kickoffBtn.click();
 
     // 【2. キックオフ実行直後】の即時会話応答確認
-    expect(document.getElementById("sprite-name").textContent).toBe("開発リーダー(PL) & チーム");
     expect(document.getElementById("speaker-name").textContent).toBe("開発リーダー (PL)");
     expect(document.getElementById("dialog-text").textContent).toContain("キックオフ決起の宣言ありがとうございます");
 
-    // 休日出勤依頼の実行
+    // 休日出勤依頼の実行 (キックオフ後に解禁される)
     const holidayBtn = document.getElementById("btn-act-holiday_work_request");
     expect(holidayBtn).not.toBeNull();
     holidayBtn.click();
@@ -172,14 +166,6 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     const logContainer = document.getElementById("action-log-container");
     expect(logContainer.innerHTML).toContain("休日出勤依頼");
-
-    // 【3. 自席に戻り、再度フロア訪問時】の通常セリフ確認
-    document.getElementById("btn-back-dashboard").click();
-    document.getElementById("nav-team").click();
-
-    expect(document.getElementById("sprite-name").textContent).toBe("開発リーダー(PL) & チーム");
-    expect(document.getElementById("speaker-name").textContent).toBe("開発リーダー (PL)");
-    expect(document.getElementById("dialog-text").textContent).toContain("現場の技術リスク精査や1on1なら今日すぐに動けますよ");
   });
 
   it("should schedule meeting on appointment action execution and show in log", async () => {
@@ -189,7 +175,6 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-start-new-project").click();
     document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
-    document.getElementById("nav-customer").click();
 
     // アポ予約アクション実行 (要件定義WS)
     document.getElementById("btn-act-req_def_ws").click();
@@ -221,15 +206,13 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     document.getElementById("btn-start-new-project").click();
     document.getElementById("btn-enter-room").click();
     document.getElementById("btn-accept-assignment").click();
-    document.getElementById("nav-customer").click();
 
     // 翌日(Day 2)のアポ予約 (qcd_align)
     document.getElementById("btn-act-qcd_align").click();
-    document.getElementById("btn-back-dashboard").click();
 
     // 1日進める (Day 1 ➔ Day 2へ)
-    const navNextDay = document.getElementById("nav-next-day");
-    navNextDay.click();
+    const advanceDayBtn = document.getElementById("btn-act-advance_day");
+    advanceDayBtn.click();
 
     // 予約当日に到達し、モーダルが開いていることの検証
     const modalOverlay = document.getElementById("event-modal-overlay");
@@ -239,7 +222,7 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
     expect(modalTitle.textContent).toContain("予定会議");
   });
 
-  it("should render debug info panel with version, screen ID, available commands, and project status", async () => {
+  it("should render debug info panel with version, screen ID, available commands, and project status matching UI", async () => {
     const appModule = await import("../src/app.js?test=" + Date.now());
     appModule.initGame();
 
@@ -250,11 +233,23 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     expect(versionTag.textContent).toContain("Version:");
     expect(screenId.textContent).toBe("Screen ID: TITLE");
-    expect(commandsList.textContent).toContain("顧客スコープ事前ネゴ");
+    expect(commandsList.textContent).toContain("要件定義WS予約");
     expect(statusDetails.textContent).toContain("[プロジェクト概要]");
 
     // シーン遷移で Screen ID が更新されることの検証
     document.getElementById("btn-start-new-project").click();
     expect(screenId.textContent).toBe("Screen ID: PROLOGUE_INTRO");
+
+    document.getElementById("btn-enter-room").click();
+    document.getElementById("btn-accept-assignment").click();
+
+    // DASHBOARD画面で、意思決定ボタンとインスペクターの一致を確認
+    const actionPanel = document.getElementById("action-panel");
+    const actionButtons = actionPanel.querySelectorAll("button");
+    expect(actionButtons.length).toBeGreaterThan(5);
+
+    // インスペクター内にも同じコマンドが記載されていることの検証
+    expect(commandsList.textContent).toContain("要件定義WS予約");
+    expect(commandsList.textContent).toContain("チームキックオフ決起");
   });
 });

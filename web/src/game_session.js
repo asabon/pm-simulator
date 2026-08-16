@@ -73,13 +73,17 @@ export class GameSession {
     });
   }
 
-  getAvailablePmCommands() {
+  getAvailablePmCommands(extraContext = {}) {
     const avgFatigue = this.teamService.getAverageFatigue();
+    const kickoffHistory = extraContext.kickoffHistory || (this.kickoffService ? this.kickoffService.history : []);
+
     return this.pm.getAvailableCommands({
       phase: this.phase === GamePhase.KICKOFF_PREP ? "KICKOFF" : "SPRINT",
       ap: this.pm.ap,
       teamFatigue: avgFatigue,
-      customerSatisfaction: this.customerService.satisfaction
+      customerSatisfaction: this.customerService.satisfaction,
+      kickoffHistory,
+      ...extraContext
     });
   }
 
