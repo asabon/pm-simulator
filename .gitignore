@@ -33,3 +33,6 @@ node_modules/
 .vite/
 .eslintcache
 
+# Auto-generated runtime artifacts
+web/src/version.js
+
