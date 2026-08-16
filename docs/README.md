@@ -11,6 +11,7 @@
 プレイヤーが体験するゲームシステム・ルール・全体コンセプトを記述します。
 
 * [spec/overview.md](file:///e:/work/pm-simulator/docs/spec/overview.md): **全体概要・設計思想・統一3大評価指標**
+* [spec/pm_commands.md](file:///e:/work/pm-simulator/docs/spec/pm_commands.md): **🎮 ProjectManager (PM) コマンド一覧仕様書 (意思決定コマンド体系・AP・アポ予約・効果一覧)**
 * [spec/career_loop.md](file:///e:/work/pm-simulator/docs/spec/career_loop.md): **年間キャリアマネジメント・人事更新（加齢・退職・新入社員）**
 * [spec/phase1_kickoff.md](file:///e:/work/pm-simulator/docs/spec/phase1_kickoff.md): **フェーズ1: キックオフ（ヒアリング ➔ 3AP事前調整 ➔ 手法宣言 ➔ チーム決起）**
 * [spec/phase2_sprint.md](file:///e:/work/pm-simulator/docs/spec/phase2_sprint.md): **フェーズ2: 開発スプリント（週進行 ➔ 定期報告 ➔ トラブル割り込み対応）**
