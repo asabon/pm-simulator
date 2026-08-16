@@ -13,6 +13,12 @@ export class TeamService {
     return this.developers;
   }
 
+  getAverageFatigue() {
+    if (!this.developers || this.developers.length === 0) return 0;
+    const total = this.developers.reduce((sum, d) => sum + (d.fatigue || 0), 0);
+    return total / this.developers.length;
+  }
+
   getDeveloper(id) {
     return this.developers.find(d => d.id === id) || null;
   }

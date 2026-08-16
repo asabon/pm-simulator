@@ -56,6 +56,13 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
         <div id="action-panel"></div>
       </main>
 
+      <section id="debug-info-panel" class="debug-info-panel">
+        <span id="debug-version-tag">Version: 6be1e63</span>
+        <span id="debug-screen-id">Screen ID: TITLE</span>
+        <div id="debug-commands-list"></div>
+        <div id="debug-status-details"></div>
+      </section>
+
       <div id="event-modal-overlay" class="event-modal-overlay hidden">
         <div id="event-modal-title"></div>
         <div id="event-modal-speaker"></div>
@@ -230,5 +237,24 @@ describe("ADV Web App Integration & Scene Transition Tests", () => {
 
     const modalTitle = document.getElementById("event-modal-title");
     expect(modalTitle.textContent).toContain("予定会議");
+  });
+
+  it("should render debug info panel with version, screen ID, available commands, and project status", async () => {
+    const appModule = await import("../src/app.js?test=" + Date.now());
+    appModule.initGame();
+
+    const versionTag = document.getElementById("debug-version-tag");
+    const screenId = document.getElementById("debug-screen-id");
+    const commandsList = document.getElementById("debug-commands-list");
+    const statusDetails = document.getElementById("debug-status-details");
+
+    expect(versionTag.textContent).toContain("Version:");
+    expect(screenId.textContent).toBe("Screen ID: TITLE");
+    expect(commandsList.textContent).toContain("顧客スコープ事前ネゴ");
+    expect(statusDetails.textContent).toContain("[プロジェクト概要]");
+
+    // シーン遷移で Screen ID が更新されることの検証
+    document.getElementById("btn-start-new-project").click();
+    expect(screenId.textContent).toBe("Screen ID: PROLOGUE_INTRO");
   });
 });
