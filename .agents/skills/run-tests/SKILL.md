@@ -12,11 +12,6 @@ description: PR発行前にプロトタイプやテストコード（pytest等�
 ### 1. テストコマンドの実行
 プロジェクト環境に合わせて、以下のコマンドを実行する。
 
-* **Python (uv環境)**:
-  ```bash
-  uv run pytest
-  ```
-
 * **JavaScript (npm環境)**:
   ```bash
   npm test

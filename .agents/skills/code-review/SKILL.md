@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: PR発行前に変更されたソースコード（Python/GDScript等）のクオリティ、命名規則、バグ、型アノテーション、プロトタイプルールをセルフレビューするスキル。
+description: PR発行前に変更されたソースコード（JavaScript/GDScript等）のクオリティ、命名規則、バグ、型アノテーション、モジュール設計をセルフレビューするスキル。
 ---
 
 # Code Review Skill
@@ -10,10 +10,9 @@ description: PR発行前に変更されたソースコード（Python/GDScript�
 ## 🔍 チェック項目
 
 ### 1. 言語別・技術仕様ルール
-* **Python (プロトタイプ)**:
-  * ターミナル上で対話的に動作し、テストプレイが容易なシンプルなコードを維持しているか。
-  * オブジェクト指向の明確な責務分け（データモデルとゲームエンジン）が意識されているか。
-  * Windows環境等における絵文字やマルチバイト文字の出力エラー（`UnicodeEncodeError`）を防ぐため、プログラムのエントリポイントで標準出力をUTF-8に再設定（`sys.stdout.reconfigure(encoding='utf-8')` など）しているか。
+* **JavaScript (Webプロトタイプ)**:
+  * モジュール（ES Module）構造が保たれ、データモデル・サービス層・UI層の単一責任原則が守られているか。
+  * `npm test` (Vitest) および `npm run lint` (ESLint) でエラー・警告が発生しない状態になっているか。
 * **Godot 4 / GDScript (将来の移植時)**:
   * 静的型ヒント（型アノテーション: `var score: int = 0`, `func update() -> void`）が徹底されているか。
   * UI構築の際は Control ノードのアンカーとコンテナ（HBox/VBox/Grid）を正しく設定し、レスポンシブなレイアウトになっているか。
@@ -21,14 +20,14 @@ description: PR発行前に変更されたソースコード（Python/GDScript�
 
 ### 2. コードクオリティ ＆ バグ予防
 * **Null Pointer / Reference Error**:
-  * 変数やオブジェクトの初期化漏れ、`None` チェックが行われているか。
+  * 変数やオブジェクトの初期化漏れ、`null` / `undefined` チェックが行われているか。
 * **境界値 ＆ 条件判定**:
   * 配列インデックスの範囲外、値の上限・下限（例: 0-100）オーバーの判定が適切か。
 * **デバッグコードの除去**:
-  * 一時的な `print` 文や不要なコメントアウトコードが残っていないか。
+  * 一時的な `console.log` 文や不要なコメントアウトコードが残っていないか。
 
 ## 🛠 実行手順
-1. `git diff` で差分のあるソースコード（`.py`, `.gd` 等）を特定する。
-2. Python コードの変更がある場合、`uv run ruff check --fix prototype/` および `uv run ruff format prototype/` を実行してLint・フォーマットを適用する。
+1. `git diff` で差分のあるソースコード（`.js`, `.gd` 等）を特定する。
+2. JS コードの変更がある場合、`npm run lint` を実行してLintエラーがないことを確認し、`npm test` を実行する。
 3. 上記のチェック項目を1つずつ検証する。
 4. 問題が見つかった場合はPR発行前に修正を完了させる。

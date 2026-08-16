@@ -64,6 +64,10 @@ PR作成前に、以下の専門スキルによるセルフレビューを実施
 $env:GITHUB_TOKEN=$null; $env:GH_TOKEN=$null; gh pr create --title "<タイトル>" --body-file .git/pr_body.md
 ```
 
+### 4.3 GitHub Actions CI 結果の確認 ＆ 自動対応
+* PR発行後、必ず `gh pr checks` 等で GitHub Actions CI の実行状況と最終ステータスを確認します。
+* CI が成功（Pass）することを確認した上で完了報告を行います。失敗した場合はログを取得して原因箇所を修正し、追加プッシュを行います。
+
 ---
 
 ## 🧹 5. マージ完了後のクリーンアップフロー
