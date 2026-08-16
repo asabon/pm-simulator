@@ -21,8 +21,9 @@
  [ Domain Model Layer ]     Project, Person/Developer, Task, Customer, Archetype, CommandResult
 ```
 
-### 1) 📦 ドメインモデル層 (`web/src/entities.js`, `web/src/command_result.js`)
+### 1) 📦 ドメインモデル層 (`web/src/entities.js`, `web/src/project_manager.js`, `web/src/command_result.js`)
 純粋な状態保持とデータ構造を定義します。UIや特定フレームワークに依存しません。
+* `ProjectManager`: プレイヤー自身を表す主体モデル。残りAP・能力値の保持と、コンテキスト（経過日数、フェーズ、チーム疲労度・士気等）に応じた**動的コマンド選択肢の提供 (`getAvailableCommands`)** およびコマンド実行を担当。
 * `Project`: 案件属性（要件明確度・納期・期待スコープ・顧客満足度初期値等）
 * `Person` / `Developer`: メンバー属性（役割・スキル・疲労度・レゾリューション・モチベーション・年齢）
 * `Task`: 開発タスク（概算工数・実進捗・潜在バグ数等）

@@ -8,16 +8,14 @@ import { CustomerService } from "./customer_service.js";
 import { KickoffService } from "./kickoff_service.js";
 import { SprintService } from "./sprint_service.js";
 
+import { ProjectManager } from "./project_manager.js";
+
 export class GameSession {
   constructor() {
     this.projectNumber = 1;
     this.phase = GamePhase.KICKOFF_PREP;
     this.project = null;
-    this.pm = {
-      ap: 3,
-      maxAp: 3,
-      resetAp() { this.ap = this.maxAp; }
-    };
+    this.pm = new ProjectManager({ name: "PM", ap: 3 });
 
     // ドメインサービスのインスタンス化
     this.teamService = new TeamService();
@@ -43,7 +41,7 @@ export class GameSession {
     this.customerService.setCustomerData(project.customer, project.customerArchetype);
     this.kickoffService.reset();
     this.sprintService.setTasks(tasks);
-    this.pm.resetAp();
+    this.pm.restoreAp();
 
     return new CommandResult({
       success: true,
@@ -72,6 +70,16 @@ export class GameSession {
       summary: `フェーズを ${prevPhase} から ${this.phase} へ切り替えました。`,
       deliverables: { prevPhase, currentPhase: this.phase },
       stateChanges: { phase: this.phase }
+    });
+  }
+
+  getAvailablePmCommands() {
+    const avgFatigue = this.teamService.getAverageFatigue();
+    return this.pm.getAvailableCommands({
+      phase: this.phase === GamePhase.KICKOFF_PREP ? "KICKOFF" : "SPRINT",
+      ap: this.pm.ap,
+      teamFatigue: avgFatigue,
+      customerSatisfaction: this.customerService.satisfaction
     });
   }
 
