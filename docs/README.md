@@ -25,4 +25,4 @@
 * [design/adv_ui_spec.md](file:///e:/work/pm-simulator/docs/design/adv_ui_spec.md): **ADV風コマンド選択式 Web UI 仕様書 (場所・人物移動型 & イベントシステム)**
 * [design/pmo_advisor_spec.md](file:///e:/work/pm-simulator/docs/design/pmo_advisor_spec.md): **🦉 PMO（軍師・参謀）アドバイスシステム仕様 (動的助言 ＆ タイムリミット警鐘)**
 * [design/methodology_balance.md](file:///e:/work/pm-simulator/docs/design/methodology_balance.md): **開発手法（🌊 WF vs 🔄 アジャイル）のメリット・デメリット対比**
-* [design/data_architecture.md](file:///e:/work/pm-simulator/docs/design/data_architecture.md): **データモデル・データ駆動型エンジン設計 (Python / Web / Godot共通)**
+* [design/data_architecture.md](file:///e:/work/pm-simulator/docs/design/data_architecture.md): **データモデル ＆ レイヤードアーキテクチャ設計 (Webモジュール構成 ＆ Godot移植性)**
