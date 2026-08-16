@@ -9,41 +9,45 @@ describe("ProjectManager", () => {
     expect(pm.maxAp).toBe(3);
   });
 
-  it("KICKOFFフェーズに応じたコマンド一覧が正しく取得できること", () => {
+  it("キックオフ前（未実施）のコマンド一覧が正しく取得できること", () => {
     const pm = new ProjectManager({ ap: 3 });
-    const commands = pm.getAvailableCommands({ phase: "KICKOFF" });
+    const commands = pm.getAvailableCommands({ kickoffHistory: [] });
 
     expect(commands.length).toBeGreaterThan(0);
-    const scopeCmd = commands.find((c) => c.id === "SCOPE_NEGOTIATION");
-    expect(scopeCmd).toBeDefined();
-    expect(scopeCmd.enabled).toBe(true);
+    const wsCmd = commands.find((c) => c.id === "req_def_ws");
+    expect(wsCmd).toBeDefined();
+    expect(wsCmd.enabled).toBe(true);
+
+    const kickoffCmd = commands.find((c) => c.id === "team_kickoff_rally");
+    expect(kickoffCmd).toBeDefined();
+    expect(kickoffCmd.enabled).toBe(true);
+
+    const holidayCmd = commands.find((c) => c.id === "holiday_work_request");
+    expect(holidayCmd).toBeUndefined(); // キックオフ前は休日出勤不可
   });
 
-  it("AP不足時にコマンドが disabled になること", () => {
+  it("キックオフ実施後のコマンド一覧が正しく切り替わること", () => {
+    const pm = new ProjectManager({ ap: 3 });
+    const commands = pm.getAvailableCommands({ kickoffHistory: ["team_kickoff_rally"] });
+
+    const kickoffCmd = commands.find((c) => c.id === "team_kickoff_rally");
+    expect(kickoffCmd).toBeUndefined(); // 実施後は決起集会非表示
+
+    const holidayCmd = commands.find((c) => c.id === "holiday_work_request");
+    expect(holidayCmd).toBeDefined();
+    expect(holidayCmd.enabled).toBe(true);
+  });
+
+  it("AP不足時にコスト1以上のコマンドが disabled になること", () => {
     const pm = new ProjectManager({ ap: 0 });
-    const commands = pm.getAvailableCommands({ phase: "KICKOFF", ap: 0 });
+    const commands = pm.getAvailableCommands({ ap: 0 });
 
-    const scopeCmd = commands.find((c) => c.id === "SCOPE_NEGOTIATION");
-    expect(scopeCmd.enabled).toBe(false);
-    expect(scopeCmd.disabledReason).toContain("APが不足");
-  });
+    const wsCmd = commands.find((c) => c.id === "req_def_ws");
+    expect(wsCmd.enabled).toBe(false);
+    expect(wsCmd.disabledReason).toContain("APが不足");
 
-  it("SPRINTフェーズでチーム疲労度条件を満たさないと1on1コマンドが disabled になること", () => {
-    const pm = new ProjectManager({ ap: 3 });
-    // 疲労度 10 (要求条件は 30)
-    const commands = pm.getAvailableCommands({ phase: "SPRINT", teamFatigue: 10 });
-
-    const oneOnOneCmd = commands.find((c) => c.id === "ONE_ON_ONE");
-    expect(oneOnOneCmd.enabled).toBe(false);
-    expect(oneOnOneCmd.disabledReason).toContain("チーム疲労度");
-  });
-
-  it("SPRINTフェーズで疲労度が30以上になると1on1コマンドが enabled になること", () => {
-    const pm = new ProjectManager({ ap: 3 });
-    const commands = pm.getAvailableCommands({ phase: "SPRINT", teamFatigue: 40 });
-
-    const oneOnOneCmd = commands.find((c) => c.id === "ONE_ON_ONE");
-    expect(oneOnOneCmd.enabled).toBe(true);
+    const freeCmd = commands.find((c) => c.id === "boss_risk_check");
+    expect(freeCmd.enabled).toBe(true); // 無料コマンドは実行可能
   });
 
   it("consumeAp および restoreAp が正常に機能すること", () => {
@@ -55,3 +59,4 @@ describe("ProjectManager", () => {
     expect(pm.ap).toBe(3);
   });
 });
+
