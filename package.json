@@ -4,9 +4,11 @@
   "description": "PM Simulator - Project Manager Career Simulator",
   "type": "module",
   "scripts": {
+    "pretest": "node scripts/update_version.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint web/src/**/*.js"
+    "lint": "eslint web/src/**/*.js",
+    "version:update": "node scripts/update_version.js"
   },
   "devDependencies": {
     "eslint": "^9.19.0",

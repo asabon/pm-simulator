@@ -15,6 +15,7 @@ import {
   runDailyProgress
 } from "./engine.js";
 import { GameSession } from "./game_session.js";
+import { APP_VERSION } from "./version.js";
 
 // =========================================================================
 // 状態変数 (State Management & Game Session Architecture)
@@ -60,7 +61,7 @@ export function initGame() {
   renderAll();
 }
 
-export const APP_VERSION = "6be1e63";
+export { APP_VERSION };
 
 // 全体レンダリング関数
 export function renderAll() {
