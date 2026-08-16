@@ -60,12 +60,15 @@ export function initGame() {
   renderAll();
 }
 
+export const APP_VERSION = "6be1e63";
+
 // 全体レンダリング関数
 export function renderAll() {
   renderHeaderStatus();
   renderSceneView();
   renderMessageBox();
   renderActionPanel();
+  renderDebugPanel();
 }
 
 // 1. ヘッダー / ステータスバーの更新
@@ -503,13 +506,30 @@ export function renderActionPanel() {
       }
     }
 
+    const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands() : [];
+
     actionsList.forEach(act => {
       const btn = document.createElement("button");
       btn.id = `btn-act-${act.id}`;
       btn.className = "btn-adv";
       
+      const actCost = act.cost !== undefined ? act.cost : 1;
+      let isDisabled = pmState.ap < actCost;
+      let disabledReason = isDisabled ? " (AP不足)" : "";
+
+      // ProjectManagerの動的コマンドメタデータと突合
+      const matchingCmd = availableCommands.find(c => c.id.toLowerCase() === act.id.toLowerCase());
+      if (matchingCmd && !matchingCmd.enabled) {
+        isDisabled = true;
+        disabledReason = ` (${matchingCmd.disabledReason})`;
+      }
+
+      if (isDisabled) {
+        btn.disabled = true;
+      }
+
       btn.innerHTML = `
-        <span>${act.name}</span>
+        <span>${act.name}${disabledReason}</span>
         <span class="btn-sub-desc">${act.desc}</span>
       `;
       btn.addEventListener("click", () => handleExecuteAction(act));
@@ -527,6 +547,51 @@ export function renderActionPanel() {
       renderAll();
     });
     panelEl.appendChild(backBtn);
+  }
+}
+
+// 5. 🛠️ 開発・検証用デバッグインスペクターパネルの更新
+export function renderDebugPanel() {
+  const versionEl = document.getElementById("debug-version-tag");
+  const screenIdEl = document.getElementById("debug-screen-id");
+  const commandsListEl = document.getElementById("debug-commands-list");
+  const statusDetailsEl = document.getElementById("debug-status-details");
+
+  if (!versionEl || !screenIdEl || !commandsListEl || !statusDetailsEl) return;
+
+  versionEl.textContent = `Version: ${APP_VERSION}`;
+  screenIdEl.textContent = `Screen ID: ${currentUIMode}`;
+
+  // 1. ProjectManager public method で取得できたコマンド一覧
+  const availableCommands = gameSession.getAvailablePmCommands ? gameSession.getAvailablePmCommands() : [];
+  if (availableCommands.length === 0) {
+    commandsListEl.textContent = "（取得可能コマンドなし）";
+  } else {
+    commandsListEl.textContent = availableCommands.map(cmd => {
+      const statusIcon = cmd.enabled ? "✅ [実行可]" : `❌ [実行不可: ${cmd.disabledReason}]`;
+      return `• ${cmd.name} (ID: ${cmd.id}, Cost: ${cmd.cost}AP)\n  状態: ${statusIcon}`;
+    }).join("\n");
+  }
+
+  // 2. プロジェクト ＆ メンバー詳細ステータス
+  if (projectState) {
+    const devs = projectState.getAllDevelopers ? projectState.getAllDevelopers() : [];
+    const devsInfo = devs.map(d => `  - ${d.name} (${d.role}): 疲労度 ${d.fatigue.toFixed(0)}%, 基礎スキル ${d.skill || 80}`).join("\n");
+    const statusText = [
+      `[プロジェクト概要]`,
+      `• 進行日: Day ${projectState.day}/${projectState.maxDays || 20} (Week ${projectState.week || 1})`,
+      `• 残行動力: ${pmState.ap} / ${pmState.maxAp} AP`,
+      `• 顧客満足度: ${projectState.customer ? projectState.customer.satisfaction.toFixed(0) : 70}% (期待: ${projectState.customerArchetype ? projectState.customerArchetype.name : "標準"})`,
+      `• 上司信頼度: ${(projectState.managerSatisfaction || 60).toFixed(0)}%`,
+      `• 予約中会議: ${(projectState.scheduledMeetings || []).length}件`,
+      `• 実行履歴: [${kickoffHistory.join(", ") || "未実施"}]`,
+      ``,
+      `[チームメンバー状態]`,
+      devsInfo || "  (メンバー未登録)"
+    ].join("\n");
+    statusDetailsEl.textContent = statusText;
+  } else {
+    statusDetailsEl.textContent = "（プロジェクト初期化前）";
   }
 }
 
