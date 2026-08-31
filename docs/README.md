@@ -6,10 +6,15 @@
 
 ## 📂 ディレクトリ構成 ＆ 役割
 
-### 🚀 [docs/v2/ (新仕様・現行策定中)](file:///e:/work/pm-simulator/docs/v2/README.md)
-ゲーム仕様を一から再構築するための現行仕様・設計ドキュメント群です。
-* **[v2/spec/ (仕様書)](file:///e:/work/pm-simulator/docs/v2/spec/overview.md)**: ゲームシステム、コアループ、ルール等の仕様書
-* **v2/design/ (設計・パラメータ)**: UI設計、イベントデータ、パラメータバランス設計
+### ☕ [docs/v3/ (カフェ開店編・現行策定中)](file:///e:/work/pm-simulator/docs/v3/README.md)
+専門用語を使わず、身近な「カフェの新規開店」を題材にPMの本質（段取り・合意形成・人間関係）を学ぶ現行仕様書群です。
+* **[v3/spec/ (仕様書)](file:///e:/work/pm-simulator/docs/v3/spec/overview.md)**: カフェオープン版のゲームシステム、登場人物、コアループ
+
+---
+
+### 🚀 [docs/v2/ (IT開発編アーカイブ)](file:///e:/work/pm-simulator/docs/v2/README.md)
+IT開発プロジェクトを平易な言葉でモデル化した旧仕様・設計ドキュメント群です。
+* **[v2/spec/ (仕様書)](file:///e:/work/pm-simulator/docs/v2/spec/overview.md)**: ゲームシステム、コアループ等の仕様書
 
 ---
 
