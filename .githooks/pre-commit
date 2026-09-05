@@ -1,0 +1,31 @@
+#!/bin/sh
+# pre-commit: main ブランチ直接コミットの防止 & ブランチ命名規則の検証
+
+branch="$(git symbolic-ref --short HEAD 2>/dev/null)"
+
+# 1. main / master への直接コミット禁止
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+    echo "========================================================"
+    echo " [ERROR] Direct commit to '$branch' branch is forbidden!"
+    echo " Please create a topic branch using standard format:"
+    echo "   e.g.) git switch -c feature/001-cafe-overview"
+    echo "========================================================"
+    exit 1
+fi
+
+# 2. ブランチ命名規則の検証: <type>/<3桁以上の番号>-<概要>
+# 許容タイプ: feature, fix, refactor, docs, chore, test
+pattern="^(feature|fix|refactor|docs|chore|test)/([0-9]{3}-.+|[a-zA-Z0-9_-]+)$"
+
+if ! echo "$branch" | grep -Eq "$pattern"; then
+    echo "========================================================"
+    echo " [ERROR] Invalid branch name: '$branch'"
+    echo " Topic branch must match the pattern: <type>/<000-id>-<summary>"
+    echo " Allowed types: feature, fix, refactor, docs, chore, test"
+    echo "   e.g.) feature/001-cafe-overview"
+    echo "   e.g.) docs/002-update-spec"
+    echo "========================================================"
+    exit 1
+fi
+
+exit 0
