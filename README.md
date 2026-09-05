@@ -53,9 +53,9 @@
 プロジェクトの詳細な設計仕様は以下に整理されています。
 
 - 📖 **[ドキュメントトップ (docs/README.md)](docs/README.md)**
-  - [v2 新ゲーム仕様書 (docs/v2/)](docs/v2/README.md) : 現在ゼロベース策定中の新仕様
-  - [v1 旧仕様アーカイブ (docs/v1/)](docs/v1/README.md) : 初期バージョンの仕様アーカイブ
-  - [開発・Git運用ガイド (docs/development/)](docs/development/git_workflow.md) : ブランチ・PR運用規約
+  - ☕ **[現行ゲーム仕様書 (docs/spec/)](docs/spec/overview.md)** : カフェ新規開店編（誰でも学べるPMの本質）
+  - 📦 **[過去バージョンアーカイブ (docs/old/)](docs/old/README.md)** : 旧バージョン仕様（v1 初期キックオフ版 / v2 IT開発編）
+  - 🛠 **[開発・Git運用ガイド (docs/development/)](docs/development/git_workflow.md)** : ブランチ・PR運用規約
 
 ---
 
