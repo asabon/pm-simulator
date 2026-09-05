@@ -18,7 +18,7 @@ description: >-
    ```
 
 2. **Issue ファイルの作成**
-   - [`docs/issues/TEMPLATE.md`](file:///e:/work/pm-simulator/docs/issues/TEMPLATE.md) をコピーして `docs/issues/<3桁番号>-<概要>.md` を作成する。
+   - [`docs/issues/TEMPLATE.md`](../../../docs/issues/TEMPLATE.md) をコピーして `docs/issues/<3桁番号>-<概要>.md` を作成する。
    - タイトル、目的、受け入れ基準（Acceptance Criteria）、設計メモを記述する。
    - ステータスを `進行中`（または `未着手`）にする。
 

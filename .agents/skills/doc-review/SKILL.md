@@ -24,7 +24,7 @@ description: PR発行前に変更されたドキュメント（docs/やREADME.md
 
 ### 3. リンク切れ ＆ ファイル参照
 * **相対パス / 内部リンク**:
-  * [README.md](file:///e:/work/pm-simulator/README.md) や [game_design.md](file:///e:/work/pm-simulator/docs/game_design.md) への相対パスリンク切れがないか。
+  * [README.md](../../../README.md) や [docs/spec/overview.md](../../../docs/spec/overview.md) への相対パスリンク切れがないか。
 
 ## 🛠 実行手順
 1. `git diff` で差分のある Markdown ファイル（`.md`）を特定する。

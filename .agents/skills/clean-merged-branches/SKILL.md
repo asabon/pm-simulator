@@ -7,7 +7,7 @@ description: スラッシュコマンド `/clean-merged-branches` や `/clean-br
 
 本スキルは、ユーザーから GitHub PR のマージ完了連絡（スラッシュコマンド `/clean-merged-branches`, `/clean-branches`, `/merged`、「マージしました」「マージ完了」等）を受けた際に、自動的に `main` ブランチへの同期と作業用ブランチの完全クリーンアップを安全かつ迅速に行うワークフローを定義します。
 
-> 📖 **関連規約**: 本スキルの処理は [AGENTS.md](file:///e:/work/pm-simulator/AGENTS.md) の「3. Git / GitHub 開発ワークフロー & コミット規約」に準拠します。
+> 📖 **関連規約**: 本スキルの処理は [AGENTS.md](../../../AGENTS.md) の「3. Git / GitHub 開発ワークフロー & コミット規約」に準拠します。
 
 ## 🛠 実行フロー
 

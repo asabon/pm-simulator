@@ -39,7 +39,7 @@ description: ユーザーから「PR出して」「PR作成」「PR提出」「�
    - 例: `[Feature] Issue #001: カフェ開店編のコアループ・コマンド体系を定義`
    - 種別: `[Feature]`, `[Fix]`, `[Refactor]`, `[Docs]`, `[Chore]`, `[Test]`
 2. **PR 本文**:
-   - [`.github/pull_request_template.md`](file:///e:/work/pm-simulator/.github/pull_request_template.md) の構成に沿って、`.git/pr_body.md` に書き出す:
+   - [`.github/pull_request_template.md`](../../../.github/pull_request_template.md) の構成に沿って、`.git/pr_body.md` に書き出す:
      - `## 概要 / Overview`
      - `## 関連 Issue / Related Issue` (例: `docs/issues/001-xxx.md`)
      - `## 変更内容 / Changes`
