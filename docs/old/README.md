@@ -27,4 +27,4 @@ IT開発プロジェクトを平易な言葉でモデル化したバージョン
 ## 🔗 関連リンク
 * 📖 [ドキュメントトップ (docs/README.md)](file:///e:/work/pm-simulator/docs/README.md)
 * ☕ [現行仕様・全体概要 (docs/spec/overview.md)](file:///e:/work/pm-simulator/docs/spec/overview.md)
-* 🛠 [開発・Git運用ガイド (docs/development/git_workflow.md)](file:///e:/work/pm-simulator/docs/development/git_workflow.md)
+* 🛠 [AI開発ガイドライン (AGENTS.md)](file:///e:/work/pm-simulator/AGENTS.md)

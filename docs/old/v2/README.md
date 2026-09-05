@@ -17,4 +17,4 @@
 ## 🔗 関連リンク
 * 📦 [アーカイブトップ (docs/old/README.md)](file:///e:/work/pm-simulator/docs/old/README.md)
 * ☕ [現行仕様・全体概要 (docs/spec/overview.md)](file:///e:/work/pm-simulator/docs/spec/overview.md)
-* 🛠 [開発・Git運用ガイド (docs/development/git_workflow.md)](file:///e:/work/pm-simulator/docs/development/git_workflow.md)
+* 🛠 [AI開発ガイドライン (AGENTS.md)](file:///e:/work/pm-simulator/AGENTS.md)

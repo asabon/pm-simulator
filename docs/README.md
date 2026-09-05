@@ -20,9 +20,9 @@
 
 ---
 
-### 🛠 [docs/development/ (開発・運用ガイド)](file:///e:/work/pm-simulator/docs/development/git_workflow.md)
-プロジェクト共通の開発規約・Git運用・CI/CDルールです。
-* [development/git_workflow.md](file:///e:/work/pm-simulator/docs/development/git_workflow.md): Git ＆ GitHub 開発・ブランチ・PR運用規約
+### 🛠 [AI開発ガイドライン & 開発ハーネス規約 (AGENTS.md)](file:///e:/work/pm-simulator/AGENTS.md)
+プロジェクト共通の開発規約・Git運用・Issue駆動ワークフロー・AI開発ガードレールです。
+* [AGENTS.md (リポジトリ直下)](file:///e:/work/pm-simulator/AGENTS.md): Git / GitHub / Issue 運用規約 ＆ ガイドライン
 
 ---
 

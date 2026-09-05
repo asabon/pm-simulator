@@ -55,7 +55,7 @@
 - 📖 **[ドキュメントトップ (docs/README.md)](docs/README.md)**
   - ☕ **[現行ゲーム仕様書 (docs/spec/)](docs/spec/overview.md)** : カフェ新規開店編（誰でも学べるPMの本質）
   - 📦 **[過去バージョンアーカイブ (docs/old/)](docs/old/README.md)** : 旧バージョン仕様（v1 初期キックオフ版 / v2 IT開発編）
-  - 🛠 **[開発・Git運用ガイド (docs/development/)](docs/development/git_workflow.md)** : ブランチ・PR運用規約
+  - 🛠 **[AI開発ガイドライン & 開発ハーネス規約 (AGENTS.md)](AGENTS.md)** : ブランチ・Issue駆動・PR運用規約
 
 ---
 
