@@ -35,16 +35,13 @@
 
 ---
 
-## 🚀 プロトタイプのプレイ・実行方法
+## 🚀 Webプロトタイプについて
 
-本プロジェクトでは、ブラウザ上でリッチなダッシュボードUIとプログレスメーターで直感的に体験できる Web プロトタイプを提供しています（スマートフォン・PC表示両対応）。
+現在、最新仕様（カフェ新規オープン編）に基づき、Webプロトタイプのゼロベース再設計・実装準備を進めています。
 
-* **オンラインで今すぐプレイ**:  
-  👉 **[https://asabon.github.io/pm-simulator/](https://asabon.github.io/pm-simulator/)**
-* **ローカル環境で起動してプレイ**:
-  * **Windows**: リポジトリ直下の `start_web_sim.bat` をダブルクリック
-  * **Mac / Linux**: `./start_web_sim.sh` を実行
-  * *(または `python -m http.server 8000 --directory web` 等を実行して `http://127.0.0.1:8000` へアクセス)*
+* **旧バージョン（v1）アーカイブ**:
+  * 初期IT開発版のプロトタイプコードは [web/old/v1/](web/old/v1/README.md) に退避されています。
+  * ローカルでの旧版実行: `python -m http.server 8000 --directory web/old/v1` を実行して `http://127.0.0.1:8000` へアクセス
 
 ---
 
