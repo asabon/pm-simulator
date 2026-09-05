@@ -1,3 +1,13 @@
+---
+title: PM Simulator - カフェ新規オープン編 仕様概要
+category: spec
+status: stable
+description: 誰でも直感的に遊べる「カフェの新規開店」を題材に、PMの段取り・合意形成・人間関係の本質を学ぶ現行仕様の全体概要、PM概念対応表、登場人物モデル、コアループ。
+related_docs:
+  - docs/README.md
+  - AGENTS.md
+---
+
 # PM Simulator v3 - カフェ新規オープン編 仕様概要
 
 ## 🎯 開発の背景と目的（Why）
