@@ -1,36 +1,42 @@
 ---
 name: create-issue
-description: ユーザーと仕様決定後、GitHub Issueを発行（「Issue作成」「Issue出して」等）し、Issue紐付けブランチ（feature/issue-XX-xxx 等）を自動作成するスキル。
+description: >-
+  Create a new Issue markdown file under docs/issues/ and switch to a corresponding
+  topic branch (<type>/<3-digit-number>-<summary>) following the standard workflow.
 ---
 
-# Create Issue Skill
+# Issue 起票 & ブランチ作成スキル
 
-本スキルは、ユーザーとチャット上で仕様合意・タスク確定した際に、GitHub Issueの自動起票およびIssue番号に紐付いたGitブランチの作成を一括で安全に自動実行するワークフローを定義します。
+新機能開発、バグ修正、リファクタリング、ドキュメント作成、ビルド保守など、**あらゆる作業を開始する際に必ず実行するスキル**です。
 
-## 🛠 実行フロー
+## 手順
 
-### STEP 1: Issue 内容の整理 ＆ ラベル判定
-1. チャットでの議論・合意事項から、以下の要素を抽出・整理する：
-   - **タイトル**: 簡潔かつ具体的な概要（例: `feat: ヘッダーにフェーズナビゲーション（ステッパー）を追加`）
-   - **目的・背景**: なぜこの変更を行うか・解決する課題
-   - **仕様・変更内容**: 実施する具体的な変更の箇条書き
-   - **完了条件**: チェックリスト (`- [ ] ...`)
-2. 変更の種類に応じた GitHub ラベルを選定する：
-   - 新機能・改善 ➔ `enhancement`
-   - バグ修正 ➔ `bug`
-   - ドキュメント更新 ➔ `documentation`
-
-### STEP 2: Issue の起票 (GitHub CLI)
-1. PowerShell環境での事故防止（バッククォートエスケープやダミートークン干渉）のため、Issue本文を一時ファイル（`.git/issue_body.md`）に書き出す。
-2. 環境変数をリセットした上で GitHub CLI で Issue を作成する：
+1. **既存 Issue の確認と採番**
+   - `docs/issues/` 配下のファイル一覧を確認し、最大の3桁連番を特定して次の番号を決定する（例: ファイルがなければ `001`、`001` があれば次は `002`）。
    ```powershell
-   powershell -NoProfile -Command "Remove-Item Env:\GITHUB_TOKEN -ErrorAction SilentlyContinue; Remove-Item Env:\GH_TOKEN -ErrorAction SilentlyContinue; gh issue create --title '...' --label '...' --body-file .git/issue_body.md"
+   Get-ChildItem docs/issues/*.md
    ```
-3. 発行された Issue 番号（例: `#36`）および URL を取得する。
 
-### STEP 3: Issue 紐付けブランチの作成
-1. 最新の `main` ブランチから、Issue 番号を含んだフィーチャーブランチを作成・チェックアウトする：
-   - 機能追加 ➔ `feature/issue-36-short-name`
-   - バグ修正 ➔ `fix/issue-37-short-name`
-   - ドキュメント ➔ `docs/issue-38-short-name`
-2. 発行された Issue の URL と、切り替えたブランチ名をユーザーに報告し、実装を開始する。
+2. **Issue ファイルの作成**
+   - [`docs/issues/TEMPLATE.md`](file:///e:/work/pm-simulator/docs/issues/TEMPLATE.md) をコピーして `docs/issues/<3桁番号>-<概要>.md` を作成する。
+   - タイトル、目的、受け入れ基準（Acceptance Criteria）、設計メモを記述する。
+   - ステータスを `進行中`（または `未着手`）にする。
+
+3. **トピックブランチの作成と切り替え**
+   - タイプを選定（`feature`, `fix`, `refactor`, `docs`, `chore`, `test`）。
+   - `main` ブランチが最新であることを確認した上で、ブランチを作成・切り替えする。
+   ```powershell
+   git checkout main
+   git pull origin main
+   git checkout -b <タイプ>/<3桁番号>-<概要>
+   ```
+
+4. **Issue ファイルの初期コミット**
+   - 作成した Issue ファイルをブランチの初期コミットとして追加する。
+   ```powershell
+   git add docs/issues/<3桁番号>-<概要>.md
+   git commit -m "Issue #<3桁番号>: <タイトル> を起票"
+   ```
+
+5. **作業開始の準備完了**
+   - 作成した Issue パスとブランチ名をユーザーに提示し、実装に着手する。
