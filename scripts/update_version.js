@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const versionFilePath = path.join(rootDir, "web", "src", "version.js");
+const versionFilePath = path.join(rootDir, "web", "old", "v1", "src", "version.js");
 
 let commitHash = "dev";
 try {

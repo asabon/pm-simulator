@@ -1,6 +1,6 @@
 # Issue #002: 旧Webプロトタイプのアーカイブ（web/old/v1/）とCIの一時休止
 
-- **ステータス**: 進行中
+- **ステータス**: 完了
 - **作成日**: 2026-09-05
 - **対象ブランチ**: `chore/002-archive-old-web-prototype`
 
@@ -14,22 +14,23 @@
 
 ## 📋 要件 / 受け入れ基準 (Acceptance Criteria)
 
-- [ ] `web/` 配下の既存コード資産（HTML, JS, tests, package.json等）を `web/old/v1/` へ移動・退避
-- [ ] `.github/workflows/test.yml` および `deploy-pages.yml` を一時無効化（休止）
-- [ ] ルートの `README.md` を更新し、旧プロトタイプがアーカイブされた旨を明記
-- [ ] リポジトリ全体で壊れたリンクや不要な依存がないことを確認
+- [x] `web/` 配下の既存コード資産（HTML, JS, tests, package.json等）を `web/old/v1/` へ移動・退避
+- [x] `.github/workflows/test.yml` および `deploy-pages.yml` を一時無効化（休止）
+- [x] ルートの `README.md` を更新し、旧プロトタイプがアーカイブされた旨を明記
+- [x] リポジトリ全体で壊れたリンクや不要な依存がないことを確認
 
 ---
 
 ## 💡 設計メモ・実装方針
 
-- `git mv` を用いて Git 履歴を保持したまま `web/old/v1/` に移動する。
-- ワークフローファイル（`.github/workflows/test.yml` / `deploy-pages.yml`）は、削除するか拡張子変更（`.yml.disabled`）またはコメントアウトで一時停止させる。将来新プロトタイプ実装時に復活させやすいよう `.yml.disabled` または条件付き休止とする。
+- `git mv` を用いて Git 履歴を保持したまま `web/old/v1/` に移動した。
+- ワークフローファイルは `.github/workflows/*.yml.disabled` にリネームして一時休止。新プロトタイプ実装時に容易に復旧可能。
+- `vitest.config.js`, `package.json`, `scripts/update_version.js` のパスを更新し、ローカル検証時は引き続きテスト可能とした。
 
 ---
 
 ## 📝 完了チェックリスト
 
-- [ ] 受け入れ基準を満たす実装の完了
-- [ ] CI が不要にトリガーされないことの確認
-- [ ] ドキュメント整合性の確認
+- [x] 受け入れ基準を満たす実装の完了
+- [x] CI が不要にトリガーされないことの確認（ワークフロー無効化）
+- [x] ドキュメント整合性の確認
